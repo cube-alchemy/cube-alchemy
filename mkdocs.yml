@@ -1,0 +1,58 @@
+site_name: Cube Alchemy
+#repo_url: https://github.com/cube-alchemy/cube-alchemy
+#repo_name: Cube Alchemy
+
+theme:
+  name: material
+  logo: assets/cube-alchemy-logo.png
+  favicon: assets/cube-alchemy-logo.png
+  features:
+    - navigation.expand
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - customstyle.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cube-alchemy/cube-alchemy
+    - icon: material/email
+      link: mailto:delmontejuan92@gmail.com
+    - icon: fontawesome/regular/house
+      link: https://cube-alchemy.com
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Installation: installation.md
+  - Concepts:
+    - Workflow: concepts/workflow.md
+    - Hypercube: concepts/hypercube.md
+    - Relationships: concepts/relationships.md
+    - Dimensions: concepts/dimensions.md
+    - Metrics: concepts/metrics.md
+    - Queries: concepts/queries.md
+    - Filters: concepts/filters.md
+    - Context State: concepts/context-state.md
+  - API:
+    - Hypercube: api/hypercube.md
+    - Metric Methods: api/metric_methods.md
+    - Query Methods: api/query_methods.md
+    - Filter Methods: api/filter_methods.md
+  - Examples: examples.md
+  - Streamlit Integration: streamlit.md
+  - Contributing: contributing.md

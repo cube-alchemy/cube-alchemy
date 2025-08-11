@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cube-alchemy"
+version = "0.1.2"
+description = "A lightweight, queryable hypercube engine for multidimensional data analysis"
+readme = "README.md"
+authors = [
+    {name = "Juan C. Del Monte", email = "delmontejuan92@gmail.com"},
+]
+license = {text = "Apache 2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "networkx==3.5",
+    "matplotlib==3.10.3",
+    "pandas==2.3.0",
+]
+
+[project.urls]
+"Docs" = "https://cube-alchemy.info"
+"Repository" = "https://github.com/cube-alchemy/cube-alchemy"
+"Bug Tracker" = "https://github.com/cube-alchemy/cube-alchemy/issues"
+
+[tool.setuptools]
+packages = ["cube_alchemy", "cube_alchemy.core", "cube_alchemy.core.hypercube_building_classes"]

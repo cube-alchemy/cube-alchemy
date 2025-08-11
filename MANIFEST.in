@@ -1,0 +1,18 @@
+include LICENSE
+include README.md
+include images *
+include pyproject.toml
+
+# Exclude documentation
+exclude mkdocs.yml
+recursive-exclude docs *
+recursive-exclude site *
+
+# Exclude virtual environment
+recursive-exclude venv *
+
+# Exclude development files
+exclude .gitignore
+exclude .github
+recursive-exclude tests *
+recursive-exclude examples *

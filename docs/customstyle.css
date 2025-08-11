@@ -1,0 +1,4 @@
+.md-logo img {
+  width: 30px !important;  /* Increase from default (around 24px) */
+  height: auto !important;  /* Maintain aspect ratio */
+}

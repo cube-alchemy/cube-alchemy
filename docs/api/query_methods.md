@@ -1,0 +1,122 @@
+# Query Methods
+
+## Define Query
+
+```python
+define_query(
+    query_name: str,
+    dimensions: set[str] = {},
+    metrics: List[str] = [],
+    drop_null_dimensions: bool = False,
+    drop_null_metric_results: bool = False
+)
+```
+
+Defines a named query with dimensions and metrics for later execution.
+
+**Parameters:**
+
+- `query_name`: A unique name for the query
+- `dimensions`: Set of dimension column names to include in the query
+- `metrics`: List of metric names (as defined with define_metric)
+- `drop_null_dimensions`: Whether to exclude rows where dimension values are missing
+- `drop_null_metric_results`: Whether to exclude rows where metric calculations result in null
+
+**Example:**
+
+```python
+# Define metrics
+cube.define_metric(name='Revenue', expression='[qty] * [price]', aggregation='sum')
+cube.define_metric(name='Units', expression='[qty]', aggregation='sum')
+
+# Define a query using those metrics
+cube.define_query(
+    query_name="sales_analysis",
+    dimensions=set(['region', 'category', 'promo_type']),
+    metrics=['Revenue', 'Units']
+)
+```
+
+## Execute Query
+
+```python
+query(query_name: str) -> pd.DataFrame
+```
+
+Executes a previously defined query by name.
+
+**Parameters:**
+
+- `query_name`: Name of a previously defined query
+
+**Returns:**
+
+- Pandas DataFrame with the query results
+
+**Example:**
+
+```python
+# Define a query
+cube.define_query(
+    query_name="sales_analysis",
+    dimensions=set(['region', 'category']),
+    metrics=['Revenue', 'Units']
+)
+
+# Execute the query
+result = cube.query("sales_analysis")
+
+# Apply a filter and run the same query again
+cube.filter({'region': ['North']})
+filtered_result = cube.query("sales_analysis")
+```
+
+## Get Dimensions
+
+```python
+get_dimensions() -> List[str]
+```
+
+Returns a list of all available dimension columns across all tables.
+
+**Example:**
+
+```python
+# Get all available dimensions
+all_dimensions = cube.get_dimensions()
+print(f"Available dimensions: {all_dimensions}")
+```
+
+## Dimensions
+
+```python
+dimensions(
+  columns_to_fetch: List[str],
+  retrieve_keys: bool = False,
+  context_state_name: str = 'Default',
+  query_filters: Optional[Dict[str, Any]] = None
+) -> pd.DataFrame
+```
+
+Fetch unique values for specified dimension columns.
+
+**Parameters:**
+
+- `columns_to_fetch`: List of dimension column names to retrieve
+- `retrieve_keys`: Whether to include link table keys in the result
+- `context_state_name`: Which context state to use
+- `query_filters`: Additional filters to apply just for this query
+
+**Returns:**
+
+- Pandas DataFrame with unique combinations of the requested dimensions
+
+**Example:**
+
+```python
+# Get unique region/category combinations
+result = cube.dimensions(['region', 'category'])
+
+# Get unique region/category combinations from a specific context state
+result = cube.dimensions(['region', 'category'], context_state_name='State1')
+```
