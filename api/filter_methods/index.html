@@ -697,15 +697,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#get-filtered-dimensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Get Filtered Dimensions
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -930,29 +921,6 @@
 <span class="n">current_filters</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_filters</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current filters: </span><span class="si">{</span><span class="n">current_filters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="get-filtered-dimensions">Get Filtered Dimensions</h2>
-<div class="highlight"><pre><span></span><code><span class="n">get_filtered_dimensions</span><span class="p">(</span>
-  <span class="n">off_set</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-</code></pre></div>
-<p>Get list of currently filtered dimension names.</p>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><code>off_set</code>: How many steps back in filter history to look</li>
-<li><code>context_state_name</code>: Which context state to check</li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul>
-<li>List of dimension names that are currently filtered</li>
-</ul>
-<p><strong>Example:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Get list of filtered dimensions</span>
-<span class="n">filtered_dims</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_filtered_dimensions</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Currently filtered dimensions: </span><span class="si">{</span><span class="n">filtered_dims</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Notes:</strong>
-- The special <code>Unfiltered</code> state is reserved and cannot be modified.</p>
 
 
 
