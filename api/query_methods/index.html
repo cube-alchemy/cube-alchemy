@@ -657,18 +657,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#get-dimensions" class="md-nav__link">
+  <a href="#dimensions-only" class="md-nav__link">
     <span class="md-ellipsis">
-      Get Dimensions
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dimensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dimensions
+      Dimensions Only
     </span>
   </a>
   
@@ -696,6 +687,29 @@
   
   <span class="md-ellipsis">
     Filter Methods
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get_analytics_components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Components
     
   </span>
   
@@ -853,16 +867,7 @@
 <span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;region&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;North&#39;</span><span class="p">]})</span>
 <span class="n">filtered_result</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;sales_analysis&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="get-dimensions">Get Dimensions</h2>
-<div class="highlight"><pre><span></span><code><span class="n">get_dimensions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-</code></pre></div>
-<p>Returns a list of all available dimension columns across all tables.</p>
-<p><strong>Example:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Get all available dimensions</span>
-<span class="n">all_dimensions</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_dimensions</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available dimensions: </span><span class="si">{</span><span class="n">all_dimensions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</code></pre></div>
-<h2 id="dimensions">Dimensions</h2>
+<h2 id="dimensions-only">Dimensions Only</h2>
 <div class="highlight"><pre><span></span><code><span class="n">dimensions</span><span class="p">(</span>
   <span class="n">columns_to_fetch</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
   <span class="n">retrieve_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

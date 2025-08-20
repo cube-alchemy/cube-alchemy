@@ -688,6 +688,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get_analytics_components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Components
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -780,40 +803,82 @@
 <h1 id="hypercube-api">Hypercube API</h1>
 <p>The Hypercube class is the central component of Cube Alchemy, providing methods for creating, querying, and analyzing multidimensional data.</p>
 <h2 id="initialization">Initialization</h2>
-<div class="highlight"><pre><span></span><code><span class="n">Hypercube</span><span class="p">(</span>
-  <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+<p>The Hypercube can be initialized in two ways:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Option 1: Initialize with data</span>
+<span class="n">Hypercube</span><span class="p">(</span>
+  <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
   <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span>
+
+<span class="c1"># Option 2: Initialize empty and load data later</span>
+<span class="n">Hypercube</span><span class="p">()</span>
+<span class="n">load_data</span><span class="p">(</span>
+  <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+  <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+  <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+  <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+  <span class="n">reset_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span>
 </code></pre></div>
+<p>The <code>load_data()</code> method can also be used to reload or update data in an existing hypercube.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>tables</code>: Dictionary mapping table names to pandas DataFrames</li>
 <li><code>apply_composite</code>: Whether to automatically create composite keys for multi-column relationships</li>
 <li><code>validate</code>: Whether to validate schema and build trajectory cache during initialization</li>
 <li><code>to_be_stored</code>: Set to True if the hypercube will be serialized/stored (skips Default context state creation)</li>
+<li><code>reset_all</code> <em>(only load_data method)</em>: Whether to reset metrics and queries definitions, as well as registered functions when reloading data</li>
 </ul>
-<p><strong>Example:</strong></p>
+<p><strong>Examples:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cube_alchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hypercube</span>
 
-<span class="c1"># Create the hypercube with tables</span>
-<span class="n">cube</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">({</span>
+<span class="c1"># Option 1: Initialize with data</span>
+<span class="n">cube1</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">({</span>
     <span class="s1">&#39;Product&#39;</span><span class="p">:</span> <span class="n">products_df</span><span class="p">,</span>
     <span class="s1">&#39;Customer&#39;</span><span class="p">:</span> <span class="n">customers_df</span><span class="p">,</span>
     <span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">sales_df</span>
 <span class="p">})</span>
+
+<span class="c1"># Option 2: Initialize empty first, then load data</span>
+<span class="n">cube2</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">()</span>
+<span class="n">cube2</span><span class="o">.</span><span class="n">load_data</span><span class="p">({</span>
+    <span class="s1">&#39;Product&#39;</span><span class="p">:</span> <span class="n">products_df</span><span class="p">,</span>
+    <span class="s1">&#39;Customer&#39;</span><span class="p">:</span> <span class="n">customers_df</span><span class="p">,</span>
+    <span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">sales_df</span>
+<span class="p">})</span>
+
+<span class="c1"># Reload data in an existing hypercube (e.g., when data is updated)</span>
+<span class="n">cube1</span><span class="o">.</span><span class="n">load_data</span><span class="p">({</span>
+    <span class="s1">&#39;Product&#39;</span><span class="p">:</span> <span class="n">updated_products_df</span><span class="p">,</span>
+    <span class="s1">&#39;Customer&#39;</span><span class="p">:</span> <span class="n">updated_customers_df</span><span class="p">,</span>
+    <span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">updated_sales_df</span>
+<span class="p">})</span>
+
+<span class="c1"># Reset metrics and queries when loading new data schema</span>
+<span class="n">cube2</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">reset_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="core-methods">Core Methods</h2>
 <p><strong>visualize_graph</strong></p>
-<div class="highlight"><pre><span></span><code><span class="n">visualize_graph</span><span class="p">(</span><span class="n">layout_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="highlight"><pre><span></span><code><span class="n">visualize_graph</span><span class="p">(</span><span class="n">layout_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">full_column_names</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 <p>Visualize the relationships between tables as a network graph.</p>
 <p><em>Parameters:</em></p>
 <ul>
 <li>
-<p><code>layout_type</code>: Algorithm for graph layout ('spring', 'circular', etc.)</p>
+<p><code>layout_type</code>: Algorithm for graph layout. Options include:</p>
+<ul>
+<li><code>'spring'</code>(default)</li>
+<li><code>'circular'</code></li>
+<li><code>'shell'</code></li>
+<li><code>'random'</code></li>
+<li><code>'kamada_kawai'</code></li>
+<li><code>'spectral'</code></li>
+<li><code>'planar'</code></li>
+<li><code>'spiral'</code></li>
+</ul>
 </li>
 <li>
 <p><code>w</code>: Width of the plot</p>
@@ -821,11 +886,18 @@
 <li>
 <p><code>h</code>: Height of the plot</p>
 </li>
+<li>
+<p><code>full_column_names</code>: Whether to show renamed columns with table reference (e.g., <code>column &lt;table_name&gt;</code>) or just the original column names</p>
+</li>
 </ul>
 <p><em>Example:</em></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Visualize the data model relationships</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<p><div class="highlight"><pre><span></span><code><span class="c1"># Visualize the data model relationships</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">()</span>
+
+<span class="c1"># Hide renamed column format for cleaner display</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
+<em>Note: If the displayed graph doesn't look so good try a couple of times or adjust the size.</em></p>
 <p><strong>set_context_state</strong></p>
 <div class="highlight"><pre><span></span><code><span class="n">set_context_state</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
