@@ -5,9 +5,7 @@
 ```python
 filter(
   criteria: Dict[str, List[Any]], 
-  context_state_name: str = 'Default',
-  is_reset: bool = False,
-  save_state: bool = True
+  context_state_name: str = 'Default'
 ) -> bool
 ```
 
@@ -17,8 +15,6 @@ Apply filters to focus analysis on specific data slices.
 
 - `criteria`: Dictionary mapping dimension names to lists of values to keep
 - `context_state_name`: Which context state to filter
-- `is_reset`: Whether to replace existing filters (True) or add to them (False)
-- `save_state`: Whether to save the filter state for undo/redo operations
 
 **Returns:**
 
@@ -33,9 +29,6 @@ cube.filter({'region': ['North', 'South']})
 # Filter to specific products within those regions
 cube.filter({'product': ['Electronics', 'Home']})
 
-# Replace all filters with a new one
-cube.filter({'customer_segment': ['Enterprise']}, is_reset=True)
-
 # Filter in a different context state
 cube.filter({'region': ['West']}, context_state_name='State1')
 ```
@@ -45,8 +38,7 @@ cube.filter({'region': ['West']}, context_state_name='State1')
 ```python
 remove_filter(
   dimensions: List[str],
-  context_state_name: str = 'Default',
-  is_reset: bool = False
+  context_state_name: str = 'Default'
 ) -> bool
 ```
 
@@ -56,7 +48,6 @@ Remove filters from specified dimensions.
 
 - `dimensions`: List of dimension names to remove filters from
 - `context_state_name`: Which context state to modify
-- `is_reset`: Whether to reset the filter pointer for undo/redo operations
 
 **Returns:**
 

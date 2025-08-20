@@ -58,4 +58,4 @@ In a more realistic workflow, when suporting multiple users/sessions with the sa
 
 One way of dealing with this is by storing the already initialized hypercube (eg. using pickle) and then retrieving it later on when a user needs it. In this case it is better if you do not store the `Default` on disk and instead you set it once the hypercube is loaded. 
 
-Make sure if this is the case that you perform *cube.set_context_state('Default') *right after loading it, so the default state will be present and work.
+Make sure if this is the case that you perform *cube.set_context_state('Default') *right after loading it, so the default state will be present and the hypercube will work properly.

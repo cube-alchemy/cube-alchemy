@@ -1,15 +1,6 @@
 # Hypercube Components
 
-The Hypercube provides several methods to access its core analytical components. These methods let you see what's available and how everything is defined in your hypercube.
-
-These methods are particularly useful for:
-
-- Understanding the analytical capabilities of a hypercube
-- Programmatically accessing and using the defined business logic
-- Building dynamic UIs where users can select from available metrics and queries
-- Documentation and metadata exploration
-- Integrating with other systems that need to understand the data model
-
+These methods let you see what's available and how everything is defined in your hypercube.
 
 ## Get Dimensions
 
