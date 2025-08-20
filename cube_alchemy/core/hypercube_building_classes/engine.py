@@ -233,20 +233,26 @@ class Engine:
     def visualize_graph(
         self,
         layout_type: str = 'spring',
-        w: int = 12,
-        h: int = 8
+        w: int = 20,
+        h: int = 14,
+        full_column_names: bool = True 
     ) -> None:
         graph = nx.DiGraph()
         node_labels = {}
         for table_name, df in self.tables.items():
-            columns = [re.sub('_composite_key_', '_c_', col) for col in df.columns if not col.startswith('_key_') and not col.startswith('_index_')]
-            columns = [re.sub(r' <.*>', '', col) for col in columns]
-            columns_str = "\n".join(columns)
-            
-            if table_name not in self.link_tables:
-                label = f"{table_name}\n{'-' * len(table_name)}\n{columns_str}"
-            else:
+            # Use all columns but the internal use ones
+            columns = [col for col in df.columns if not col.startswith('_key_') and not col.startswith('_index_') and not col.startswith('_composite_key_')]
+            if table_name.startswith('_composite_') or not full_column_names:
+                columns = [re.sub(r' <.*>', '', col) for col in columns]         
+            columns_str = "\n".join(columns)  
+            if table_name in self.link_tables:
                 label = table_name.replace('_link_table_', '').replace('_composite_key_', '_c_')
+            else:
+                if table_name.startswith('_composite_'):
+                    _len_ct = len('Composite Table')
+                    label = f"Composite Table\n{'-' * _len_ct}\n{columns_str}"
+                else:
+                    label = f"{table_name}\n{'-' * len(table_name)}\n{columns_str}"
             graph.add_node(table_name)
             node_labels[table_name] = label
         for (table1, table2), (key1, key2) in self.relationships.items():
@@ -277,6 +283,40 @@ class Engine:
         plt.title("Tables and Relationships")
         plt.show()
 
+    def get_dimensions(self) -> List[str]:
+        dimensions = set()
+        for table_name, table in self.tables.items():
+            dimensions.update(
+                col for col in table.columns 
+                if not (
+                    col.startswith('_index_') or 
+                    col.startswith('_key_') or 
+                    col.startswith('_composite_key_') or
+                    #re.search(r'<_composite_', col)
+                    re.search(r'<.*>', col)
+                )
+            )
+        return sorted(list(dimensions))
+
+    def get_queries(self) -> Dict[str, Any]:
+        # for each metric I want to bring the metric.name
+        queries_formatted = {}
+        for query in self.queries:
+            query_metrics = []
+            for metric in self.queries[query]['metrics']:
+                query_metrics.append(metric.name)
+            queries_formatted[query] = {
+                "dimensions": self.queries[query]['dimensions'],
+                "metrics": query_metrics,
+                "drop_null_dimensions": self.queries[query]['drop_null_dimensions'],
+                "drop_null_metric_results": self.queries[query]['drop_null_metric_results']
+            }
+        return queries_formatted
     
+    def get_metrics(self) -> Dict[str, Any]:
+        metrics_formatted = {}
+        for metric_name, metric in self.metrics.items():
+            metrics_formatted[metric_name] = metric.get_metric_details()
+        return metrics_formatted 
 
         

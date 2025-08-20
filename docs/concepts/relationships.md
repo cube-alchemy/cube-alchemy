@@ -40,8 +40,14 @@ Cube Alchemy takes a flexible approach:
 
 ## Visualization
 
-When setting up your hypercube, inspect the relationship graph to confirm how tables connect and where composite keys have been introduced. 
+When setting up your hypercube, it's a good idea to inspect the relationship graph to confirm how tables connect and where composite keys have been introduced. 
 ```python
+# Default view shows renamed columns (column_name <table_name>)
 cube.visualize_graph()
+
+# For cleaner display without table name suffixes
+cube.visualize_graph(full_column_names=False)
 ```
-This visualization helps you understand the automatic transformations that Cube Alchemy has applied to optimize your data model for analysis.
+This visualization helps you understand the automatic transformations that Cube Alchemy has applied.
+
+*Note: If the displayed graph doesn't look so good try a couple of times or adjust the size.*

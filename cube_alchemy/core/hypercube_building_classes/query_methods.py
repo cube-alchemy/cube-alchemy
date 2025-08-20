@@ -16,12 +16,6 @@ def brackets_to_backticks(expression: str) -> str:
     return re.sub(r'\[(.*?)\]', lambda m: f"`{m.group(1)}`", expression)
 
 class QueryMethods:
-    
-    def get_dimensions(self) -> List[str]:
-        dimensions = set()
-        for table_name, table in self.tables.items():
-            dimensions.update(col for col in table.columns if not (col.startswith('_index_') or col.startswith('_key_')))
-        return sorted(list(dimensions))
 
     def dimensions(
         self,

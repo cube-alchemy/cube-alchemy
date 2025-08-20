@@ -129,34 +129,3 @@ Get currently active filters.
 current_filters = cube.get_filters()
 print(f"Current filters: {current_filters}")
 ```
-
-## Get Filtered Dimensions
-
-```python
-get_filtered_dimensions(
-  off_set: int = 0,
-  context_state_name: str = 'Default'
-) -> List[str]
-```
-
-Get list of currently filtered dimension names.
-
-**Parameters:**
-
-- `off_set`: How many steps back in filter history to look
-- `context_state_name`: Which context state to check
-
-**Returns:**
-
-- List of dimension names that are currently filtered
-
-**Example:**
-
-```python
-# Get list of filtered dimensions
-filtered_dims = cube.get_filtered_dimensions()
-print(f"Currently filtered dimensions: {filtered_dims}")
-```
-
-**Notes:**
-- The special `Unfiltered` state is reserved and cannot be modified.

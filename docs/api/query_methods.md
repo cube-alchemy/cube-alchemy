@@ -71,23 +71,7 @@ cube.filter({'region': ['North']})
 filtered_result = cube.query("sales_analysis")
 ```
 
-## Get Dimensions
-
-```python
-get_dimensions() -> List[str]
-```
-
-Returns a list of all available dimension columns across all tables.
-
-**Example:**
-
-```python
-# Get all available dimensions
-all_dimensions = cube.get_dimensions()
-print(f"Available dimensions: {all_dimensions}")
-```
-
-## Dimensions
+## Dimensions Only
 
 ```python
 dimensions(
