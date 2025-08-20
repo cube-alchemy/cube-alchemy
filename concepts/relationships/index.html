@@ -820,29 +820,14 @@
 
 <h1 id="relationships-in-cube-alchemy">Relationships in Cube Alchemy</h1>
 <p>Cube Alchemy uses implicit relationships, meaning DataFrames automatically connect to each other through shared column names. This creates a unified data model without requiring you to write explicit joins.</p>
-<p>These relationships enable you to:</p>
-<ul>
-<li>
-<p>Traverse the entire data model seamlessly</p>
-</li>
-<li>
-<p>Query across multiple tables without complex join logic</p>
-</li>
-<li>
-<p>Select dimensions from any table in your schema</p>
-</li>
-<li>
-<p>Create metrics using columns from any connected table</p>
-</li>
-</ul>
-<p>Cube Alchemy handles all the necessary data operations under the hood, so you can use more of your time to focus on analysis.</p>
+<p>These relationships enable you to work with your (newly) connected data declaratively. Cube Alchemy handles all the necessary data operations under the hood, so you can use more of your time to focus on analysis.</p>
 <h2 id="single-path">Single Path</h2>
 <p>Cube Alchemy ensures there is exactly one bidirectional path between any two tables in your data model. This creates a clear, unambiguous way to traverse from one table to another.</p>
 <h2 id="composite-key">Composite Key</h2>
-<p>When tables share multiple columns, Cube Alchemy automatically creates composite keys to properly connect them:</p>
+<p>When tables share multiple columns, Cube Alchemy automatically creates bridges to connect them:</p>
 <ol>
-<li><strong>Detection</strong>: The system identifies sets of shared columns between tables</li>
-<li><strong>Composite Key Creation</strong>: A single, efficient key is generated from these shared columns</li>
+<li><strong>Detection</strong>: It identifies sets of shared columns between tables</li>
+<li><strong>Composite Key Creation</strong>: A single key is generated from these shared columns, autonumbered to improve performance on the upcoming operations.</li>
 <li><strong>Composite Tables</strong>: New tables are created to store only the shared columns along with the generated keys</li>
 <li><strong>Column Renaming</strong>: The original shared columns in source tables are renamed with a format of <code>column_name &lt;table_name&gt;</code></li>
 <li><strong>Key Addition</strong>: The newly created composite keys are added to the original tables</li>
@@ -864,7 +849,7 @@
 <span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">()</span>
 
 <span class="c1"># For cleaner display without table name suffixes</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 </code></pre></div>
 This visualization helps you understand the automatic transformations that Cube Alchemy has applied.</p>
 <p><em>Note: If the displayed graph doesn't look so good try a couple of times or adjust the size.</em></p>

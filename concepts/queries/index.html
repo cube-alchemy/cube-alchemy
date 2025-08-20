@@ -843,7 +843,7 @@
 
 
 <h1 id="understanding-queries">Understanding Queries</h1>
-<p>Queries in Cube Alchemy bring together metrics and dimensions to answer specific business questions.</p>
+<p>Queries in Cube Alchemy bring together metrics and dimensions to answer specific questions.</p>
 <p>A query consists of three key components:</p>
 <ul>
 <li>
@@ -863,7 +863,7 @@
 <span class="c1"># Define a query by region and product category</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;regional_sales&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">},</span>  <span class="c1"># Using direct set literal</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Order Count&#39;</span><span class="p">]</span>
 <span class="p">)</span>
 
@@ -874,14 +874,14 @@
 <p>When you run a query, Cube Alchemy efficiently processes your data in four steps:</p>
 <ol>
 <li><strong>Group metrics by context</strong>: Metrics sharing the same context state and custom metric filters are calculated together</li>
-<li><strong>Fetch required data</strong>: All necessary dimension and metric columns are retrieved automatically, traversing table relationships and getting the required indexes</li>
+<li><strong>Fetch required data</strong>: All necessary dimension and metric columns are retrieved automatically, traversing table relationships and getting the required metric columns' indexes</li>
 <li><strong>Apply aggregations</strong>: Each metric's aggregation is applied to the corresponding dimensions</li>
 <li><strong>Merge results</strong>: The individual metric calculations are combined based on your specified dimensions</li>
 </ol>
 <h2 id="query-types">Query Types</h2>
 <p>Queries must contain either dimensions, metrics, or both (a query cannot lack both).</p>
 <h3 id="dimension-only-queries">Dimension-Only Queries</h3>
-<p>When you only need to see what unique dimension combinations exist in your data:</p>
+<p>When you only need to see what unique dimension combinations:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define a query with only dimensions</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;dimension_combinations&quot;</span><span class="p">,</span>
@@ -892,7 +892,7 @@
 <span class="n">combinations</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;dimension_combinations&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="metric-only-queries">Metric-Only Queries</h3>
-<p>When you need to calculate global aggregates across your entire dataset:</p>
+<p>When you need to calculate global aggregates:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Total Revenue&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Total Orders&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[order_id]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>

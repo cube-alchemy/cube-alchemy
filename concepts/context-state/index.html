@@ -798,7 +798,7 @@
 <p><strong>Note</strong></p>
 <p>In a more realistic workflow, when suporting multiple users/sessions with the same data model, you might not want to initialize and build the relationships (deploy the keys) accross the entire DAG in every session.</p>
 <p>One way of dealing with this is by storing the already initialized hypercube (eg. using pickle) and then retrieving it later on when a user needs it. In this case it is better if you do not store the <code>Default</code> on disk and instead you set it once the hypercube is loaded. </p>
-<p>Make sure if this is the case that you perform <em>cube.set_context_state('Default') </em>right after loading it, so the default state will be present and work.</p>
+<p>Make sure if this is the case that you perform <em>cube.set_context_state('Default') </em>right after loading it, so the default state will be present and the hypercube will work properly.</p>
 
 
 

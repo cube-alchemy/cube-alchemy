@@ -972,8 +972,11 @@
 </code></pre></div>
 <h3 id="unfiltered-and-default-context-states">'Unfiltered' and 'Default' Context States</h3>
 <p>Cube Alchemy maintains two special context states called 'Unfiltered' and 'Default'.</p>
-<p>'Unfiltered' always contains your full dataset in the context and cannot be updated. </p>
-<p>'Default' is used as default (as you might have guessed). And 'Unfiltered' can also be used on the metric context state: </p>
+<pre><code>- 'Unfiltered' always contains your full dataset in the context and cannot be updated.
+
+- 'Default' is used as default (as you might have guessed).
+</code></pre>
+<p>And 'Unfiltered' can also be used on the metric context state: </p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define standard revenue metric in the default (filtered) context</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Filtered Revenue&#39;</span><span class="p">,</span>
@@ -1004,7 +1007,6 @@
 <span class="c1"># the total revenue across all regions for each product category</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>For complete details on all filtering capabilities, see the <a href="../../api/filter_methods/">Filter Methods</a> API documentation.</p>
 
 
 

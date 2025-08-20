@@ -822,7 +822,7 @@
 <p>A metric is a calculated measure that aggregates data in some meaningful way. Think revenue, profit margin, average order size, customer count—basically any aggregated value that helps you analyze your data.</p>
 <p>In Cube Alchemy, metrics are defined once and stored within the cube object for later use:</p>
 <ol>
-<li>You <strong>define a metric</strong> using <code>cube.define_metric()</code> providing a name, expression, and aggregation method</li>
+<li>You <strong>define a metric</strong> using <code>cube.define_metric()</code> providing at least a name, expression, and aggregation method</li>
 <li>The metric is <strong>stored in the cube object</strong></li>
 <li>Later, you <strong>reference metrics by name</strong> when defining queries</li>
 </ol>
@@ -830,7 +830,7 @@
 <p>Every metric needs three essential components:</p>
 <ol>
 <li><strong>Name</strong>: A clear, descriptive label for the metric (e.g., 'Revenue', 'Customer Count')</li>
-<li><strong>Expression</strong>: The calculation formula, using column references inside square brackets (e.g., <code>[qty] * [price]</code>)</li>
+<li><strong>Expression</strong>: The calculation formula, using dimension references inside square brackets (e.g., <code>[qty] * [price]</code>)</li>
 <li><strong>Aggregation</strong>: How to combine values—standard methods like <code>sum</code>, <code>mean</code>, <code>count</code>, or custom functions</li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="c1"># Step 1: Define your metrics</span>
@@ -855,7 +855,7 @@
 <span class="c1"># Step 2: Define a query that uses these metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;sales_performance&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="nb">set</span><span class="p">([</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">]),</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Average Order Value&#39;</span><span class="p">,</span> <span class="s1">&#39;Number of Orders&#39;</span><span class="p">]</span>
 <span class="p">)</span>
 
@@ -871,12 +871,14 @@
 </li>
 <li>
 <p><strong>Aggregation Methods</strong>: The <code>aggregation</code> parameter accepts:</p>
-</li>
+<ul>
 <li>
 <p>Pandas group by strings: <code>'sum'</code>, <code>'mean'</code>, <code>'count'</code>, <code>'min'</code>, <code>'max'</code>, etc.</p>
 </li>
 <li>
 <p>Custom callable functions: <code>lambda x: x.quantile(0.95)</code> or any function that accepts a pandas Series</p>
+</li>
+</ul>
 </li>
 </ul>
 <h2 id="advanced-features">Advanced Features</h2>
@@ -887,7 +889,7 @@
 <li><strong>Row conditions</strong>: Pre-filter rows before calculating the metric</li>
 <li><strong>Custom functions</strong>: Use your own Python functions for complex logic</li>
 </ul>
-<p>Each of these options allows you to create highly specialized metrics that can answer specific business questions within the same analytical framework.</p>
+<p>Each of these options allows you to create highly specialized metrics that can answer specific more sofisticated questions.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Only count high-value orders</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;High Value Orders&#39;</span><span class="p">,</span>

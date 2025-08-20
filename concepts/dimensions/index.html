@@ -754,7 +754,6 @@
 <li><strong>Multi-hop</strong>: You can combine dimensions that are several "hops" apart in your data model—like querying by both customer region and product category even if they're in completely separate tables</li>
 </ul>
 <p><strong>Getting dimension values:</strong></p>
-<p>You can fetch unique values for any dimension using <code>cube.query(['dimension_name'])</code>. This is useful for building filters, dropdowns in apps, or just exploring what values are available:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get combinations of region and category</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">dimensions</span><span class="p">([</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">])</span>
 
