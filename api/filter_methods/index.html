@@ -718,7 +718,7 @@
   
   
   <span class="md-ellipsis">
-    Analytics Components
+    Get Components
     
   </span>
   
@@ -822,9 +822,7 @@
 <h2 id="apply-filter">Apply Filter</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">filter</span><span class="p">(</span>
   <span class="n">criteria</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> 
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span><span class="p">,</span>
-  <span class="n">is_reset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-  <span class="n">save_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 <p>Apply filters to focus analysis on specific data slices.</p>
@@ -832,8 +830,6 @@
 <ul>
 <li><code>criteria</code>: Dictionary mapping dimension names to lists of values to keep</li>
 <li><code>context_state_name</code>: Which context state to filter</li>
-<li><code>is_reset</code>: Whether to replace existing filters (True) or add to them (False)</li>
-<li><code>save_state</code>: Whether to save the filter state for undo/redo operations</li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul>
@@ -846,17 +842,13 @@
 <span class="c1"># Filter to specific products within those regions</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;product&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Electronics&#39;</span><span class="p">,</span> <span class="s1">&#39;Home&#39;</span><span class="p">]})</span>
 
-<span class="c1"># Replace all filters with a new one</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;customer_segment&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Enterprise&#39;</span><span class="p">]},</span> <span class="n">is_reset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
 <span class="c1"># Filter in a different context state</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;region&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;West&#39;</span><span class="p">]},</span> <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;State1&#39;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="remove-filter">Remove Filter</h2>
 <div class="highlight"><pre><span></span><code><span class="n">remove_filter</span><span class="p">(</span>
   <span class="n">dimensions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span><span class="p">,</span>
-  <span class="n">is_reset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 <p>Remove filters from specified dimensions.</p>
@@ -864,7 +856,6 @@
 <ul>
 <li><code>dimensions</code>: List of dimension names to remove filters from</li>
 <li><code>context_state_name</code>: Which context state to modify</li>
-<li><code>is_reset</code>: Whether to reset the filter pointer for undo/redo operations</li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul>
