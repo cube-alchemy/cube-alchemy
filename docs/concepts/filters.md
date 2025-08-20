@@ -120,9 +120,11 @@ cube.define_metric(
 
 Cube Alchemy maintains two special context states called 'Unfiltered' and 'Default'.
 
-'Unfiltered' always contains your full dataset in the context and cannot be updated. 
+    - 'Unfiltered' always contains your full dataset in the context and cannot be updated. 
 
-'Default' is used as default (as you might have guessed). And 'Unfiltered' can also be used on the metric context state: 
+    - 'Default' is used as default (as you might have guessed). 
+
+And 'Unfiltered' can also be used on the metric context state: 
 
 ```python
 # Define standard revenue metric in the default (filtered) context
@@ -155,5 +157,3 @@ cube.define_query(
 # the total revenue across all regions for each product category
 result = cube.query("revenue_comparison")
 ```
-
-For complete details on all filtering capabilities, see the [Filter Methods](../api/filter_methods.md) API documentation.

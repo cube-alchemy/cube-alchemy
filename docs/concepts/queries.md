@@ -1,6 +1,6 @@
 # Understanding Queries
 
-Queries in Cube Alchemy bring together metrics and dimensions to answer specific business questions.
+Queries in Cube Alchemy bring together metrics and dimensions to answer specific questions.
 
 A query consists of three key components:
 
@@ -18,7 +18,7 @@ cube.define_metric(name='Order Count', expression='[order_id]', aggregation='cou
 # Define a query by region and product category
 cube.define_query(
     query_name="regional_sales",
-    dimensions={'region', 'category'},  # Using direct set literal
+    dimensions={'region', 'category'},
     metrics=['Revenue', 'Order Count']
 )
 
@@ -31,7 +31,7 @@ result = cube.query("regional_sales")
 When you run a query, Cube Alchemy efficiently processes your data in four steps:
 
 1. **Group metrics by context**: Metrics sharing the same context state and custom metric filters are calculated together
-2. **Fetch required data**: All necessary dimension and metric columns are retrieved automatically, traversing table relationships and getting the required indexes
+2. **Fetch required data**: All necessary dimension and metric columns are retrieved automatically, traversing table relationships and getting the required metric columns' indexes
 3. **Apply aggregations**: Each metric's aggregation is applied to the corresponding dimensions
 4. **Merge results**: The individual metric calculations are combined based on your specified dimensions
 
@@ -42,7 +42,7 @@ Queries must contain either dimensions, metrics, or both (a query cannot lack bo
 
 ### Dimension-Only Queries
 
-When you only need to see what unique dimension combinations exist in your data:
+When you only need to see what unique dimension combinations:
 
 ```python
 # Define a query with only dimensions
@@ -57,7 +57,7 @@ combinations = cube.query("dimension_combinations")
 
 ### Metric-Only Queries
 
-When you need to calculate global aggregates across your entire dataset:
+When you need to calculate global aggregates:
 
 ```python
 # Define metrics

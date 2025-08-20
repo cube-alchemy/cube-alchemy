@@ -11,17 +11,46 @@ from .hypercube_building_classes.filter_methods import FilterMethods
 # hypercube supporting classes
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
-from .metric import Metric
 
 class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
-    def __init__(
+    def __init__(        
         self,
-        tables: Dict[str, pd.DataFrame],
+        tables: Optional[Dict[str, pd.DataFrame]] = None,
         apply_composite = True,
         validate: bool = True,
         to_be_stored: bool = False
     ) -> None:
+        self.metrics = {}
+        self.queries = {}
+        self.registered_functions = {'pd': pd,'np': np}
+        if tables is not None:
+            self.load_data(
+                tables, 
+                apply_composite=apply_composite, 
+                validate=validate, 
+                to_be_stored=to_be_stored,
+                reset_all=True
+            )
+
+    def load_data(        
+        self,
+        tables: Dict[str, pd.DataFrame],
+        apply_composite = True,
+        validate: bool = True,
+        to_be_stored: bool = False,
+        reset_all: bool = False
+    ) -> None:
+        if reset_all:
+            self.metrics = {}
+            self.queries = {}
+            self.registered_functions = {'pd': pd,'np': np}
         try:
+            # clean data if existing
+            self.tables: Dict[str, pd.DataFrame] = {}
+            self.composite_tables: Optional[Dict[str, pd.DataFrame]] = {}
+            self.composite_keys: Optional[Dict[str, Any]] = {}
+            self.reduced_input_tables = {}
+
             if validate:
 
                 print("Initializing DataModel with provided tables...")
@@ -30,24 +59,23 @@ class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
 
                 print("Hypercube schema validated successfully. Loading full data..")
             
-                self.reduced_input_tables = SchemaValidator._create_sample_tables(tables)
+            
+            self.reduced_input_tables = SchemaValidator._create_sample_tables(tables)
             
             # 2. Schema is valid, build the actual model with full data
             bridge_generator = None
             if apply_composite:
                 bridge_generator = CompositeBridgeGenerator(tables)
-                tables = bridge_generator.tables
-                composite_tables = bridge_generator.link_tables
-                composite_keys = bridge_generator.composite_keys
+                self.tables: Dict[str, pd.DataFrame] = bridge_generator.tables
+                self.composite_tables: Optional[Dict[str, pd.DataFrame]] = bridge_generator.composite_tables
+                self.composite_keys: Optional[Dict[str, Any]] = bridge_generator.composite_keys
             else:
-                composite_tables = {}
-                composite_keys = {}
-            
-            self.tables: Dict[str, pd.DataFrame] = tables
+                self.tables: Dict[str, pd.DataFrame] = tables
+                self.composite_tables: Optional[Dict[str, pd.DataFrame]] = {}
+                self.composite_keys: Optional[Dict[str, Any]] = {}
+
             self.relationships: Dict[Any, Any] = {}
             self.link_tables: Dict[str, pd.DataFrame] = {}
-            self.composite_tables: Optional[Dict[str, pd.DataFrame]] = composite_tables
-            self.composite_keys: Optional[Dict[str, Any]] = composite_keys
             self.link_table_keys: list = []
             self.column_to_table: Dict[str, str] = {}
 
@@ -90,17 +118,14 @@ class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
             
             self.applied_filters = {}   # List of applied filters
             self.filter_pointer = {}    # Pointer to the current filter state
-            self.registered_functions = {'pd': pd,'np': np}
-            self.metrics = {}
-            self.queries = {}
 
             if not to_be_stored: # If the model is intended to be stored in the disk initialize the context state "Default" after loading in memory
                 self.set_context_state('Default')
             
             if not bridge_generator.composite_keys and validate:
-                print("Hypercube initialized successfully")
+                print("Hypercube loaded successfully")
             elif bridge_generator.composite_keys and validate:
-                print("Hypercube initialized successfully with composite keys.")
+                print("Hypercube loaded successfully with composite keys.")
 
         except ValueError as e:
             # Re-raise ValueError exceptions to be caught by calling code

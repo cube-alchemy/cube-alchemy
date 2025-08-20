@@ -23,9 +23,7 @@ Reduce glue code and speed up your analysis so you can focus on insights.
 ## Installation
 Requires Python 3.8+.
 
-The simplest way to install it is with pip.
-
-[![PyPI version](https://badge.fury.io/py/cube-alchemy.svg)](https://pypi.org/project/cube-alchemy/)
+[![PyPI version](https://img.shields.io/pypi/v/cube-alchemy.svg)](https://pypi.org/project/cube-alchemy/)
 
 ```bash
 cd 'your_new_project_path'
@@ -109,15 +107,15 @@ cube = Hypercube({
     'Promos': promos,
 })
 
-# 3) Inspect your new hypercube model (shared columns are now the edges)
+# Inspect your new hypercube model (shared columns are now the edges)
 
-cube.visualize_graph()
+cube.visualize_graph(w=12, h=10, full_column_names=False)
 ```
 
 ![Hypercube Graph Visualization](images/hypercube_graph.png)
 
 ```python
-# 4) Define metrics
+# 3) Define metrics
 cube.define_metric(
     name='Revenue',
     expression='[qty] * [price]',
@@ -142,14 +140,14 @@ cube.define_metric(
     aggregation='count'
 )
 
-# 5) Define query/ies
+# 4) Define query/ies
 cube.define_query(
     query_name="sales_analysis",
     dimensions={'region', 'category', 'promo_type'},
     metrics=['Revenue', 'Units', 'Margin', 'Number of Sales']
 )
 
-# Execute the query
+# 5) Execute the query (or queries)
 cube.query("sales_analysis")
 ```
 
@@ -211,8 +209,10 @@ Created with 🧠 and ☕ by Juan C. Del Monte
   <a href="https://github.com/juandelmonte" target="_blank">
     <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
   </a>
-  <br>
-  <a href="https://www.cube-alchemy.com/" target="_blank">
-    <img src="https://img.shields.io/badge/Website-cube--alchemy.com-blue?style=for-the-badge&logo=globe&logoColor=white" alt="Website" />
+</div>
+<div align="right">
+  <br><br>
+    <a href="https://www.cube-alchemy.com/" target="_blank">
+    <img src="https://img.shields.io/badge/Website-cube--alchemy.com-white?style=for-the-badge&logo=globe&logoColor=black" alt="Website" />
   </a>
 </div>

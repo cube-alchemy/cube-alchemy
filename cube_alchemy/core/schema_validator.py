@@ -2,6 +2,7 @@
 from typing import Dict, Tuple, TYPE_CHECKING
 import pandas as pd
 import copy # I need a deep copy to ensure complete isolation of the sample tables from the original data
+import re
   
 
 class SchemaValidator:
@@ -33,6 +34,9 @@ class SchemaValidator:
             for column in table.columns:
                 if column.startswith('_key_') or column.startswith('_index_') or column.startswith('_composite_key_'):
                     raise ValueError(f"Column '{column}' in table '{table_name}' uses reserved prefix '_key_' or '_index_' or '_composite_key_'. These prefixes are reserved for internal use.")
+                # Check that column name do not use '<*>' syntax
+                if re.search(r'<.*>', column):
+                    raise ValueError(f"Column '{column}' in table '{table_name}' uses invalid brackets '<*>' syntax. These are reserved for internal use.")
 
         # Initialize hypercube with generated structures
         hypercube = Hypercube(reduced_tables_1, validate = False)

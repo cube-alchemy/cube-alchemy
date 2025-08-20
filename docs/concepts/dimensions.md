@@ -10,8 +10,6 @@ In Cube Alchemy, any column from any table in your hypercube can serve as a dime
 
 **Getting dimension values:**
 
-You can fetch unique values for any dimension using `cube.query(['dimension_name'])`. This is useful for building filters, dropdowns in apps, or just exploring what values are available:
-
 ```python
 # Get combinations of region and category
 cube.dimensions(['region', 'category'])

@@ -12,26 +12,25 @@ Cube Alchemy turns pandas DataFrames into a unified analytic model and semantic 
 
 - Maintain stateful context to compare scenarios
 
+## Semantic Layer
+
+Map raw tables to a consistent set of analysis components:
+
+- **Dimensions**: Entities in your domain (e.g., Customer, Region, Product; Device, Study, Site)
+
+- **Metrics**: Key measures (e.g., Revenue, Conversion Rate; Throughput, Accuracy, Deviation Closure Time)
+
+- **Queries**: Analyses (e.g., Performance by Group; Trends over Time)
 ## Why It Matters
 
 Ship insights faster and reduce maintenance.
 
 - **Speed**: Relationships are discovered automatically
 
-- **Simplicity**: Pure Python queries replace unnecessary ad‑hoc joins
+- **Simplicity**: Declarative queries simplify code and replace ad‑hoc joins
 
 - **Consistency**: Standardized metrics and filters yield reliable results
 
 - **Maintainability**: Centralized business logic in reusable components
 
 - **Integration**: Works great with Streamlit and other app frameworks
-
-## Semantic Layer
-
-Map raw tables to a consistent set of analysis concepts:
-
-- **Dimensions**: Entities in your domain (e.g., Customer, Region, Product; Device, Study, Site)
-
-- **Metrics**: Key measures (e.g., Revenue, Conversion Rate; Throughput, Accuracy)
-
-- **Queries**: Analyses (e.g., Performance by Group; Trends over Time)

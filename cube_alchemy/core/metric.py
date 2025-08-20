@@ -26,6 +26,18 @@ class Metric:
         self.metric_filters = metric_filters
         self.context_state_name = context_state_name
         self.fillna = fillna
+    
+    def get_metric_details(self):
+        #return a dictionary with metric details
+        return {
+            "expression": self.expression,
+            "row_condition_expression": self.row_condition_expression,
+            "aggregation": self.aggregation,
+            "columns": self.columns,
+            "metric_filters": self.metric_filters,
+            "context_state_name": self.context_state_name,
+            "fillna": self.fillna
+        }
 
 class MetricGroup: # group of metrics based on state and query filters
     def __init__(

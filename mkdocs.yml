@@ -40,8 +40,8 @@ nav:
   - Overview: overview.md
   - Installation: installation.md
   - Concepts:
-    - Workflow: concepts/workflow.md
     - Hypercube: concepts/hypercube.md
+    - Workflow: concepts/workflow.md
     - Relationships: concepts/relationships.md
     - Dimensions: concepts/dimensions.md
     - Metrics: concepts/metrics.md
@@ -53,6 +53,7 @@ nav:
     - Metric Methods: api/metric_methods.md
     - Query Methods: api/query_methods.md
     - Filter Methods: api/filter_methods.md
+    - Get Components: api/get_analytics_components.md
   - Examples: examples.md
   - Streamlit Integration: streamlit.md
   - Contributing: contributing.md

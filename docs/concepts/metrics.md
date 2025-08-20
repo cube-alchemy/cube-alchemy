@@ -4,7 +4,7 @@ A metric is a calculated measure that aggregates data in some meaningful way. Th
 
 In Cube Alchemy, metrics are defined once and stored within the cube object for later use:
 
-1. You **define a metric** using `cube.define_metric()` providing a name, expression, and aggregation method
+1. You **define a metric** using `cube.define_metric()` providing at least a name, expression, and aggregation method
 2. The metric is **stored in the cube object**
 3. Later, you **reference metrics by name** when defining queries
 
@@ -13,7 +13,7 @@ In Cube Alchemy, metrics are defined once and stored within the cube object for 
 Every metric needs three essential components:
 
 1. **Name**: A clear, descriptive label for the metric (e.g., 'Revenue', 'Customer Count')
-2. **Expression**: The calculation formula, using column references inside square brackets (e.g., `[qty] * [price]`)
+2. **Expression**: The calculation formula, using dimension references inside square brackets (e.g., `[qty] * [price]`)
 3. **Aggregation**: How to combine values—standard methods like `sum`, `mean`, `count`, or custom functions
 
 
@@ -34,13 +34,13 @@ cube.define_metric(
 cube.define_metric(
     name='Number of Orders',
     expression='[order_id]',
-    aggregation='count'
+    aggregation=lambda x: x.nunique()
 )
 
 # Step 2: Define a query that uses these metrics
 cube.define_query(
     query_name="sales_performance",
-    dimensions=set(['region', 'product_category']),
+    dimensions={'region', 'product_category'},
     metrics=['Revenue', 'Average Order Value', 'Number of Orders']
 )
 
@@ -56,9 +56,9 @@ result = cube.query("sales_performance")
 
 - **Aggregation Methods**: The `aggregation` parameter accepts:
 
-   - Pandas group by strings: `'sum'`, `'mean'`, `'count'`, `'min'`, `'max'`, etc.
+    - Pandas group by strings: `'sum'`, `'mean'`, `'count'`, `'min'`, `'max'`, etc.
 
-   - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
+    - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
 
 ## Advanced Features
 
@@ -69,7 +69,7 @@ For more sophisticated analysis, metrics support several powerful options:
 - **Row conditions**: Pre-filter rows before calculating the metric
 - **Custom functions**: Use your own Python functions for complex logic
 
-Each of these options allows you to create highly specialized metrics that can answer specific business questions within the same analytical framework.
+Each of these options allows you to create highly specialized metrics that can answer specific more sofisticated questions.
 
 ```python
 # Only count high-value orders
