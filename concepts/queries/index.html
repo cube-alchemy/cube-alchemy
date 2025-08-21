@@ -523,18 +523,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#working-with-filters" class="md-nav__link">
+  <a href="#computed-metrics-and-having" class="md-nav__link">
     <span class="md-ellipsis">
-      Working with Filters
+      Computed Metrics and HAVING
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#computed-metrics-and-having" class="md-nav__link">
+  <a href="#working-with-filters" class="md-nav__link">
     <span class="md-ellipsis">
-      Computed Metrics and HAVING
+      Working with Filters
     </span>
   </a>
   
@@ -931,29 +931,6 @@
     <span class="n">drop_null_metric_results</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 </code></pre></div>
-<h2 id="working-with-filters">Working with Filters</h2>
-<p>Queries automatically respect all active filters on your hypercube, allowing you to:</p>
-<ol>
-<li>Define a query once</li>
-<li>Apply different filters</li>
-<li>Execute the same query to see different filtered views of your data</li>
-</ol>
-<div class="highlight"><pre><span></span><code><span class="c1"># Define your query</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;product_sales&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">},</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Order Count&#39;</span><span class="p">]</span>
-<span class="p">)</span>
-
-<span class="c1"># Get unfiltered results</span>
-<span class="n">unfiltered_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;product_sales&quot;</span><span class="p">)</span>
-
-<span class="c1"># Apply filters</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;product_type&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Electronics&#39;</span><span class="p">,</span> <span class="s1">&#39;Home&#39;</span><span class="p">]})</span>
-
-<span class="c1"># Get filtered results using the same query</span>
-<span class="n">filtered_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;product_sales&quot;</span><span class="p">)</span>
-</code></pre></div>
 <h2 id="computed-metrics-and-having">Computed Metrics and HAVING</h2>
 <p><strong>Post-aggregation</strong></p>
 <p>Sometimes you want to compute a value after metrics are aggregated, or filter rows by a metric result like in SQL's HAVING clause. You can do both at the query level:</p>
@@ -983,6 +960,29 @@
 <p>Computed metrics run after aggregations and can reference any metric/dimension present in the result.</p>
 </li>
 </ul>
+<h2 id="working-with-filters">Working with Filters</h2>
+<p>Queries automatically respect all active filters on your hypercube, allowing you to:</p>
+<ol>
+<li>Define a query once</li>
+<li>Apply different filters</li>
+<li>Execute the same query to see different filtered views of your data</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define your query</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;product_sales&quot;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">},</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Order Count&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Get unfiltered results</span>
+<span class="n">unfiltered_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;product_sales&quot;</span><span class="p">)</span>
+
+<span class="c1"># Apply filters</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;product_type&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Electronics&#39;</span><span class="p">,</span> <span class="s1">&#39;Home&#39;</span><span class="p">]})</span>
+
+<span class="c1"># Get filtered results using the same query</span>
+<span class="n">filtered_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;product_sales&quot;</span><span class="p">)</span>
+</code></pre></div>
 
 
 
