@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../hypercube/">
+        <link rel="prev" href="../workflow/">
       
       
         <link rel="next" href="../dimensions/">
@@ -307,12 +307,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../workflow/" class="md-nav__link">
+      <a href="../hypercube/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Workflow
+    Hypercube
     
   </span>
   
@@ -330,12 +330,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../hypercube/" class="md-nav__link">
+      <a href="../workflow/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Hypercube
+    Workflow
     
   </span>
   
@@ -842,6 +842,22 @@
 <li>
 <p>You should understand your data's natural cardinality to avoid unexpected results in your aggregations (e.g., due to row duplication).</p>
 </li>
+</ul>
+<p><strong>Fact and Dimension Tables</strong></p>
+<p>As a data analyst you might be already familiar with dimensional modeling principles used in data warehousing and business intelligence. These typically involve:</p>
+<ul>
+<li>
+<p><strong>Fact tables</strong>: Contain quantitative data that represent events or transactions (sales, orders, shipments).</p>
+</li>
+<li>
+<p><strong>Dimension tables</strong>: Provide descriptive context through attributes that answer the "who, what, where, when, why, and how" questions about your data (customers, products, locations, time periods).</p>
+</li>
+</ul>
+<p>Please bear in mind that Cube Alchemy's approach is flexible regarding relationships between your data rather than enforcing a specific modeling paradigm:</p>
+<ul>
+<li>Cube Alchemy does not explicitly enforce Fact and Dimension table distinctions.</li>
+<li>Every single column provided in the DataFrames you use to define a Hypercube will be available as a dimension, and can also be used to create metrics and filters.</li>
+<li>The framework is design-agnostic. It's up to you as the analyst to define which tables serve as Facts or Dimensions in your specific context.</li>
 </ul>
 <h2 id="visualization">Visualization</h2>
 <p>When setting up your hypercube, it's a good idea to inspect the relationship graph to confirm how tables connect and where composite keys have been introduced. 
