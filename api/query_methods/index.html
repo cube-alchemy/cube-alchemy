@@ -816,7 +816,9 @@
     <span class="n">dimensions</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">drop_null_dimensions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">drop_null_metric_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">drop_null_metric_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">computed_metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">having</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Defines a named query with dimensions and metrics for later execution.</p>
@@ -827,6 +829,8 @@
 <li><code>metrics</code>: List of metric names (as defined with define_metric)</li>
 <li><code>drop_null_dimensions</code>: Whether to exclude rows where dimension values are missing</li>
 <li><code>drop_null_metric_results</code>: Whether to exclude rows where metric calculations result in null</li>
+<li><code>computed_metrics</code>: List of dicts with keys <code>name</code>, <code>expression</code>, and optional <code>fillna</code> to create post-aggregation calculated columns</li>
+<li><code>having</code>: SQL HAVING-like expression to filter rows based on aggregated results</li>
 </ul>
 <p><strong>Example:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define metrics</span>
@@ -843,9 +847,6 @@
     <span class="p">],</span>
     <span class="n">having</span><span class="o">=</span><span class="s1">&#39;[Avg Revenue per Unit] &gt; 10&#39;</span>
 <span class="p">)</span>
-<span class="n">Parameters</span><span class="p">:</span>
-<span class="o">-</span> <span class="err">`</span><span class="n">computed_metrics</span><span class="err">`</span><span class="p">:</span> <span class="n">List</span> <span class="n">of</span> <span class="n">dicts</span> <span class="k">with</span> <span class="n">keys</span> <span class="err">`</span><span class="n">name</span><span class="err">`</span><span class="p">,</span> <span class="err">`</span><span class="n">expression</span><span class="err">`</span><span class="p">,</span> <span class="ow">and</span> <span class="n">optional</span> <span class="err">`</span><span class="n">fillna</span><span class="err">`</span><span class="o">.</span> <span class="n">Expressions</span> <span class="n">use</span> <span class="p">[</span><span class="n">Column</span><span class="p">]</span> <span class="n">syntax</span> <span class="ow">and</span> <span class="n">can</span> <span class="n">reference</span> <span class="n">aggregated</span> <span class="n">metrics</span><span class="o">.</span>
-<span class="o">-</span> <span class="err">`</span><span class="n">having</span><span class="err">`</span><span class="p">:</span> <span class="n">String</span> <span class="n">expression</span> <span class="n">evaluated</span> <span class="n">on</span> <span class="n">the</span> <span class="n">aggregated</span> <span class="n">result</span> <span class="n">to</span> <span class="nb">filter</span> <span class="n">rows</span> <span class="p">(</span><span class="n">SQL</span> <span class="n">HAVING</span> <span class="n">equivalent</span><span class="p">)</span><span class="o">.</span> <span class="n">Use</span> <span class="p">[</span><span class="n">Column</span><span class="p">]</span> <span class="n">syntax</span><span class="p">;</span> <span class="n">registered</span> <span class="n">functions</span> <span class="n">are</span> <span class="n">available</span> <span class="n">via</span> <span class="nd">@name</span><span class="o">.</span>
 </code></pre></div>
 <h2 id="execute-query">Execute Query</h2>
 <div class="highlight"><pre><span></span><code><span class="n">query</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
@@ -877,7 +878,7 @@
 <h2 id="dimensions-only">Dimensions Only</h2>
 <div class="highlight"><pre><span></span><code><span class="n">dimensions</span><span class="p">(</span>
   <span class="n">columns_to_fetch</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-  <span class="n">retrieve_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+  <span class="n">retrieve_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="c1"># Internal use, these are autogenerated autonumbered keys each of shared column names have.</span>
   <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span><span class="p">,</span>
   <span class="n">query_filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
