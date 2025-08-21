@@ -531,6 +531,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#post-aggregation-computed-metrics-and-having" class="md-nav__link">
+    <span class="md-ellipsis">
+      Post-aggregation Computed Metrics and HAVING
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -911,6 +920,8 @@
 <ul>
 <li><code>drop_null_dimensions=True</code>: Remove rows with missing dimension values</li>
 <li><code>drop_null_metric_results=True</code>: Remove rows with null metric results</li>
+<li><code>computed_metrics=[...]</code>: Define post-aggregation columns derived from metric results (e.g., ratios and percentages)</li>
+<li><code>having="..."</code>: Apply a HAVING-like filter on the aggregated result using metric columns</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;clean_sales_data&quot;</span><span class="p">,</span>
@@ -921,6 +932,30 @@
 <span class="p">)</span>
 </code></pre></div>
 <h2 id="working-with-filters">Working with Filters</h2>
+<h2 id="post-aggregation-computed-metrics-and-having">Post-aggregation Computed Metrics and HAVING</h2>
+<p>Sometimes you want to compute a value after metrics are aggregated (e.g., Margin % = Margin / Cost * 100), or filter rows by a metric result like in SQL's HAVING clause. You can do both at the query level:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define base metrics</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cost&#39;</span><span class="p">,</span>    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[cost]&#39;</span><span class="p">,</span>           <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span>  <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price] - [cost]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+
+<span class="c1"># Add a computed metric and a HAVING filter</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">query_name</span><span class="o">=</span><span class="s1">&#39;margin_by_product&#39;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product&#39;</span><span class="p">},</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span> <span class="s1">&#39;Cost&#39;</span><span class="p">],</span>
+    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Margin %&#39;</span><span class="p">,</span> <span class="s1">&#39;expression&#39;</span><span class="p">:</span> <span class="s1">&#39;[Margin] / [Cost] * 100&#39;</span><span class="p">,</span> <span class="s1">&#39;fillna&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">having</span><span class="o">=</span><span class="s1">&#39;[Margin %] &gt;= 20&#39;</span>
+<span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;margin_by_product&#39;</span><span class="p">)</span>
+<span class="c1"># df includes the computed &#39;Margin %&#39; column and only rows where Margin % &gt;= 20</span>
+</code></pre></div>
+<p>Notes:
+- Use the same bracket syntax [Column] in expressions; registered functions are available as @name.
+- Computed metrics run after aggregations and can reference any metric/dimension present in the result.</p>
 <p>Queries automatically respect all active filters on your hypercube, allowing you to:</p>
 <ol>
 <li>Define a query once</li>
