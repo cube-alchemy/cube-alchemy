@@ -8,7 +8,7 @@ There are two main context states:
 
 **More states (?)**
 
-You can also create more context states, as many as you want. They allow you to create multiple independent filtering contexts within the same app, so you can compare, isolate, or simulate different scenarios side by side.
+You can also create more context states, as many as you want. They allow you to create multiple independent filtering contexts within the same app so you can compare, isolate, simulate different scenarios side by side or use to create more advanced filtering scenarios.
 
 **Creating new context states:**
 
@@ -40,7 +40,7 @@ cube.define_metric(
 
 # Define a query that will use both metrics
 cube.define_query(
-    query_name="revenue_comparison",
+    name="revenue_comparison",
     dimensions={'region'},
     metrics=['Regular Revenue', 'New Analysis Revenue']
     # Queries don't have context_state_name parameter

@@ -50,10 +50,10 @@ nav:
     - Context State: concepts/context-state.md
   - API:
     - Hypercube: api/hypercube.md
-    - Metric Methods: api/metric_methods.md
-    - Query Methods: api/query_methods.md
-    - Filter Methods: api/filter_methods.md
-    - Get Components: api/get_analytics_components.md
+    - Metrics: api/metric_methods.md
+    - Queries: api/query_methods.md
+    - Filters: api/filter_methods.md
+    - Define Components: api/analytics_components.md
   - Examples: examples.md
   - Streamlit Integration: streamlit.md
   - Contributing: contributing.md

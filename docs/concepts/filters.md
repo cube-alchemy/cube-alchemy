@@ -16,7 +16,7 @@ cube.define_metric(name='Revenue', expression='[qty] * [price]', aggregation='su
 
 # Now all queries only see North and West data
 cube.define_query(
-    query_name="sales",
+    name="sales",
     dimensions={'category'},
     metrics=['Revenue']
 )
@@ -148,7 +148,7 @@ cube.define_metric(
 
 # Define a query that compares filtered and unfiltered metrics
 cube.define_query(
-    query_name="revenue_comparison",
+    name="revenue_comparison",
     dimensions={'product_category'},
     metrics=['Filtered Revenue', 'Total Revenue']
 )

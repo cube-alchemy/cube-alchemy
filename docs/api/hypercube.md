@@ -110,7 +110,7 @@ cube.visualize_graph('spring', w=20, h=12, full_column_names=False)
 **set_context_state**
 
 ```python
-set_context_state(context_state_name: str) -> bool
+set_context_state(context_state_name: str, base_context_state_name: str = 'Unfiltered') -> bool
 ```
 
 Create a new context state for independent filtering environments.
@@ -118,6 +118,7 @@ Create a new context state for independent filtering environments.
 *Parameters:*
 
 - `context_state_name`: Name for the new context state
+- `base_context_state_name`: Name of the base context state, the new context state will be a copy of this one.
 
 *Returns:*
 
@@ -127,7 +128,7 @@ Create a new context state for independent filtering environments.
 
 ```python
 # Create a new context state
-cube.set_context_state('Marketing Analysis')
+cube.set_context_state('Marketing Analysis') # Creates a copy from the unfiltered context state --> self.context_states['Marketing Analysis'] = self.context_states['Unfiltered']
 
 # Apply filters specific to this context
 cube.filter({'channel': ['Email', 'Social']}, context_state_name='Marketing Analysis')

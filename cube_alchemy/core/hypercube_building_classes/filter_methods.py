@@ -18,7 +18,7 @@ class FilterMethods:
         
         dimensions = list(criteria.keys())
         df = self.dimensions(dimensions, retrieve_keys = True, context_state_name = context_state_name)
-        df = self.apply_filters_to_dataframe(df, criteria)
+        df = self._apply_filters_to_dataframe(df, criteria)
 
         self.context_states[context_state_name] = df.drop(columns=dimensions, errors='ignore')
 

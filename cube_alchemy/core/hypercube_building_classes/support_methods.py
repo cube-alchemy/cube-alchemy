@@ -4,7 +4,7 @@ import pandas as pd
 from typing import Dict, List, Any, Optional
 
 class SupportMethods:
-    def find_path(
+    def _find_path(
         self,
         start_table: str,
         end_table: str
@@ -21,15 +21,7 @@ class SupportMethods:
                     queue.append((neighbor_table[1], path + [(neighbor_table[0], neighbor_table[1], key1, key2)]))
         return None
 
-    def print_model(self) -> None:
-        print('tables:\n')
-        for table in self.tables:
-            print(table, '->\n', self.tables[table], '\n\n')
-        print('\nrelationships:\n ')
-        for r in self.relationships:
-            print(r, '-', self.relationships[r])
-
-    def fetch_and_merge_columns(
+    def _fetch_and_merge_columns(
         self,
         columns_to_fetch: List[str],
         keys_df: pd.DataFrame,
@@ -68,7 +60,7 @@ class SupportMethods:
                 keys_df = keys_df.drop_duplicates()
         return keys_df
 
-    def apply_filters_to_dataframe(
+    def _apply_filters_to_dataframe(
         self,
         df: pd.DataFrame,
         criteria: Dict[str, List[Any]]
@@ -79,7 +71,7 @@ class SupportMethods:
             columns_to_fetch = [col for col in dimensions if col not in df.columns]
             if len(columns_to_fetch) > 0:
                 # Fetch only columns that are not already in the DataFrame
-                df = self.fetch_and_merge_columns(columns_to_fetch, df)
+                df = self._fetch_and_merge_columns(columns_to_fetch, df)
             # Apply filters based on the criteria
             for column, values in criteria.items():
                 if column in df.columns:
@@ -89,3 +81,11 @@ class SupportMethods:
             return df[columns_init]  # Return DataFrame with original columns
         else:
             return df
+        
+    def print_model(self) -> None:
+        print('tables:\n')
+        for table in self.tables:
+            print(table, '->\n', self.tables[table], '\n\n')
+        print('\nrelationships:\n ')
+        for r in self.relationships:
+            print(r, '-', self.relationships[r])

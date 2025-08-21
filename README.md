@@ -52,7 +52,7 @@ flowchart LR
   F --> E
 ```
 
-Cube Alchemy connects your data by identifying common column names between DataFrames. These shared columns (edges) form the relationships; automatically building bridges between tables (nodes), handling composite keys when needed. The result is a unified schema you can slice and dice and query in a simple and intuetive way.
+Cube Alchemy connects your data by identifying common column names between DataFrames. These shared columns form the relationships; automatically building bridges between tables. The result is a unified schema you can slice and dice and query in a declarative, simple and intuetive way.
 
 ```python
 import pandas as pd
@@ -173,23 +173,18 @@ cube.query("sales_analysis")
 1  North         Home   Discount    100.0      4    40.0                1
 ```
 
-Notes
-- *Multi-hop* works out of the box through implicit relationships (shared column names connect DataFrames, just make sure to rename your columns accordigly).
+**Some Notes**
 
-- If input tables are connected by more than one column, **composite keys and tables** will be created *automatically*. The original tables' columns will be replaced with the composite keys.
+- *Multi-hop* works out of the box through implicit relationships (shared column names connect DataFrames).
 
-- The relationships graph can **not** contain cycles. The hypercube will not load if there are.
+- If input tables are connected by more than one column, **composite keys and tables** will be created *automatically*.
 
 - **Cardinallity** is **not** assumed **nor** cheched *(any-to-any)*. Links are treated as many-to-many, which can duplicate rows and skew aggregations if not modeled carefully.
 
-- Columns in **Metric Expression** use square brackets: `[qty]`, `[price]`, `[cost]`, etc.
-
-- **Metric Aggregation** accepts pandas group by pre-defined aggregations (e.g., 'sum', 'mean') or a custom function callable.
-
-- Addional *features* such as **Context Filter Control**, **New Context States** and **Metric filters and row conditions** are available but omitted here for *brevity* and *simplicity*. See the docs for details.
+- Addional *features* such as **Filters** and **New Context States**, and more *parameters* are available but omitted here for brevity and simplicity. See the docs for details.
 
 ## Full documentation
-For concepts, API specs, advanced filtering, context states, full examples and Streamlit integration see:
+For concepts, API specs, advanced features, full examples and Streamlit integration see:
 
 - Docs: https://cube-alchemy.info
 

@@ -1,5 +1,5 @@
 
-# Composite Bridge Keys and Link Tables Generator for OLAP Hypercube
+# Composite Bridge Keys and Composite Tables Generator for the Hypercube
 # ---------------------------------------------------------
 # This class automates the process of generating composite keys and link tables
 # for a set of relational tables
@@ -9,7 +9,7 @@
 #   we need to combine these columns into a single composite key that uniquely represents the relationship.
 # - This class detects such multi-column links, generates a composite key by merging the values
 #   of the shared columns, and uses this key to efficiently link tables.
-# - The idea is to maintain a schema that is suitable for OLAP queries while keeping the underlying data intact.
+# - The idea is to maintain a schema that is suitable for the queries while keeping the underlying data intact.
 
 
 
@@ -69,8 +69,6 @@ class CompositeBridgeGenerator:
         # Filter the matrix to find shared columns (columns present in more than one table)
         shared_columns_matrix = self.column_table_matrix.loc[(self.column_table_matrix.sum(axis=1) > 1)]
 
-        
-
         # List of shared columns
         shared_columns = shared_columns_matrix.index.tolist()
 
@@ -81,12 +79,13 @@ class CompositeBridgeGenerator:
         while unprocessed_tables:
             # Start with an arbitrary unprocessed table
             current_table_name = unprocessed_tables.pop()
+            # Get the shared columns for that table
             current_columns = [col for col in self.tables[current_table_name].columns if col in shared_columns]
+            # Create a copy of the table's shared columns
             current_table = self.tables[current_table_name][current_columns]
 
             # Track tables processed in this iteration
             processed_in_iteration = [current_table_name]
-
             multi_column = False
 
             # Iterate over the remaining tables to see if they share columns with the current table

@@ -16,7 +16,7 @@ cube.dimensions(['region', 'category'])
 
 # Or you can use the query method, but you first need to define the query without metrics
 cube.define_query(
-    query_name="dimension_combinations",
+    name="dimension_combinations",
     dimensions=set(['region', 'category'])
 )
 cube.query('dimension_combinations')

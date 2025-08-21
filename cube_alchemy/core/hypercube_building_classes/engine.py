@@ -34,7 +34,7 @@ class Engine:
             #rename the column to differentiate it from the original column
             self.tables[table_name].rename(columns={column: f'{column} <{table_name}>'}, inplace=True)
 
-    def add_auto_relationships(self) -> None:
+    def _add_auto_relationships(self) -> None:
         table_names = list(self.tables.keys())
         for i in range(len(table_names)):
             for j in range(i + 1, len(table_names)):
@@ -42,16 +42,16 @@ class Engine:
                 table2 = table_names[j]
                 common_columns = set(self.tables[table1].columns).intersection(set(self.tables[table2].columns))
                 for column in common_columns:
-                    self.add_relationship(table1, table2, column, column)
+                    self._add_relationship(table1, table2, column, column)
 
-    def add_table(
+    def _add_table(
         self,
         table_name: str,
         table_data: pd.DataFrame
     ) -> None:
         self.tables[table_name] = table_data
-    # I chose to leave it as a pair as, even currently the model's schema generation is assuming implicit relationships by column names, it could be adapted to use explicit (and even uni-directional? - need to think more about this -) relationships in the future. So far I don't think it is needed.
-    def add_relationship(
+    # I chose to leave it as a pair as, even currently the model's schema is assuming implicit relationships by column names, it could be adapted to use explicit (and even uni-directional? - need to think more about this -) relationships in the future.
+    def _add_relationship(
         self,
         table1_name: str,
         table2_name: str,
@@ -69,12 +69,12 @@ class Engine:
             self.relationships[(table2_name, table1_name)] = (key2, key1)
         return None
 
-    def build_column_to_table_mapping(self) -> None:
+    def _build_column_to_table_mapping(self) -> None:
         for table_name, table in self.tables.items():
             for column in table.columns:
                 self.column_to_table[column] = table_name
 
-    def create_link_tables(self) -> None:
+    def _create_link_tables(self) -> None:
         all_columns = {}
         for table_name, table_data in self.tables.items():
             for column in table_data.columns:
@@ -86,7 +86,7 @@ class Engine:
                 link_table_name = f'_link_table_{column}'
                 self._create_and_update_link_table(column, link_table_name, table_names)
 
-    def find_complete_trajectory(
+    def _find_complete_trajectory(
         self,
         target_tables: Dict[str, pd.DataFrame]
     ) -> List[str]:
@@ -97,15 +97,15 @@ class Engine:
         trajectory = [start_table]
         for i in range(1, len(target_table_list)):
             next_table = target_table_list[i]
-            path = self.find_path(start_table, next_table)
+            path = self._find_path(start_table, next_table)
             if path:
                 for step in path:
                     trajectory.append(step[0])
                     trajectory.append(step[1])
             else:
                 for table in self.tables:
-                    path_with_intermediate = self.find_path(start_table, table)
-                    path_to_next = self.find_path(table, next_table)
+                    path_with_intermediate = self._find_path(start_table, table)
+                    path_to_next = self._find_path(table, next_table)
                     if path_with_intermediate and path_to_next:
                         for step in path_with_intermediate + path_to_next:
                             trajectory.append(step[0])
@@ -118,7 +118,7 @@ class Engine:
                 final_trajectory.append(trajectory[i])
         return final_trajectory
 
-    def join_trajectory_keys(
+    def _join_trajectory_keys(
         self,
         trajectory: List[str]
     ) -> Any:
@@ -146,7 +146,7 @@ class Engine:
             )
         return current_data
 
-    def has_cyclic_relationships(self) -> Tuple[bool, List[Any]]:
+    def _has_cyclic_relationships(self) -> Tuple[bool, List[Any]]:
         def dfs(node: str, visited: set, path: List[str], parent: Optional[str]) -> List[str]:
             visited.add(node)
             path.append(node)
@@ -183,22 +183,7 @@ class Engine:
 
         return False, []
 
-    def set_context_state(
-        self,
-        context_state_name: str
-    ) -> bool:
-        if context_state_name == 'Unfiltered':
-            raise ValueError("Cannot use 'Unfiltered' state name. Please use a different state name.")
-        try:
-            self.context_states[context_state_name] = self.context_states['Unfiltered'].copy()
-            self.applied_filters[context_state_name]  =  [] 
-            self.filter_pointer[context_state_name]  = 0 
-            return True
-        except Exception as e:
-            print(f"Error setting state '{context_state_name}': {e}")
-            return False
-
-    def compute_and_cache_trajectories(self):
+    def _compute_and_cache_trajectories(self):
                
         start_time = time.time()
         self.trajectory_cache = {}
@@ -213,7 +198,7 @@ class Engine:
                 tables_dict = {table_name: self.tables[table_name] for table_name in table_subset}
                 
                 # Find trajectory
-                trajectory = self.find_complete_trajectory(tables_dict)
+                trajectory = self._find_complete_trajectory(tables_dict)
                 
                 # Store using a tuple of sorted table names for consistent lookup
                 key = tuple(sorted(table_subset))
@@ -223,8 +208,7 @@ class Engine:
         duration = time.time() - start_time
         print(f"Precomputed {total_combinations} table trajectories in {duration:.2f} seconds")     
 
-    # Add a helper method to the cube for efficient trajectory lookup
-    def get_trajectory(self,tables_to_find):
+    def _get_trajectory(self,tables_to_find):
         key = tuple(sorted(tables_to_find))
         
         # Return cached trajectory
@@ -283,42 +267,18 @@ class Engine:
         plt.title("Tables and Relationships")
         plt.show()
 
-    def get_dimensions(self) -> List[str]:
-        dimensions = set()
-        for table_name, table in self.tables.items():
-            dimensions.update(
-                col for col in table.columns 
-                if not (
-                    col.startswith('_index_') or 
-                    col.startswith('_key_') or 
-                    col.startswith('_composite_key_') or
-                    #re.search(r'<_composite_', col)
-                    re.search(r'<.*>', col)
-                )
-            )
-        return sorted(list(dimensions))
-
-    def get_queries(self) -> Dict[str, Any]:
-        # for each metric I want to bring the metric.name
-        queries_formatted = {}
-        for query in self.queries:
-            query_metrics = []
-            for metric in self.queries[query]['metrics']:
-                query_metrics.append(metric.name)
-            queries_formatted[query] = {
-                "dimensions": self.queries[query]['dimensions'],
-                "metrics": query_metrics,
-                "drop_null_dimensions": self.queries[query]['drop_null_dimensions'],
-                "drop_null_metric_results": self.queries[query]['drop_null_metric_results'],
-                "computed_metrics": self.queries[query].get('computed_metrics', []),
-                "having": self.queries[query].get('having')
-            }
-        return queries_formatted
-    
-    def get_metrics(self) -> Dict[str, Any]:
-        metrics_formatted = {}
-        for metric_name, metric in self.metrics.items():
-            metrics_formatted[metric_name] = metric.get_metric_details()
-        return metrics_formatted 
-
-        
+    def set_context_state(
+        self,
+        context_state_name: str,
+        base_context_state_name: str = 'Unfiltered'
+    ) -> bool:
+        if context_state_name == 'Unfiltered':
+            raise ValueError("Cannot use 'Unfiltered' state name. Please use a different state name.")
+        try:
+            self.context_states[context_state_name] = self.context_states[base_context_state_name].copy()
+            self.applied_filters[context_state_name]  =  [] 
+            self.filter_pointer[context_state_name]  = 0 
+            return True
+        except Exception as e:
+            print(f"Error setting state '{context_state_name}': {e}")
+            return False
