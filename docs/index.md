@@ -2,7 +2,7 @@
 
 **Streamlined Multidimensional Analytics in Pure Python**
 
-Transform disconnected tables into a coherent analytical framework that seamlessly works across your entire data. Cube Alchemy creates a unified data model from your pandas DataFrames, enabling powerful cross-dimensional analysis with minimal code.
+Cube Alchemy creates a unified data model from your pandas DataFrames, enabling simple yet powerful cross-dimensional analysis.
 
 **Highlights**
 

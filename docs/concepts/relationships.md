@@ -1,8 +1,8 @@
 # Relationships in Cube Alchemy
 
-Cube Alchemy uses implicit relationships, meaning DataFrames automatically connect to each other through shared column names. This creates a unified data model without requiring you to write explicit joins.
+Cube Alchemy uses implicit relationships, meaning DataFrames automatically connect to each other through shared column names.
 
-These relationships enable you to work with your (newly) connected data declaratively. Cube Alchemy handles all the necessary data operations under the hood, so you can use more of your time to focus on analysis.
+These relationships enable you to work with your newly connected data declaratively. Cube Alchemy handles all the necessary data operations under the hood.
 
 ## Single Path
 

@@ -39,7 +39,7 @@ cube.define_metric(
 
 # Step 2: Define a query that uses these metrics
 cube.define_query(
-    query_name="sales_performance",
+    name="sales_performance",
     dimensions={'region', 'product_category'},
     metrics=['Revenue', 'Average Order Value', 'Number of Orders']
 )
@@ -60,6 +60,49 @@ result = cube.query("sales_performance")
 
     - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
 
+## Computed Metrics
+
+Computed metrics are calculated after aggregation has already occurred. While regular metrics aggregate over dimensions, computed metrics work with already aggregated results, letting you create ratios, percentages, and other derivative calculations.
+
+```python
+# First define the metrics needed for the computation
+cube.define_metric(
+    name='Revenue',
+    expression='[qty] * [price]',
+    aggregation='sum'
+)
+
+cube.define_metric(
+    name='Cost',
+    expression='[qty] * [unit_cost]',
+    aggregation='sum'
+)
+
+# Then define a computed metric that uses them
+cube.define_computed_metric(
+    name='Profit Margin %',
+    expression='([Revenue] - [Cost]) / [Revenue] * 100'
+)
+
+# Use both regular and computed metrics in queries
+cube.define_query(
+    name="profitability_analysis",
+    dimensions={'product_category', 'region'},
+    computed_metrics=['Profit Margin %']
+)
+
+# Execute the query
+result = cube.query("profitability_analysis")
+```
+
+The workflow is:
+
+1. Define regular metrics that perform aggregation
+
+2. Define computed metrics that reference those aggregated metrics
+
+3. Include them in your queries (computed metrics are passed separately)
+
 ## Advanced Features
 
 For more sophisticated analysis, metrics support several powerful options:
@@ -68,8 +111,9 @@ For more sophisticated analysis, metrics support several powerful options:
 - **Metric filters**: Apply specific filters only for a particular metric
 - **Row conditions**: Pre-filter rows before calculating the metric
 - **Custom functions**: Use your own Python functions for complex logic
+- **Computed metrics**: Create post-aggregation calculations like margins and ratios
 
-Each of these options allows you to create highly specialized metrics that can answer specific more sofisticated questions.
+Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.
 
 ```python
 # Only count high-value orders
@@ -107,7 +151,7 @@ cube.define_metric(
 
 # Define a query with these metrics
 cube.define_query(
-    query_name="advanced_analysis",
+    name="advanced_analysis",
     dimensions=set(my_query_dimensions),
     metrics=['High Value Orders', 'Regional Revenue', 'High Value Orders']
 )

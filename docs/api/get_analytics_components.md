@@ -5,7 +5,7 @@ These methods let you see what's available and how everything is defined in your
 ## Get Dimensions
 
 ```python
-get_dimensions() -> List[str]
+cube.get_dimensions() -> List[str]
 ```
 
 Returns a list of all available dimension columns across all tables.
@@ -16,6 +16,24 @@ Returns a list of all available dimension columns across all tables.
 # Get all available dimensions
 all_dimensions = cube.get_dimensions()
 print(f"Available dimensions: {all_dimensions}")
+```
+
+## Get a Single Dimension's Values
+
+This accessor now lives under Query Methods as `cube.dimension(...)`.
+
+```python
+cube.dimension(dimension: str) -> List[str]
+```
+
+Returns the distinct values for a given dimension.
+
+**Example:**
+
+```python
+# Get all distinct Product names
+products = cube.dimension('Product')
+print(products[:10])
 ```
 
 ## Get Metrics
@@ -30,6 +48,48 @@ Retrieve all defined metrics in the hypercube. Metrics are one of the core compo
 
 - Dictionary of metrics with their details (name, expression, aggregation, and other properties)
 
+## Get a Single Metric
+
+```python
+cube.get_metric(metric: str) -> Dict[str, Any]
+```
+
+Returns a single metric definition with its details.
+
+**Example:**
+
+```python
+revenue = cube.get_metric('Revenue')
+print(revenue)
+```
+
+## Get Computed Metrics
+
+```python
+cube.get_computed_metrics() -> Dict[str, Any]
+```
+
+Retrieve all persisted computed metrics.
+
+*Returns:*
+
+- Dictionary mapping computed metric names to specs: expression, optional fillna, and referenced columns
+
+## Get a Single Computed Metric
+
+```python
+cube.get_computed_metric(computed_metric: str) -> Dict[str, Any]
+```
+
+Returns a single computed metric definition.
+
+**Example:**
+
+```python
+margin_pct = cube.get_computed_metric('Margin %')
+print(margin_pct)
+```
+
 ## Get Queries
 
 ```python
@@ -39,3 +99,24 @@ cube.get_queries() -> Dict[str, Any]
 *Returns:*
 
 - Dictionary of queries with their dimensions, metrics, and display options
+
+## Get a Single Query
+
+```python
+cube.get_query(query: str) -> Dict[str, Any]
+```
+
+Returns the definition for a single query (dimensions, metrics, computed_metrics, and options like having).
+
+**Example:**
+
+```python
+q = cube.get_query('Sales by Region')
+print(q)
+```
+
+## See Also
+
+- [Filter Methods](filter_methods.md)
+- [Query Methods](query_methods.md)
+- [Computed Metrics](computed_metrics.md)

@@ -1,6 +1,6 @@
 # Overview
 
-Cube Alchemy turns pandas DataFrames into a unified analytic model and semantic layer—so you can explore data declaratively, with less joins and glue code.
+Cube Alchemy turns pandas DataFrames into a unified analytic model and semantic layer, then you can explore data declaratively.
 
 ## Capabilities
 

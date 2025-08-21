@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional
 
 # hypercube building classes
 from .hypercube_building_classes.engine import Engine
+from .hypercube_building_classes.analytics_components import AnalyticsComponents
 from .hypercube_building_classes.support_methods import SupportMethods
 from .hypercube_building_classes.query_methods import QueryMethods
 from .hypercube_building_classes.filter_methods import FilterMethods
@@ -12,24 +13,25 @@ from .hypercube_building_classes.filter_methods import FilterMethods
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 
-class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
-    def __init__(        
+class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods):
+    def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
-        apply_composite = True,
+        apply_composite=True,
         validate: bool = True,
-        to_be_stored: bool = False
+        to_be_stored: bool = False,
     ) -> None:
         self.metrics = {}
+        self.computed_metrics = {}
         self.queries = {}
-        self.registered_functions = {'pd': pd,'np': np}
+        self.registered_functions = {'pd': pd, 'np': np}
         if tables is not None:
             self.load_data(
-                tables, 
-                apply_composite=apply_composite, 
-                validate=validate, 
+                tables,
+                apply_composite=apply_composite,
+                validate=validate,
                 to_be_stored=to_be_stored,
-                reset_all=True
+                reset_all=True,
             )
 
     def load_data(        
@@ -42,6 +44,7 @@ class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
     ) -> None:
         if reset_all:
             self.metrics = {}
+            self.computed_metrics = {}
             self.queries = {}
             self.registered_functions = {'pd': pd,'np': np}
         try:
@@ -79,7 +82,7 @@ class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
             self.link_table_keys: list = []
             self.column_to_table: Dict[str, str] = {}
 
-            self.add_auto_relationships()
+            self._add_auto_relationships()
                 
             self.relationships_raw = self.relationships.copy()  # Keep a raw copy of initial relationships
             self.relationships = {}
@@ -92,15 +95,15 @@ class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
                     self.tables[table].rename(columns={'index': index_col}, inplace=True)
             
             # Create link tables for shared columns and update the original tables
-            self.create_link_tables()  # Link tables are used to join tables on shared columns
+            self._create_link_tables()  # Link tables are used to join tables on shared columns
 
             # Build the column-to-table mapping
-            self.build_column_to_table_mapping()  # Map each column to its source table
+            self._build_column_to_table_mapping()  # Map each column to its source table
             
             # Automatically add relationships based on shared column names
-            self.add_auto_relationships()  # Add relationships for columns with the same name
+            self._add_auto_relationships()  # Add relationships for columns with the same name
 
-            self.is_cyclic = self.has_cyclic_relationships()
+            self.is_cyclic = self._has_cyclic_relationships()
             if self.is_cyclic[0]:
                 return None #no need to continue, there are cycle relationships
 
@@ -108,13 +111,13 @@ class Hypercube(Engine, QueryMethods, FilterMethods, SupportMethods):
             self.trajectory_cache = {}
 
             if validate:
-                self.compute_and_cache_trajectories()
-                link_tables_trajectories = self.get_trajectory(self.link_tables.keys())
+                self._compute_and_cache_trajectories()
+                link_tables_trajectories = self._get_trajectory(self.link_tables.keys())
             else:
-                link_tables_trajectories = self.find_complete_trajectory(self.link_tables)
+                link_tables_trajectories = self._find_complete_trajectory(self.link_tables)
             
             # Set the initial state to the unfiltered version of the joined trajectory keys
-            self.context_states['Unfiltered'] = self.join_trajectory_keys(link_tables_trajectories)
+            self.context_states['Unfiltered'] = self._join_trajectory_keys(link_tables_trajectories)
             
             self.applied_filters = {}   # List of applied filters
             self.filter_pointer = {}    # Pointer to the current filter state
