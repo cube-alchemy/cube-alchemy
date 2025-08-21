@@ -309,7 +309,9 @@ class Engine:
                 "dimensions": self.queries[query]['dimensions'],
                 "metrics": query_metrics,
                 "drop_null_dimensions": self.queries[query]['drop_null_dimensions'],
-                "drop_null_metric_results": self.queries[query]['drop_null_metric_results']
+                "drop_null_metric_results": self.queries[query]['drop_null_metric_results'],
+                "computed_metrics": self.queries[query].get('computed_metrics', []),
+                "having": self.queries[query].get('having')
             }
         return queries_formatted
     
