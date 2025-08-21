@@ -61,7 +61,9 @@ class QueryMethods:
         dimensions: set[str] = {},
         metrics: List[str] = [],
         drop_null_dimensions: bool = False,
-        drop_null_metric_results: bool = False
+        drop_null_metric_results: bool = False,
+        computed_metrics: Optional[List[Dict[str, Any]]] = None,
+        having: Optional[str] = None
     ):
         dimensions = list(dimensions)
         list_of_metric_objects = []
@@ -71,7 +73,9 @@ class QueryMethods:
             "dimensions": dimensions,
             "metrics": list_of_metric_objects,
             "drop_null_dimensions": drop_null_dimensions,
-            "drop_null_metric_results": drop_null_metric_results
+            "drop_null_metric_results": drop_null_metric_results,
+            "computed_metrics": computed_metrics or [],
+            "having": having
         }
 
     def query(self, query_name: str):
@@ -84,6 +88,12 @@ class QueryMethods:
             metrics = query["metrics"],
             drop_null_dimensions = query["drop_null_dimensions"],
             drop_null_metric_results = query["drop_null_metric_results"]
+        )
+        # Post-aggregation computed metrics and HAVING-like filter
+        query_result = self._apply_computed_metrics_and_having(
+            query_result,
+            query.get("computed_metrics", []),
+            query.get("having")
         )
         return query_result
     
@@ -267,3 +277,51 @@ class QueryMethods:
                 for result in results[1:]:
                     final_result = pd.merge(final_result, result, on=dimensions, how='outer')
         return final_result
+
+    def _apply_computed_metrics_and_having(
+        self,
+        df: pd.DataFrame,
+        computed_metrics: Optional[List[Dict[str, Any]]] = None,
+        having: Optional[str] = None
+    ) -> pd.DataFrame:
+        """
+        Post-aggregation stage:
+        - computed_metrics: list of dicts [{'name': str, 'expression': str, 'fillna': Any?}]
+        - having: string expression to filter aggregated rows, also using [Column] syntax.
+        """
+        if df is None or df.empty:
+            return df
+
+        # Evaluate computed metrics
+        for cm in (computed_metrics or []):
+            if not isinstance(cm, dict) or "name" not in cm or "expression" not in cm:
+                raise ValueError("Each computed metric must be a dict with 'name' and 'expression'.")
+            name = cm["name"]
+            expression = cm["expression"]
+
+            try:
+                # Turn [col] into df['col'] for Python eval
+                expr = add_quotes_to_brackets(expression.replace('[', 'df['))
+                # Allow using @fn for registered functions
+                expr = re.sub(r'@([A-Za-z_]\w*)', r'\1', expr)
+
+                eval_locals = {"df": df}
+                eval_globals = self.registered_functions
+                df[name] = eval(expr, eval_globals, eval_locals)
+
+                # Optional fillna for computed metric
+                if "fillna" in cm:
+                    df[name] = df[name].fillna(cm["fillna"])
+            except Exception as e:
+                raise ValueError(f"Error evaluating computed metric '{name}': {e}") from e
+
+        # Apply HAVING-like filter
+        if having:
+            try:
+                # Convert [col] -> `col` for DataFrame.query backtick syntax
+                having_expr = brackets_to_backticks(having)
+                df = df.query(having_expr, engine='python', local_dict=self.registered_functions)
+            except Exception as e:
+                raise ValueError(f"Error applying HAVING expression '{having}': {e}") from e
+
+        return df

@@ -80,6 +80,8 @@ Fine-tune your query results with these options:
 
 - `drop_null_dimensions=True`: Remove rows with missing dimension values
 - `drop_null_metric_results=True`: Remove rows with null metric results
+- `computed_metrics=[...]`: Define post-aggregation columns derived from metric results (e.g., ratios and percentages)
+- `having="..."`: Apply a HAVING-like filter on the aggregated result using metric columns
 
 ```python
 cube.define_query(
@@ -90,6 +92,37 @@ cube.define_query(
     drop_null_metric_results=True
 )
 ```
+
+## Computed Metrics and HAVING
+
+**Post-aggregation**
+
+Sometimes you want to compute a value after metrics are aggregated, or filter rows by a metric result like in SQL's HAVING clause. You can do both at the query level:
+
+```python
+# Define base metrics
+cube.define_metric(name='Cost',    expression='[cost]',           aggregation='sum')
+cube.define_metric(name='Margin',  expression='[qty] * [price] - [cost]', aggregation='sum')
+
+# Add a computed metric and a HAVING filter
+cube.define_query(
+    query_name='margin_by_product',
+    dimensions={'product'},
+    metrics=['Margin', 'Cost'],
+    computed_metrics=[
+        { 'name': 'Margin %', 'expression': '[Margin] / [Cost] * 100', 'fillna': 0 }
+    ],
+    having='[Margin %] >= 20'
+)
+
+df = cube.query('margin_by_product')
+```
+
+**Notes:**
+
+- Use the same bracket syntax [Column] in expressions; registered functions are available as @name.
+
+- Computed metrics run after aggregations and can reference any metric/dimension present in the result.
 
 ## Working with Filters
 
