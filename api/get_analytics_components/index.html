@@ -20,7 +20,7 @@
     
     
       
-        <title>Get Components - Cube Alchemy</title>
+        <title>Components - Cube Alchemy</title>
       
     
     
@@ -99,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Get Components
+              Components
             
           </span>
         </div>
@@ -571,7 +571,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -594,7 +594,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -617,7 +617,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -649,7 +649,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -662,7 +662,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -694,6 +694,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#get-a-single-dimensions-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get a Single Dimension's Values
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#get-metrics" class="md-nav__link">
     <span class="md-ellipsis">
       Get Metrics
@@ -703,9 +712,54 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#get-a-single-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get a Single Metric
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-computed-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get Computed Metrics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-a-single-computed-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get a Single Computed Metric
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#get-queries" class="md-nav__link">
     <span class="md-ellipsis">
       Get Queries
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-a-single-query" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get a Single Query
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      See Also
     </span>
   </a>
   
@@ -812,13 +866,23 @@
 <h1 id="hypercube-components">Hypercube Components</h1>
 <p>These methods let you see what's available and how everything is defined in your hypercube.</p>
 <h2 id="get-dimensions">Get Dimensions</h2>
-<div class="highlight"><pre><span></span><code><span class="n">get_dimensions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_dimensions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 </code></pre></div>
 <p>Returns a list of all available dimension columns across all tables.</p>
 <p><strong>Example:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get all available dimensions</span>
 <span class="n">all_dimensions</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_dimensions</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available dimensions: </span><span class="si">{</span><span class="n">all_dimensions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="get-a-single-dimensions-values">Get a Single Dimension's Values</h2>
+<p>This accessor now lives under Query Methods as <code>cube.dimension(...)</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="n">dimension</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</code></pre></div>
+<p>Returns the distinct values for a given dimension.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Get all distinct Product names</span>
+<span class="n">products</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s1">&#39;Product&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">products</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
 </code></pre></div>
 <h2 id="get-metrics">Get Metrics</h2>
 <div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
@@ -828,12 +892,50 @@
 <ul>
 <li>Dictionary of metrics with their details (name, expression, aggregation, and other properties)</li>
 </ul>
+<h2 id="get-a-single-metric">Get a Single Metric</h2>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+<p>Returns a single metric definition with its details.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="n">revenue</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="s1">&#39;Revenue&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">revenue</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="get-computed-metrics">Get Computed Metrics</h2>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_computed_metrics</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+<p>Retrieve all persisted computed metrics.</p>
+<p><em>Returns:</em></p>
+<ul>
+<li>Dictionary mapping computed metric names to specs: expression, optional fillna, and referenced columns</li>
+</ul>
+<h2 id="get-a-single-computed-metric">Get a Single Computed Metric</h2>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_computed_metric</span><span class="p">(</span><span class="n">computed_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+<p>Returns a single computed metric definition.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="n">margin_pct</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_computed_metric</span><span class="p">(</span><span class="s1">&#39;Margin %&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">margin_pct</span><span class="p">)</span>
+</code></pre></div>
 <h2 id="get-queries">Get Queries</h2>
 <div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_queries</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </code></pre></div>
 <p><em>Returns:</em></p>
 <ul>
 <li>Dictionary of queries with their dimensions, metrics, and display options</li>
+</ul>
+<h2 id="get-a-single-query">Get a Single Query</h2>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">get_query</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+<p>Returns the definition for a single query (dimensions, metrics, computed_metrics, and options like having).</p>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">get_query</span><span class="p">(</span><span class="s1">&#39;Sales by Region&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="../filter_methods/">Filter Methods</a></li>
+<li><a href="../query_methods/">Query Methods</a></li>
+<li><a href="computed_metrics.md">Computed Metrics</a></li>
 </ul>
 
 

@@ -715,7 +715,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -738,7 +738,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -761,7 +761,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -784,7 +784,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -898,7 +898,7 @@
 
 <span class="c1"># Now all queries only see North and West data</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;sales&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sales&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">]</span>
 <span class="p">)</span>
@@ -998,7 +998,7 @@
 
 <span class="c1"># Define a query that compares filtered and unfiltered metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product_category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Filtered Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Total Revenue&#39;</span><span class="p">]</span>
 <span class="p">)</span>

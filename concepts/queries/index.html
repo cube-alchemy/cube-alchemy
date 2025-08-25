@@ -472,9 +472,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-query-execution-works" class="md-nav__link">
+  <a href="#execution-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      How Query Execution Works
+      Execution Pipeline
     </span>
   </a>
   
@@ -510,15 +510,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Options
-    </span>
-  </a>
   
 </li>
       
@@ -682,7 +673,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -705,7 +696,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -728,7 +719,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -751,7 +742,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -871,7 +862,7 @@
 
 <span class="c1"># Define a query by region and product category</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;regional_sales&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;regional_sales&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Order Count&#39;</span><span class="p">]</span>
 <span class="p">)</span>
@@ -879,21 +870,22 @@
 <span class="c1"># Execute the query</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;regional_sales&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="how-query-execution-works">How Query Execution Works</h3>
-<p>When you run a query, Cube Alchemy efficiently processes your data in four steps:</p>
-<ol>
-<li><strong>Group metrics by context</strong>: Metrics sharing the same context state and custom metric filters are calculated together</li>
-<li><strong>Fetch required data</strong>: All necessary dimension and metric columns are retrieved automatically, traversing table relationships and getting the required metric columns' indexes</li>
-<li><strong>Apply aggregations</strong>: Each metric's aggregation is applied to the corresponding dimensions</li>
-<li><strong>Merge results</strong>: The individual metric calculations are combined based on your specified dimensions</li>
-</ol>
+<h3 id="execution-pipeline">Execution Pipeline</h3>
+<p>When you run a query, Cube Alchemy processes your data in a clear, ordered pipeline:</p>
+<pre class="mermaid"><code>flowchart LR
+  A["Apply Context State Filters"] --&gt; B["Fetch Dimensions"]
+  B --&gt; C["Calculate Metrics (Aggregations)"]
+  C --&gt; D["Compute Post-Aggregation Metrics"]
+  D --&gt; E["Apply HAVING Filter"]
+  E --&gt; F["Apply SORT"]
+  F --&gt; G["Return Final Result"]</code></pre>
 <h2 id="query-types">Query Types</h2>
 <p>Queries must contain either dimensions, metrics, or both (a query cannot lack both).</p>
 <h3 id="dimension-only-queries">Dimension-Only Queries</h3>
 <p>When you only need to see what unique dimension combinations:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define a query with only dimensions</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;dimension_combinations&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dimension_combinations&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">}</span>
 <span class="p">)</span>
 
@@ -908,56 +900,44 @@
 
 <span class="c1"># Define a query with no dimensions</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;global_totals&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;global_totals&quot;</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Total Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Total Orders&#39;</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Execute the query</span>
 <span class="n">global_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;global_totals&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="query-options">Query Options</h2>
-<p>Fine-tune your query results with these options:</p>
-<ul>
-<li><code>drop_null_dimensions=True</code>: Remove rows with missing dimension values</li>
-<li><code>drop_null_metric_results=True</code>: Remove rows with null metric results</li>
-<li><code>computed_metrics=[...]</code>: Define post-aggregation columns derived from metric results (e.g., ratios and percentages)</li>
-<li><code>having="..."</code>: Apply a HAVING-like filter on the aggregated result using metric columns</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;clean_sales_data&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">},</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Orders&#39;</span><span class="p">],</span>
-    <span class="n">drop_null_dimensions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">drop_null_metric_results</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span>
-</code></pre></div>
 <h2 id="computed-metrics-and-having">Computed Metrics and HAVING</h2>
-<p><strong>Post-aggregation</strong></p>
-<p>Sometimes you want to compute a value after metrics are aggregated, or filter rows by a metric result like in SQL's HAVING clause. You can do both at the query level:</p>
+<p>Computed metrics are calculated after base metrics are aggregated. Define them once, then reference by name in queries.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define base metrics</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cost&#39;</span><span class="p">,</span>    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[cost]&#39;</span><span class="p">,</span>           <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span>  <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price] - [cost]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cost&#39;</span><span class="p">,</span>   <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[cost]&#39;</span><span class="p">,</span>           <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price] - [cost]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
 
-<span class="c1"># Add a computed metric and a HAVING filter</span>
+<span class="c1"># Define a computed metric (post-aggregation)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_computed_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin %&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[Margin] / [Cost] * 100&#39;</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+
+<span class="c1"># Use computed metric by name and add a HAVING filter</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s1">&#39;margin_by_product&#39;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;margin_by_product&#39;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span> <span class="s1">&#39;Cost&#39;</span><span class="p">],</span>
-    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span>
-        <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Margin %&#39;</span><span class="p">,</span> <span class="s1">&#39;expression&#39;</span><span class="p">:</span> <span class="s1">&#39;[Margin] / [Cost] * 100&#39;</span><span class="p">,</span> <span class="s1">&#39;fillna&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="p">}</span>
-    <span class="p">],</span>
+    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin %&#39;</span><span class="p">],</span>
     <span class="n">having</span><span class="o">=</span><span class="s1">&#39;[Margin %] &gt;= 20&#39;</span>
 <span class="p">)</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;margin_by_product&#39;</span><span class="p">)</span>
 </code></pre></div>
-<p><strong>Notes:</strong></p>
+<p>Notes:</p>
 <ul>
 <li>
-<p>Use the same bracket syntax [Column] in expressions; registered functions are available as @name.</p>
+<p>Use [Column] syntax in expressions; registered functions are available as @name.</p>
 </li>
 <li>
-<p>Computed metrics run after aggregations and can reference any metric/dimension present in the result.</p>
+<p>Computed metrics reference columns present in the aggregated result (metrics and dimensions).</p>
 </li>
 </ul>
 <h2 id="working-with-filters">Working with Filters</h2>
@@ -969,7 +949,7 @@
 </ol>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define your query</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;product_sales&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;product_sales&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Order Count&#39;</span><span class="p">]</span>
 <span class="p">)</span>

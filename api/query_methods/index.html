@@ -20,7 +20,7 @@
     
     
       
-        <title>Query Methods - Cube Alchemy</title>
+        <title>Queries - Cube Alchemy</title>
       
     
     
@@ -99,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Query Methods
+              Queries
             
           </span>
         </div>
@@ -571,7 +571,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -603,7 +603,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -616,7 +616,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -665,6 +665,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#single-dimension-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Single Dimension Values
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -686,7 +695,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -709,7 +718,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -812,24 +821,24 @@
 <h1 id="query-methods">Query Methods</h1>
 <h2 id="define-query">Define Query</h2>
 <div class="highlight"><pre><span></span><code><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">drop_null_dimensions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">drop_null_metric_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">computed_metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">computed_metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">having</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Defines a named query with dimensions and metrics for later execution.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li><code>query_name</code>: A unique name for the query</li>
+<li><code>name</code>: A unique name for the query</li>
 <li><code>dimensions</code>: Set of dimension column names to include in the query</li>
 <li><code>metrics</code>: List of metric names (as defined with define_metric)</li>
 <li><code>drop_null_dimensions</code>: Whether to exclude rows where dimension values are missing</li>
 <li><code>drop_null_metric_results</code>: Whether to exclude rows where metric calculations result in null</li>
-<li><code>computed_metrics</code>: List of dicts with keys <code>name</code>, <code>expression</code>, and optional <code>fillna</code> to create post-aggregation calculated columns</li>
+<li><code>computed_metrics</code>: List of names referencing computed metrics defined via <code>define_computed_metric()</code></li>
 <li><code>having</code>: SQL HAVING-like expression to filter rows based on aggregated results</li>
 </ul>
 <p><strong>Example:</strong></p>
@@ -837,24 +846,25 @@
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Units&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
 
+<span class="n">cube</span><span class="o">.</span><span class="n">define_computed_metric</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Avg Revenue per Unit&#39;</span><span class="p">,</span> <span class="n">expression</span> <span class="o">=</span> <span class="s1">&#39;[Revenue] / [Units]&#39;</span><span class="p">)</span>
+
 <span class="c1"># Define a query using those metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;sales_analysis&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="nb">set</span><span class="p">([</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="s1">&#39;promo_type&#39;</span><span class="p">]),</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Units&#39;</span><span class="p">],</span>
-    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span>
-        <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Avg Revenue per Unit&#39;</span><span class="p">,</span> <span class="s1">&#39;expression&#39;</span><span class="p">:</span> <span class="s1">&#39;[Revenue] / [Units]&#39;</span><span class="p">,</span> <span class="s1">&#39;fillna&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="n">having</span><span class="o">=</span><span class="s1">&#39;[Avg Revenue per Unit] &gt; 10&#39;</span>
+    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;sales analysis&quot;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="s1">&#39;promo_type&#39;</span><span class="p">},</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">],</span>
+    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue per Unit&#39;</span><span class="p">],</span>
+    <span class="n">having</span><span class="o">=</span><span class="s1">&#39;[Revenue per Unit] &gt; 10&#39;</span>
 <span class="p">)</span>
 </code></pre></div>
 <h2 id="execute-query">Execute Query</h2>
-<div class="highlight"><pre><span></span><code><span class="n">query</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<div class="highlight"><pre><span></span><code><span class="n">query</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">return_internal_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
 <p>Executes a previously defined query by name.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>query_name</code>: Name of a previously defined query</li>
+<li><code>return_internal_metrics</code>: The query might need metrics and/or computed metrics which are internally used for calculation of computed metrics, having and/or sorting. If this parameter is set to True they will also be retrieved. Can be useful for debugging or validation.</li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul>
@@ -901,6 +911,13 @@
 
 <span class="c1"># Get unique region/category combinations from a specific context state</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">dimensions</span><span class="p">([</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">],</span> <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;State1&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="single-dimension-values">Single Dimension Values</h2>
+<p>Fetch distinct values for a single dimension.</p>
+<div class="highlight"><pre><span></span><code><span class="n">dimension</span><span class="p">(</span><span class="n">dimension</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</code></pre></div>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="n">products</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s1">&#39;Product&#39;</span><span class="p">)</span>
 </code></pre></div>
 
 

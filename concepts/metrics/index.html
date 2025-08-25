@@ -467,6 +467,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#computed-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Computed Metrics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#advanced-features" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced Features
@@ -649,7 +658,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -672,7 +681,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -695,7 +704,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -718,7 +727,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -854,7 +863,7 @@
 
 <span class="c1"># Step 2: Define a query that uses these metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;sales_performance&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sales_performance&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Average Order Value&#39;</span><span class="p">,</span> <span class="s1">&#39;Number of Orders&#39;</span><span class="p">]</span>
 <span class="p">)</span>
@@ -881,6 +890,49 @@
 </ul>
 </li>
 </ul>
+<h2 id="computed-metrics">Computed Metrics</h2>
+<p>Computed metrics are calculated after aggregation has already occurred. While regular metrics aggregate over dimensions, computed metrics work with already aggregated results, letting you create ratios, percentages, and other derivative calculations.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># First define the metrics needed for the computation</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
+<span class="p">)</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cost&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [unit_cost]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Then define a computed metric that uses them</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_computed_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Profit Margin %&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;([Revenue] - [Cost]) / [Revenue] * 100&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Use both regular and computed metrics in queries</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;profitability_analysis&quot;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product_category&#39;</span><span class="p">,</span> <span class="s1">&#39;region&#39;</span><span class="p">},</span>
+    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Profit Margin %&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Execute the query</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;profitability_analysis&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The workflow is:</p>
+<ol>
+<li>
+<p>Define regular metrics that perform aggregation</p>
+</li>
+<li>
+<p>Define computed metrics that reference those aggregated metrics</p>
+</li>
+<li>
+<p>Include them in your queries (computed metrics are passed separately)</p>
+</li>
+</ol>
 <h2 id="advanced-features">Advanced Features</h2>
 <p>For more sophisticated analysis, metrics support several powerful options:</p>
 <ul>
@@ -888,8 +940,9 @@
 <li><strong>Metric filters</strong>: Apply specific filters only for a particular metric</li>
 <li><strong>Row conditions</strong>: Pre-filter rows before calculating the metric</li>
 <li><strong>Custom functions</strong>: Use your own Python functions for complex logic</li>
+<li><strong>Computed metrics</strong>: Create post-aggregation calculations like margins and ratios</li>
 </ul>
-<p>Each of these options allows you to create highly specialized metrics that can answer specific more sofisticated questions.</p>
+<p>Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Only count high-value orders</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;High Value Orders&#39;</span><span class="p">,</span>
@@ -925,7 +978,7 @@
 
 <span class="c1"># Define a query with these metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;advanced_analysis&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;advanced_analysis&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">my_query_dimensions</span><span class="p">),</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;High Value Orders&#39;</span><span class="p">,</span> <span class="s1">&#39;Regional Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;High Value Orders&#39;</span><span class="p">]</span>
 <span class="p">)</span>

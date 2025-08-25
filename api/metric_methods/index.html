@@ -20,7 +20,7 @@
     
     
       
-        <title>Metric Methods - Cube Alchemy</title>
+        <title>Metrics - Cube Alchemy</title>
       
     
     
@@ -99,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Metric Methods
+              Metrics
             
           </span>
         </div>
@@ -580,7 +580,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -593,7 +593,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -619,6 +619,15 @@
   <a href="#define-metric" class="md-nav__link">
     <span class="md-ellipsis">
       Define Metric
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#define-computed-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      Define Computed Metric
     </span>
   </a>
   
@@ -654,7 +663,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -677,7 +686,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -700,7 +709,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -859,6 +868,37 @@
 <p>Custom callable functions: <code>lambda x: x.quantile(0.95)</code> or any function that accepts a pandas Series</p>
 </li>
 </ul>
+<h2 id="define-computed-metric">Define Computed Metric</h2>
+<div class="highlight"><pre><span></span><code><span class="n">define_computed_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Defines a post-aggregation computed metric that operates on already aggregated metrics and dimensions.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>name</code>: Unique label for the metric (used in query results)</li>
+<li><code>expression</code>: Calculation formula using [MetricName] references and dimension column references</li>
+<li><code>fillna</code>: Optional value to replace NaN results after calculation</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define a profit margin percentage computed metric</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_computed_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin %&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;([Revenue] - [Cost]) / [Revenue] * 100&#39;</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Using in queries:</strong></p>
+<p>You must define computed metrics first, then reference them by name in queries:</p>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">query_name</span><span class="o">=</span><span class="s1">&#39;sales_margin_named&#39;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product&#39;</span><span class="p">},</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;Cost&#39;</span><span class="p">],</span>
+    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin %&#39;</span><span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
 <h2 id="register-function">Register Function</h2>
 <div class="highlight"><pre><span></span><code><span class="n">register_function</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>

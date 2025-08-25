@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#the-hypercube" class="md-skip">
+        <a href="#the-hypercube-explained" class="md-skip">
           Skip to content
         </a>
       
@@ -581,7 +581,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -604,7 +604,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -627,7 +627,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -650,7 +650,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -750,27 +750,42 @@
 
 
 
-<h1 id="the-hypercube">The Hypercube</h1>
-<p>A hypercube is a multidimensional data structure that organizes information across multiple dimensions simultaneously. In data analysis, it extends beyond two-dimensional tables to create a unified view that connects related data across multiple attributes.</p>
-<p>In Cube Alchemy, the Hypercube brings multiple DataFrames together into a single, logical structure you can query consistently. Instead of manually joining tables, it dynamically connects your data.</p>
-<p>At a glance:</p>
+<h1 id="the-hypercube-explained">The Hypercube Explained</h1>
+<p>A <strong>hypercube</strong> is a flexible way of organizing data for analysis. Instead of just three axes (like length, width, and height in a cube), a hypercube can have as <strong>many axes</strong> as you can imagine.</p>
+<p>Each axis represents a <strong>dimension</strong> of your data—such as <strong>time</strong>, <strong>region</strong>, <strong>product category</strong>, or <strong>customer type</strong>.  </p>
+<p>The hypercube lets you calculate <strong>measures</strong> (like sales, revenue, or counts) across these dimensions:</p>
+<ul>
+<li>Sales by <strong>month</strong></li>
+<li>Sales by <strong>month + product category</strong> </li>
+<li>Sales by <strong>month + product category + region + wheather condition</strong></li>
+</ul>
+<p>This works the same way no matter how many dimensions you add—the hypercube keeps the calculations <strong>consistent and reusable</strong>.  </p>
+<hr />
+<p><strong>How it works in Cube Alchemy</strong></p>
+<p>In Cube Alchemy, the hypercube doesn’t just come from one table. Instead, it brings together <strong>multiple DataFrames</strong> into a single, logical structure you can query consistently.  </p>
+<p>You don’t have to manually join tables—the hypercube dynamically connects them.  </p>
+<p><strong>At a glance</strong></p>
 <ul>
 <li>
-<p>Directed Acyclic Graph <strong>(DAG)</strong></p>
+<p>The data model is a <strong>Directed Acyclic Graph (DAG)</strong>:  </p>
 <ul>
 <li>
-<p><em>Nodes</em> are your DataFrames.</p>
+<p><strong>Nodes</strong> = your DataFrames  </p>
 </li>
 <li>
-<p><em>Edges</em> are the shared column names that connect them.</p>
+<p><strong>Edges</strong> = the shared columns that connect them  </p>
 </li>
 </ul>
 </li>
 <li>
-<p><strong>Queries'</strong> <em>dimensions</em> and <em>metrics</em> can traverse these connections (multi-hop) to combine the pieces your analysis needs. You define the metrics and queries once, and they work consistently across your analysis using a <em>context state</em> managed with <em>filters</em>.</p>
+<p><strong>Queries</strong>: your chosen dimensions and measures can <strong>traverse these connections (multi-hop)</strong> to combine all the data your analysis needs  </p>
+</li>
+<li>
+<p><strong>Consistency</strong>: you define metrics and queries once, and they work everywhere in the model  </p>
 </li>
 </ul>
-<p><strong>Note</strong></p>
+<hr />
+<p><strong>Important Note</strong></p>
 <p>To be able to multi-hop through the related tables, we need to <strong>avoid cyclic relationships</strong> (also called circular references), as this breaks the logic of data traversal and aggregation. So you need to make sure your model is a <em>directed acyclic graph (DAG)</em>.</p>
 
 

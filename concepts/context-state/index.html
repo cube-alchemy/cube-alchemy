@@ -574,7 +574,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -597,7 +597,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -620,7 +620,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -643,7 +643,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -756,7 +756,7 @@
 </li>
 </ul>
 <p><strong>More states (?)</strong></p>
-<p>You can also create more context states, as many as you want. They allow you to create multiple independent filtering contexts within the same app, so you can compare, isolate, or simulate different scenarios side by side.</p>
+<p>You can also create more context states, as many as you want. They allow you to create multiple independent filtering contexts within the same app so you can compare, isolate, simulate different scenarios side by side or use to create more advanced filtering scenarios.</p>
 <p><strong>Creating new context states:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Create a new filtering environment</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">set_context_state</span><span class="p">(</span><span class="s1">&#39;New Analysis&#39;</span><span class="p">)</span>
@@ -785,7 +785,7 @@
 
 <span class="c1"># Define a query that will use both metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">},</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Regular Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;New Analysis Revenue&#39;</span><span class="p">]</span>
     <span class="c1"># Queries don&#39;t have context_state_name parameter</span>

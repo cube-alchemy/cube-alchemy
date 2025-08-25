@@ -631,7 +631,7 @@
   
   
   <span class="md-ellipsis">
-    Metric Methods
+    Metrics
     
   </span>
   
@@ -654,7 +654,7 @@
   
   
   <span class="md-ellipsis">
-    Query Methods
+    Queries
     
   </span>
   
@@ -677,7 +677,7 @@
   
   
   <span class="md-ellipsis">
-    Filter Methods
+    Filters
     
   </span>
   
@@ -700,7 +700,7 @@
   
   
   <span class="md-ellipsis">
-    Get Components
+    Components
     
   </span>
   
@@ -899,12 +899,13 @@
 </code></pre></div>
 <em>Note: If the displayed graph doesn't look so good try a couple of times or adjust the size.</em></p>
 <p><strong>set_context_state</strong></p>
-<div class="highlight"><pre><span></span><code><span class="n">set_context_state</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<div class="highlight"><pre><span></span><code><span class="n">set_context_state</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base_context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Unfiltered&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 <p>Create a new context state for independent filtering environments.</p>
 <p><em>Parameters:</em></p>
 <ul>
 <li><code>context_state_name</code>: Name for the new context state</li>
+<li><code>base_context_state_name</code>: Name of the base context state, the new context state will be a copy of this one.</li>
 </ul>
 <p><em>Returns:</em></p>
 <ul>
@@ -912,7 +913,7 @@
 </ul>
 <p><em>Example:</em></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Create a new context state</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">set_context_state</span><span class="p">(</span><span class="s1">&#39;Marketing Analysis&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">set_context_state</span><span class="p">(</span><span class="s1">&#39;Marketing Analysis&#39;</span><span class="p">)</span> <span class="c1"># Creates a copy from the unfiltered context state --&gt; self.context_states[&#39;Marketing Analysis&#39;] = self.context_states[&#39;Unfiltered&#39;]</span>
 
 <span class="c1"># Apply filters specific to this context</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;channel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Email&#39;</span><span class="p">,</span> <span class="s1">&#39;Social&#39;</span><span class="p">]},</span> <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;Marketing Analysis&#39;</span><span class="p">)</span>
