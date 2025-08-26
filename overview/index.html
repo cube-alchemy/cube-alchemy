@@ -268,18 +268,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#capabilities" class="md-nav__link">
+  <a href="#core-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
-      Capabilities
+      Core Capabilities
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#semantic-layer" class="md-nav__link">
+  <a href="#the-semantic-layer" class="md-nav__link">
     <span class="md-ellipsis">
-      Semantic Layer
+      The Semantic Layer
     </span>
   </a>
   
@@ -704,12 +704,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/get_analytics_components/" class="md-nav__link">
+      <a href="../api/analytics_components.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Components
+    Define Components
     
   </span>
   
@@ -810,53 +810,28 @@
 
 
 <h1 id="overview">Overview</h1>
-<p>Cube Alchemy turns pandas DataFrames into a unified analytic model and semantic layer, then you can explore data declaratively.</p>
-<h2 id="capabilities">Capabilities</h2>
+<p>Cube Alchemy transforms your pandas DataFrames into a powerful <strong>hypercube</strong>, creating a unified semantic layer for multidimensional analysis. This allows you to move from disconnected tables to a coherent analytical model where you can explore data declaratively.</p>
+<h3 id="core-capabilities">Core Capabilities</h3>
 <ul>
-<li>
-<p>Connects DataFrames automatically via shared column names</p>
-</li>
-<li>
-<p>Handles composite keys and complex relationships transparently</p>
-</li>
-<li>
-<p>Define reusable metrics and queries</p>
-</li>
-<li>
-<p>Maintain stateful context to compare scenarios</p>
-</li>
+<li><strong>Automatic Data Modeling:</strong> Intelligently discovers relationships between your DataFrames by matching shared column names, building a connected graph model automatically.</li>
+<li><strong>Complex Relationship Handling:</strong> Transparently manages composite keys and multi-hop relationships, so you can query across tables without writing the complex joins to connect them.</li>
+<li><strong>Reusable Analytics:</strong> Define metrics and queries once and reuse them across your entire analysis, ensuring consistency and reducing boilerplate code.</li>
+<li><strong>Stateful Analysis:</strong> Maintain a filtering context across queries to easily compare different scenarios.</li>
 </ul>
-<h2 id="semantic-layer">Semantic Layer</h2>
-<p>Map raw tables to a consistent set of analysis components:</p>
+<h3 id="the-semantic-layer">The Semantic Layer</h3>
+<p>Map your raw data into a clear and consistent set of analytical components that form your hypercube:</p>
 <ul>
-<li>
-<p><strong>Dimensions</strong>: Entities in your domain (e.g., Customer, Region, Product; Device, Study, Site)</p>
-</li>
-<li>
-<p><strong>Metrics</strong>: Key measures (e.g., Revenue, Conversion Rate; Throughput, Accuracy, Deviation Closure Time)</p>
-</li>
-<li>
-<p><strong>Queries</strong>: Analyses (e.g., Performance by Group; Trends over Time)</p>
-</li>
+<li><strong>Dimensions</strong>: The "by" of your analysis—the entities you use to slice and dice data (e.g., <code>Customer</code>, <code>Region</code>, <code>Product</code>).</li>
+<li><strong>Metrics</strong>: The key performance indicators (KPIs) you measure (e.g., <code>Total Revenue</code>, <code>Conversion Rate</code>, <code>Average Order Value</code>).</li>
+<li><strong>Queries</strong>: The questions you ask of your data, combining metrics and dimensions to produce insights (e.g., <em>Sales by Region over Time</em>).</li>
 </ul>
-<h2 id="why-it-matters">Why It Matters</h2>
-<p>Ship insights faster and reduce maintenance.</p>
+<h3 id="why-it-matters">Why It Matters</h3>
+<p>Build faster, more reliable analytics with a fraction of the effort.</p>
 <ul>
-<li>
-<p><strong>Speed</strong>: Relationships are discovered automatically</p>
-</li>
-<li>
-<p><strong>Simplicity</strong>: Declarative queries simplify code and replace ad‑hoc joins</p>
-</li>
-<li>
-<p><strong>Consistency</strong>: Standardized metrics and filters yield reliable results</p>
-</li>
-<li>
-<p><strong>Maintainability</strong>: Centralized business logic in reusable components</p>
-</li>
-<li>
-<p><strong>Integration</strong>: Works great with Streamlit and other app frameworks</p>
-</li>
+<li><strong>Accelerate Insights:</strong> Go from raw data to deep analysis in minutes. Relationships are discovered automatically, not manually coded.</li>
+<li><strong>Simplify Complexity:</strong> Replace messy, ad-hoc joins with clean, declarative queries that are easy to read and maintain.</li>
+<li><strong>Ensure Consistency:</strong> Standardized metrics and a central data model guarantee that everyone gets reliable, consistent results.</li>
+<li><strong>Integrate Seamlessly:</strong> Designed to work with Streamlit and other Python-based frameworks for building interactive data applications.</li>
 </ul>
 
 
