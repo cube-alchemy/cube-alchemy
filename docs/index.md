@@ -1,11 +1,9 @@
-# Cube Alchemy
+# Build a Powerful Hypercube
 
-**Streamlined Multidimensional Analytics in Pure Python**
+More analysis, less plumbing. Cube Alchemy automatically transforms your disconnected pandas DataFrames into a unified, multidimensional data model. 
 
-Cube Alchemy creates a unified data model from your pandas DataFrames, enabling simple yet powerful cross-dimensional analysis.
+**Key Features:**
 
-**Highlights**
-
-- Simple slicing and dicing — less manual joins and glue code
-- Reusable components and stateful queries
-- Works great in notebooks and apps (Streamlit/Panel)
+- **Automatic Relationship Discovery:** Connects DataFrames instantly using shared columns.
+- **Multidimensional Analysis:** Slice, dice, and aggregate your data across any dimension with consistent, reusable metrics and queries.
+- **Interactive & Scalable:** Works great in notebooks and apps (Streamlit/Panel)

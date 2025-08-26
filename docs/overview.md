@@ -1,36 +1,27 @@
 # Overview
 
-Cube Alchemy turns pandas DataFrames into a unified analytic model and semantic layer, then you can explore data declaratively.
+Cube Alchemy transforms your pandas DataFrames into a powerful **hypercube**, creating a unified semantic layer for multidimensional analysis. This allows you to move from disconnected tables to a coherent analytical model where you can explore data simply and declaratively.
 
-## Capabilities
+### Core Capabilities
 
-- Connects DataFrames automatically via shared column names
+- **Automatic Relationships:**  Discovers relationships between your DataFrames by matching shared column names.
+    - *Complex Relationship Handling:* Handles composite keys and complex relationships transparently.
+- **Reusable Analytics:** Define metrics and queries once and reuse them across your entire analysis, ensuring consistency and reducing boilerplate code.
+- **Stateful Analysis:** Maintain a filtering context across queries to easily compare different scenarios.
 
-- Handles composite keys and complex relationships transparently
+### The Semantic Layer
 
-- Define reusable metrics and queries
+Map your raw data into a clear and consistent set of analytical assets to work with your hypercube:
 
-- Maintain stateful context to compare scenarios
+- **Dimensions**: The "by" of your analysis—the entities you use to slice and dice data (e.g., `Customer`, `Region`, `Product`).
+- **Metrics**: The key performance indicators (KPIs) you measure (e.g., `Total Revenue`, `Conversion Rate`, `Average Order Value`).
+- **Queries**: The questions you ask of your data, combining metrics and dimensions to produce insights (e.g., *Revenue by Region over Time*).
 
-## Semantic Layer
+### Why It Matters
 
-Map raw tables to a consistent set of analysis components:
+Build faster, reliable analytics with a fraction of the effort.
 
-- **Dimensions**: Entities in your domain (e.g., Customer, Region, Product; Device, Study, Site)
-
-- **Metrics**: Key measures (e.g., Revenue, Conversion Rate; Throughput, Accuracy, Deviation Closure Time)
-
-- **Queries**: Analyses (e.g., Performance by Group; Trends over Time)
-## Why It Matters
-
-Ship insights faster and reduce maintenance.
-
-- **Speed**: Relationships are discovered automatically
-
-- **Simplicity**: Declarative queries simplify code and replace ad‑hoc joins
-
-- **Consistency**: Standardized metrics and filters yield reliable results
-
-- **Maintainability**: Centralized business logic in reusable components
-
-- **Integration**: Works great with Streamlit and other app frameworks
+- **Accelerate Insights:** Get into deep analysis in minutes. Relationships are discovered automatically, not manually coded.
+- **Simplify Complexity:** Replace ad-hoc joins and messy code with clean, declarative queries that are easy to read and maintain.
+- **Ensure Consistency:** Standardized metrics and a central data model guarantee that everyone gets reliable, consistent results.
+- **Integrate Seamlessly:** Designed to work with Streamlit and other Python-based frameworks for building interactive data applications.

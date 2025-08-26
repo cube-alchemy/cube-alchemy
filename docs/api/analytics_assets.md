@@ -1,6 +1,6 @@
-# Hypercube Components
+# Hypercube Analyitics Assets
 
-These methods let you see what's available and how everything is defined in your hypercube.
+These methods let you see what is available and how your dimensions, metrics and queries are defined in your hypercube.
 
 ## Get Dimensions
 
@@ -114,9 +114,3 @@ Returns the definition for a single query (dimensions, metrics, computed_metrics
 q = cube.get_query('Sales by Region')
 print(q)
 ```
-
-## See Also
-
-- [Filter Methods](filter_methods.md)
-- [Query Methods](query_methods.md)
-- [Computed Metrics](computed_metrics.md)

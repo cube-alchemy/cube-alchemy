@@ -1,39 +1,41 @@
-# The Hypercube Explained
+# Understanding the Hypercube
 
-A **hypercube** is a flexible way of organizing data for analysis. Instead of just three axes (like length, width, and height in a cube), a hypercube can have as **many axes** as you can imagine.
+A **hypercube** is a powerful data structure for organizing and analyzing data from multiple perspectives. Think of a simple cube with three dimensions: length, width, and height. A hypercube extends this concept to an unlimited number of dimensions, allowing you to model complex business scenarios.
 
-Each axis represents a **dimension** of your data—such as **time**, **region**, **product category**, or **customer type**.  
+Each axis of the hypercube represents a key **dimension** of your data, such as:
 
-The hypercube lets you calculate **measures** (like sales, revenue, or counts) across these dimensions:
+- **Time** (e.g., year, month, day)
 
-- Sales by **month**
-- Sales by **month + product category** 
-- Sales by **month + product category + region + wheather condition**
+- **Geography** (e.g., region, country, city)
 
-This works the same way no matter how many dimensions you add—the hypercube keeps the calculations **consistent and reusable**.  
+- **Product** (e.g., category, brand, item)
 
----
+- **Customer** (e.g., segment, demographics)
 
-**How it works in Cube Alchemy**
+The hypercube enables you to calculate *metrics* (like sales, revenue, or user counts) across any combination of these dimensions, ensuring your calculations are always consistent and reusable. For example, you can analyze:
 
-In Cube Alchemy, the hypercube doesn’t just come from one table. Instead, it brings together **multiple DataFrames** into a single, logical structure you can query consistently.  
-
-You don’t have to manually join tables—the hypercube dynamically connects them.  
-
-**At a glance**
-
-- The data model is a **Directed Acyclic Graph (DAG)**:  
-
-    - **Nodes** = your DataFrames  
-
-    - **Edges** = the shared columns that connect them  
-
-- **Queries**: your chosen dimensions and measures can **traverse these connections (multi-hop)** to combine all the data your analysis needs  
-
-- **Consistency**: you define metrics and queries once, and they work everywhere in the model  
+- *Revenue* by **Month**
+- *Active users* by **Month** and **Product Category**
+- *Margin* by **Month**, **Product Category**, and **Region**
 
 ---
 
-**Important Note**
+### How Cube Alchemy Builds the Hypercube
 
-To be able to multi-hop through the related tables, we need to **avoid cyclic relationships** (also called circular references), as this breaks the logic of data traversal and aggregation. So you need to make sure your model is a *directed acyclic graph (DAG)*.
+In Cube Alchemy, the hypercube is not limited to a single table. It combines **multiple DataFrames** into a unified, logical model that you can query seamlessly. You don't need to write the complex joins to connect them; the hypercube handles the relationships for you.
+
+**Key Concepts:**
+
+- **Data Model as a Graph:** The underlying structure is a **Directed Acyclic Graph (DAG)**.
+    - **Nodes**: Your DataFrames.
+    - **Edges**: The shared columns that link them.
+
+- **Effortless Queries:** When you request a metric across certain dimensions, the hypercube automatically **traverses** these connections (even across multiple "hops") to gather the necessary data.
+
+- **Consistency:** Define your metrics and dimensions once, and they can be reliably used across the entire data model.
+
+---
+
+> **Important Note: Avoid Circular Dependencies**
+>
+> For the hypercube to function correctly, your data model must be a **Directed Acyclic Graph (DAG)**. This means you must avoid **cyclic relationships** (or circular references). Such cycles break the logic of data traversal and can lead to incorrect or infinite aggregations.

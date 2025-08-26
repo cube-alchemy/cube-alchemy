@@ -53,7 +53,12 @@ nav:
     - Metrics: api/metric_methods.md
     - Queries: api/query_methods.md
     - Filters: api/filter_methods.md
-    - Define Components: api/analytics_components.md
+    - Analytics Assets: api/analytics_assets.md
   - Examples: examples.md
   - Streamlit Integration: streamlit.md
   - Contributing: contributing.md
+
+extra_javascript:
+  - https://www.googletagmanager.com/gtag/js?id=G-JXW3ZYFYK0
+  - js/ga4.js
+
