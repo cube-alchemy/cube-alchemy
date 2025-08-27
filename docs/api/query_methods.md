@@ -7,10 +7,10 @@ define_query(
     name: str,
     dimensions: set[str] = {},
     metrics: List[str] = [],
-    drop_null_dimensions: bool = False,
-    drop_null_metric_results: bool = False,
     computed_metrics: Optional[List[str]] = None,
-    having: Optional[str] = None
+    having: Optional[str] = None,
+    drop_null_dimensions: bool = False,
+    drop_null_metric_results: bool = False
 )
 ```
 
@@ -21,10 +21,10 @@ Defines a named query with dimensions and metrics for later execution.
 - `name`: A unique name for the query
 - `dimensions`: Set of dimension column names to include in the query
 - `metrics`: List of metric names (as defined with define_metric)
-- `drop_null_dimensions`: Whether to exclude rows where dimension values are missing
-- `drop_null_metric_results`: Whether to exclude rows where metric calculations result in null
 - `computed_metrics`: List of names referencing computed metrics defined via `define_computed_metric()`
 - `having`: SQL HAVING-like expression to filter rows based on aggregated results
+- `drop_null_dimensions`: Whether to exclude rows where dimension values are missing
+- `drop_null_metric_results`: Whether to exclude rows where metric calculations result in null
 
 **Example:**
 

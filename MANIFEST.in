@@ -16,3 +16,4 @@ exclude .gitignore
 exclude .github
 recursive-exclude tests *
 recursive-exclude examples *
+exclude BACKLOG.md

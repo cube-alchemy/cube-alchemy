@@ -33,7 +33,7 @@ class Metric:
             "expression": self.expression,
             "row_condition_expression": self.row_condition_expression,
             "aggregation": self.aggregation,
-            "columns": self.columns,
+            #"columns": self.columns,
             "metric_filters": self.metric_filters,
             "context_state_name": self.context_state_name,
             "fillna": self.fillna
@@ -81,5 +81,5 @@ class ComputedMetric:
         return {
             "expression": self.expression,
             "fillna": self.fillna,
-            "columns": self.columns,
+        #    "columns": self.columns,
         }

@@ -35,11 +35,11 @@ class AnalyticsComponents:
         name: str,
         dimensions: set[str] = {},
         metrics: List[str] = [],
-        drop_null_dimensions: bool = False,
-        drop_null_metric_results: bool = False,
         computed_metrics: List[str] = [],
         having: Optional[str] = None,
-        sort: List[Tuple[str, str]] = [],
+        sort: List[Tuple[str, str]] = [],        
+        drop_null_dimensions: bool = False,
+        drop_null_metric_results: bool = False,
     ):
         dimensions = list(dimensions) 
 
@@ -56,12 +56,12 @@ class AnalyticsComponents:
         self.queries[name] = {
             "dimensions": dimensions,
             "metrics": metrics,
-            "drop_null_dimensions": drop_null_dimensions,
-            "drop_null_metric_results": drop_null_metric_results,
             "computed_metrics": computed_metrics,
             "having": having,
             "having_columns": having_columns,
             "sort": sort,
+            "drop_null_dimensions": drop_null_dimensions,
+            "drop_null_metric_results": drop_null_metric_results,
         }
 
     def get_dimensions(self) -> List[str]:
@@ -85,11 +85,11 @@ class AnalyticsComponents:
             queries_formatted[name] = {
                 "dimensions": q.get('dimensions', []),
                 "metrics": q.get('metrics', []),
-                "drop_null_dimensions": q.get('drop_null_dimensions', False),
-                "drop_null_metric_results": q.get('drop_null_metric_results', False),
                 "computed_metrics": q.get('computed_metrics', []),
                 "having": q.get('having'),
-                "sort": q.get('sort'),
+                "sort": q.get('sort'),                
+                "drop_null_dimensions": q.get('drop_null_dimensions', False),
+                "drop_null_metric_results": q.get('drop_null_metric_results', False),
             }
         return queries_formatted
     
