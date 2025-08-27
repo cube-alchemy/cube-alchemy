@@ -727,7 +727,7 @@
   
   
   <span class="md-ellipsis">
-    Analytics Assets
+    Get Analytics Assets
     
   </span>
   
@@ -939,8 +939,8 @@
 <li><strong>Different context states</strong>: Calculate metrics in different filtering environments</li>
 <li><strong>Metric filters</strong>: Apply specific filters only for a particular metric</li>
 <li><strong>Row conditions</strong>: Pre-filter rows before calculating the metric</li>
+<li><strong>Ignore Dimensions</strong>: Control dimensional aggregation behavior</li>
 <li><strong>Custom functions</strong>: Use your own Python functions for complex logic</li>
-<li><strong>Computed metrics</strong>: Create post-aggregation calculations like margins and ratios</li>
 </ul>
 <p>Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Only count high-value orders</span>
@@ -976,6 +976,22 @@
     <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;My New Context&#39;</span>
 <span class="p">)</span>
 
+<span class="c1"># Ignore_dimensions from aggregation</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Total Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">ignore_dimensions</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Ignores all dimensions, returns same value for all rows</span>
+<span class="p">)</span>
+
+<span class="c1"># Ignore specific dimensions from aggregation</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Country Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">ignore_dimensions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;product&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">]</span>  <span class="c1"># Ignore these dimensions when aggregating</span>
+<span class="p">)</span>
+
 <span class="c1"># Define a query with these metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;advanced_analysis&quot;</span><span class="p">,</span>
@@ -991,7 +1007,7 @@
 <ol>
 <li><strong>Define a Python function</strong> that performs your specialized calculation</li>
 <li><strong>Register the function</strong> with your cube using <code>cube.register_function()</code></li>
-<li><strong>Reference the function</strong> in your metric expressions using the <code>@function_name</code> syntax</li>
+<li><strong>Reference the function</strong> in your metric expressions using the <code>@function_name</code> syntax (Pandas and Numpy are already registered as <em>pd</em> and <em>np</em>).</li>
 </ol>
 <p>This powerful feature allows you to implement virtually any calculation logic while keeping your metric definitions clean and readable.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1038,6 +1054,29 @@
     <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;@categorize_revenue([qty] * [price])&#39;</span><span class="p">,</span>
     <span class="n">aggregation</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="p">)</span>
+
+<span class="c1"># All pandas and numpy functions are already registered functions and can be used right away by calling pd or np</span>
+
+<span class="c1"># for example if you have this metric</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;High Value Orders&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[order_id]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">,</span>
+    <span class="n">row_condition_expression</span><span class="o">=</span><span class="s1">&#39;[price] &gt; 100&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># it can be defined also using numpy inside the expression</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;High Value Orders&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;@np.where([price] &gt; 100, [order_id], np.nan)&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;count&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Will retrieve the exact same value</span>
+
+<span class="c1"># You can inspect available registered functions:</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">registered_functions</span>
 </code></pre></div>
 <p><strong>Note on Function Handling</strong></p>
 <p>Metric aggregation allows you to pass custom functions directly while expression functions need to be registered on the hypercube first and referenced with <code>@function_name</code>. This difference exists due to their roles in the processing pipeline:</p>

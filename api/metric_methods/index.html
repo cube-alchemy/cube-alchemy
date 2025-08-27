@@ -709,7 +709,7 @@
   
   
   <span class="md-ellipsis">
-    Analytics Assets
+    Get Analytics Assets
     
   </span>
   
@@ -818,6 +818,7 @@
     <span class="n">metric_filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">row_condition_expression</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span><span class="p">,</span>
+    <span class="n">ignore_dimensions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">fillna</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -828,9 +829,9 @@
 <li><code>expression</code>: Calculation formula using [column] references and @custom_functions</li>
 <li><code>aggregation</code>: How to combine values - pandas aggregation string ('sum', 'mean', 'count') or custom callable</li>
 <li><code>metric_filters</code>: Filters applied only when evaluating this specific metric</li>
-<li><code>metric_filters</code>: Filters applied only when evaluating this specific metric</li>
 <li><code>row_condition_expression</code>: Filter expression applied to rows before calculating the metric</li>
 <li><code>context_state_name</code>: Which context state this metric operates in</li>
+<li><code>ignore_dimensions</code>: Control how dimensions affect aggregation - <code>True</code> to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or <code>False</code> (default) for normal dimensional aggregation</li>
 <li><code>fillna</code>: Value to use for replacing NaN results</li>
 </ul>
 <p><strong>Example:</strong></p>
@@ -851,6 +852,22 @@
     <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[sales_amount]&#39;</span><span class="p">,</span>
     <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
     <span class="n">row_condition_expression</span><span class="o">=</span><span class="s1">&#39;[region] == &quot;Australia&quot;&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a metric that ignores all dimensions (calculates grand total)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Total Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">ignore_dimensions</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Ignore all dimensions when aggregating</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a metric that ignores specific dimensions (partial total)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue by Country&#39;</span><span class="p">,</span> 
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">ignore_dimensions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">]</span>  <span class="c1"># Ignore these dimensions, aggregate only by remaining dimensions</span>
 <span class="p">)</span>
 </code></pre></div>
 <p><strong>Syntax Rules</strong></p>
