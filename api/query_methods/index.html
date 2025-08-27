@@ -824,10 +824,10 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-    <span class="n">drop_null_dimensions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">drop_null_metric_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">computed_metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">having</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">having</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">drop_null_dimensions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">drop_null_metric_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Defines a named query with dimensions and metrics for later execution.</p>
@@ -836,10 +836,10 @@
 <li><code>name</code>: A unique name for the query</li>
 <li><code>dimensions</code>: Set of dimension column names to include in the query</li>
 <li><code>metrics</code>: List of metric names (as defined with define_metric)</li>
-<li><code>drop_null_dimensions</code>: Whether to exclude rows where dimension values are missing</li>
-<li><code>drop_null_metric_results</code>: Whether to exclude rows where metric calculations result in null</li>
 <li><code>computed_metrics</code>: List of names referencing computed metrics defined via <code>define_computed_metric()</code></li>
 <li><code>having</code>: SQL HAVING-like expression to filter rows based on aggregated results</li>
+<li><code>drop_null_dimensions</code>: Whether to exclude rows where dimension values are missing</li>
+<li><code>drop_null_metric_results</code>: Whether to exclude rows where metric calculations result in null</li>
 </ul>
 <p><strong>Example:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define metrics</span>
