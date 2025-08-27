@@ -10,6 +10,7 @@ define_metric(
     metric_filters: Optional[Dict[str, Any]] = None,
     row_condition_expression: Optional[str] = None,
     context_state_name: str = 'Default',
+    ignore_dimensions: Optional[Union[bool, List[str]]] = False,
     fillna: Optional[any] = None
 )
 ```
@@ -22,9 +23,9 @@ Defines a metric and stores it in the cube object for later use in queries.
 - `expression`: Calculation formula using [column] references and @custom_functions
 - `aggregation`: How to combine values - pandas aggregation string ('sum', 'mean', 'count') or custom callable
 - `metric_filters`: Filters applied only when evaluating this specific metric
-- `metric_filters`: Filters applied only when evaluating this specific metric
 - `row_condition_expression`: Filter expression applied to rows before calculating the metric
 - `context_state_name`: Which context state this metric operates in
+- `ignore_dimensions`: Control how dimensions affect aggregation - `True` to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or `False` (default) for normal dimensional aggregation
 - `fillna`: Value to use for replacing NaN results
 
 **Example:**
@@ -47,6 +48,22 @@ cube.define_metric(
     expression='[sales_amount]',
     aggregation='sum',
     row_condition_expression='[region] == "Australia"'
+)
+
+# Define a metric that ignores all dimensions (calculates grand total)
+cube.define_metric(
+    name='Total Revenue',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_dimensions=True  # Ignore all dimensions when aggregating
+)
+
+# Define a metric that ignores specific dimensions (partial total)
+cube.define_metric(
+    name='Revenue by Country', 
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_dimensions=['city', 'product_category']  # Ignore these dimensions, aggregate only by remaining dimensions
 )
 ```
 

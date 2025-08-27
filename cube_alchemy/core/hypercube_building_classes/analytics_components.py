@@ -12,9 +12,10 @@ class AnalyticsComponents:
         metric_filters: Optional[Dict[str, Any]] = None,
         row_condition_expression: Optional[str] = None, 
         context_state_name: str = 'Default',
+        ignore_dimensions: bool = False,
         fillna: Optional[any] = None, ):
         
-        new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, fillna)
+        new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, ignore_dimensions, fillna)
         self.metrics[new_metric.name] = new_metric
     
     def define_computed_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:

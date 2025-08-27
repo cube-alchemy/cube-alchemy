@@ -135,8 +135,8 @@ class QueryMethods:
             else:
                 df = self.context_states[context_state_name].copy() # I copy the state DataFrame to avoid modifying the original state
                 df = self._apply_filters_to_dataframe(df, query_filters)
-                df['all'] = 1
-                dimensions = ['all']
+                df['<all>'] = 1
+                dimensions = ['<all>']
                 no_dimension = True
             results = []          
             for metric in metrics:
@@ -193,7 +193,31 @@ class QueryMethods:
                     print(f"Error evaluating metric expression: {e}")
                     return None
 
-                metric_result = metric_result.groupby(dimensions,dropna = drop_null_dimensions)[metric.name].agg(metric.aggregation).reset_index()
+                # Handle ignore_dimensions (ignore all or specific dimensions)
+                if metric.ignore_dimensions:
+                    if isinstance(metric.ignore_dimensions, list):
+                        # Exclude specified dimensions (partial ignore)
+                        group_dims = [d for d in dimensions if d not in metric.ignore_dimensions]
+                        if group_dims:
+                            # Group by remaining dimensions
+                            agg_result = metric_result.groupby(group_dims, dropna=drop_null_dimensions)[metric.name].agg(metric.aggregation).reset_index()
+                            # Get all dimension combinations to join back
+                            all_dims = df[dimensions].drop_duplicates()
+                            metric_result = pd.merge(all_dims, agg_result, on=group_dims, how='left')
+                        else:
+                            # If all dimensions are excluded, calculate grand total
+                            total_agg_val = metric_result[metric.name].agg(metric.aggregation)
+                            metric_result = df[dimensions].drop_duplicates()
+                            metric_result[metric.name] = total_agg_val
+                    else:
+                        # Boolean True - ignore all dimensions (grand total)
+                        total_agg_val = metric_result[metric.name].agg(metric.aggregation)
+                        metric_result = df[dimensions].drop_duplicates()
+                        metric_result[metric.name] = total_agg_val
+                else:
+                    # Normal aggregation with all dimensions
+                    metric_result = metric_result.groupby(dimensions, dropna=drop_null_dimensions)[metric.name].agg(metric.aggregation).reset_index()
+                
                 if drop_null_metric_results:
                     metric_result = metric_result.dropna(subset=[metric.name])
                 results.append(metric_result)
@@ -202,7 +226,7 @@ class QueryMethods:
             for result in results[1:]:
                 final_result = pd.merge(final_result, result, on=dimensions, how='outer')
             if no_dimension:
-                final_result.drop('all', axis=1, inplace=True)
+                final_result.drop('<all>', axis=1, inplace=True)
 
             return final_result
 

@@ -16,6 +16,7 @@ class Metric:
         metric_filters: Optional[Dict[str, Any]] = None,
         row_condition_expression: Optional[str] = None, 
         context_state_name: str = 'Default',
+        ignore_dimensions: Optional[Union[bool, List[str]]] = False,
         fillna: Optional[any] = None, 
     ) -> None:
         self.name = name
@@ -25,18 +26,31 @@ class Metric:
         self.columns = extract_columns(str(self.expression) + str(self.row_condition_expression))
         self.metric_filters = metric_filters
         self.context_state_name = context_state_name
+        self.ignore_dimensions = ignore_dimensions
         self.fillna = fillna
     
     def get_metric_details(self):
+        import inspect
         #return a dictionary with metric details
+        aggregation_display = self.aggregation
+        if callable(self.aggregation):
+            try:
+                # Get source for lambdas, or name for regular functions
+                source = inspect.getsource(self.aggregation).strip()
+                aggregation_display = source if source.startswith('lambda') else self.aggregation.__name__
+            except (TypeError, OSError):
+                # Fallback to name for built-in functions or if source is not available
+                aggregation_display = self.aggregation.__name__
+
         return {
             "expression": self.expression,
             "row_condition_expression": self.row_condition_expression,
-            "aggregation": self.aggregation,
+            "aggregation": aggregation_display,
             #"columns": self.columns,
             "metric_filters": self.metric_filters,
             "context_state_name": self.context_state_name,
-            "fillna": self.fillna
+            "ignore_dimensions": self.ignore_dimensions,
+            "fillna": self.fillna,
         }
 
 class MetricGroup: # group of metrics based on state and query filters

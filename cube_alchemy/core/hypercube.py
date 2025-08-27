@@ -52,7 +52,7 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
             self.tables: Dict[str, pd.DataFrame] = {}
             self.composite_tables: Optional[Dict[str, pd.DataFrame]] = {}
             self.composite_keys: Optional[Dict[str, Any]] = {}
-            self.reduced_input_tables = {}
+            self.input_tables_columns = {}
 
             if validate:
 
@@ -61,11 +61,13 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
                 SchemaValidator.validate(tables)
 
                 print("Hypercube schema validated successfully. Loading full data..")
-            
-            
-            self.reduced_input_tables = SchemaValidator._create_sample_tables(tables)
-            
-            # 2. Schema is valid, build the actual model with full data
+
+            # Store input table columns for reference
+            reduced_input_tables, _ = SchemaValidator._create_sample_tables(tables)
+            for table_name in reduced_input_tables:
+                self.input_tables_columns[table_name] = reduced_input_tables[table_name].columns.to_list()
+
+            # Schema is valid, build the actual model with full data
             bridge_generator = None
             if apply_composite:
                 bridge_generator = CompositeBridgeGenerator(tables)

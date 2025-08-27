@@ -110,8 +110,8 @@ For more sophisticated analysis, metrics support several powerful options:
 - **Different context states**: Calculate metrics in different filtering environments
 - **Metric filters**: Apply specific filters only for a particular metric
 - **Row conditions**: Pre-filter rows before calculating the metric
+- **Ignore Dimensions**: Control dimensional aggregation behavior
 - **Custom functions**: Use your own Python functions for complex logic
-- **Computed metrics**: Create post-aggregation calculations like margins and ratios
 
 Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.
 
@@ -149,6 +149,22 @@ cube.define_metric(
     context_state_name='My New Context'
 )
 
+# Ignore_dimensions from aggregation
+cube.define_metric(
+    name='Total Revenue',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_dimensions=True  # Ignores all dimensions, returns same value for all rows
+)
+
+# Ignore specific dimensions from aggregation
+cube.define_metric(
+    name='Country Revenue',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_dimensions=['city', 'product', 'date']  # Ignore these dimensions when aggregating
+)
+
 # Define a query with these metrics
 cube.define_query(
     name="advanced_analysis",
@@ -166,7 +182,7 @@ When your analysis requires logic that goes beyond basic arithmetic, you can reg
 
 1. **Define a Python function** that performs your specialized calculation
 2. **Register the function** with your cube using `cube.register_function()`
-3. **Reference the function** in your metric expressions using the `@function_name` syntax
+3. **Reference the function** in your metric expressions using the `@function_name` syntax (Pandas and Numpy are already registered as *pd* and *np*).
 
 This powerful feature allows you to implement virtually any calculation logic while keeping your metric definitions clean and readable.
 
@@ -215,7 +231,31 @@ cube.define_metric(
     expression='@categorize_revenue([qty] * [price])',
     aggregation=lambda x: x.value_counts().index[0]
 )
+
+# All pandas and numpy functions are already registered functions and can be used right away by calling pd or np
+
+# for example if you have this metric
+cube.define_metric(
+    name='High Value Orders',
+    expression='[order_id]',
+    aggregation='count',
+    row_condition_expression='[price] > 100'
+)
+
+# it can be defined also using numpy inside the expression
+
+cube.define_metric(
+    name='High Value Orders',
+    expression='@np.where([price] > 100, [order_id], np.nan)',
+    aggregation='count'
+)
+
+# Will retrieve the exact same value
+
+# You can inspect available registered functions:
+cube.registered_functions
 ```
+
 
 **Note on Function Handling**
 

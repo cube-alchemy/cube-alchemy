@@ -53,7 +53,7 @@ nav:
     - Metrics: api/metric_methods.md
     - Queries: api/query_methods.md
     - Filters: api/filter_methods.md
-    - Analytics Assets: api/analytics_assets.md
+    - Get Analytics Assets: api/analytics_assets.md
   - Examples: examples.md
   - Streamlit Integration: streamlit.md
   - Contributing: contributing.md
