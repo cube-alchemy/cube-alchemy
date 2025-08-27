@@ -686,7 +686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_components.md" class="md-nav__link">
+      <a href="../../api/analytics_components/" class="md-nav__link">
         
   
   
@@ -793,20 +793,30 @@
 
 <h1 id="understanding-the-hypercube">Understanding the Hypercube</h1>
 <p>A <strong>hypercube</strong> is a powerful data structure for organizing and analyzing data from multiple perspectives. Think of a simple cube with three dimensions: length, width, and height. A hypercube extends this concept to an unlimited number of dimensions, allowing you to model complex business scenarios.</p>
-<p>Each axis of the hypercube represents a key <strong>dimension</strong> of your data, such as:
-- <strong>Time</strong> (e.g., year, month, day)
-- <strong>Geography</strong> (e.g., region, country, city)
-- <strong>Product</strong> (e.g., category, brand, item)
-- <strong>Customer</strong> (e.g., segment, demographics)</p>
-<p>The hypercube enables you to calculate <strong>measures</strong> (like sales, revenue, or user counts) across any combination of these dimensions, ensuring your calculations are always consistent and reusable. For example, you can analyze:</p>
+<p>Each axis of the hypercube represents a key <strong>dimension</strong> of your data, such as:</p>
 <ul>
-<li><em>Total Sales</em> by <strong>Month</strong></li>
-<li><em>Total Sales</em> by <strong>Month</strong> and <strong>Product Category</strong></li>
-<li><em>Total Sales</em> by <strong>Month</strong>, <strong>Product Category</strong>, and <strong>Region</strong></li>
+<li>
+<p><strong>Time</strong> (e.g., year, month, day)</p>
+</li>
+<li>
+<p><strong>Geography</strong> (e.g., region, country, city)</p>
+</li>
+<li>
+<p><strong>Product</strong> (e.g., category, brand, item)</p>
+</li>
+<li>
+<p><strong>Customer</strong> (e.g., segment, demographics)</p>
+</li>
+</ul>
+<p>The hypercube enables you to calculate <em>metrics</em> (like sales, revenue, or user counts) across any combination of these dimensions, ensuring your calculations are always consistent and reusable. For example, you can analyze:</p>
+<ul>
+<li><em>Revenue</em> by <strong>Month</strong></li>
+<li><em>Active users</em> by <strong>Month</strong> and <strong>Product Category</strong></li>
+<li><em>Margin</em> by <strong>Month</strong>, <strong>Product Category</strong>, and <strong>Region</strong></li>
 </ul>
 <hr />
 <h3 id="how-cube-alchemy-builds-the-hypercube">How Cube Alchemy Builds the Hypercube</h3>
-<p>In Cube Alchemy, the hypercube is not limited to a single table. It intelligently combines <strong>multiple DataFrames</strong> into a unified, logical model that you can query seamlessly. You don't need to write manual joins; the hypercube handles the relationships for you.</p>
+<p>In Cube Alchemy, the hypercube is not limited to a single table. It combines <strong>multiple DataFrames</strong> into a unified, logical model that you can query seamlessly. You don't need to write the complex joins to connect them; the hypercube handles the relationships for you.</p>
 <p><strong>Key Concepts:</strong></p>
 <ul>
 <li>
@@ -826,7 +836,7 @@
 <hr />
 <blockquote>
 <p><strong>Important Note: Avoid Circular Dependencies</strong></p>
-<p>For the hypercube to function correctly, your data model must be a <strong>Directed Acyclic Graph (DAG)</strong>. This means you must avoid <strong>cyclic relationships</strong> (or circular references), where a path of relationships leads back to the starting table. Such cycles break the logic of data traversal and can lead to incorrect or infinite aggregations.</p>
+<p>For the hypercube to function correctly, your data model must be a <strong>Directed Acyclic Graph (DAG)</strong>. This means you must avoid <strong>cyclic relationships</strong> (or circular references). Such cycles break the logic of data traversal and can lead to incorrect or infinite aggregations.</p>
 </blockquote>
 
 
