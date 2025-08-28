@@ -26,7 +26,7 @@ Defines a metric and stores it in the cube object for later use in queries.
 - `row_condition_expression`: Filter expression applied to rows before calculating the metric
 - `context_state_name`: Which context state this metric operates in
 - `ignore_dimensions`: Control how dimensions affect aggregation - `True` to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or `False` (default) for normal dimensional aggregation
-- `fillna`: Value to use for replacing NaN results
+- `fillna`: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation.
 
 **Example:**
 
@@ -94,7 +94,7 @@ Defines a post-aggregation computed metric that operates on already aggregated m
 
 - `name`: Unique label for the metric (used in query results)
 - `expression`: Calculation formula using [MetricName] references and dimension column references
-- `fillna`: Optional value to replace NaN results after calculation
+- `fillna`: Optional value to replace NaN computed metrics expression columns before calculation.
 
 **Example:**
 

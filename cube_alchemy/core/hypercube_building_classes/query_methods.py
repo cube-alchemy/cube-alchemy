@@ -174,9 +174,13 @@ class QueryMethods:
                 else:
                     metric_result = self._fetch_and_merge_columns(metric.columns, metric_result)
               
+                # Store masks for NaN values before filling
+                filled_masks = {}
                 if metric.fillna is not None:
                     for col in metric.columns:
-                        metric_result[col] = metric_result[col].fillna(metric.fillna)
+                        filled_masks[col] = metric_result[col].isna()
+                        metric_result.loc[filled_masks[col], col] = metric.fillna
+
                 try:
                     # If metric has row condition filter down the data based on it
                     if metric.row_condition_expression:
@@ -189,9 +193,15 @@ class QueryMethods:
                     eval_locals = {'metric_result': metric_result}
                     eval_globals = self.registered_functions
                     metric_result[metric.name] = eval(expr, eval_globals, eval_locals)
+                    
                 except Exception as e:
                     print(f"Error evaluating metric expression: {e}")
                     return None
+                
+                # Restore original NaN values in source columns (can be relevant if a metric column is also a dimension)
+                if metric.fillna is not None:
+                    for col, mask in filled_masks.items():
+                        metric_result.loc[mask, col] = pd.NA
 
                 # Handle ignore_dimensions (ignore all or specific dimensions)
                 if metric.ignore_dimensions:
@@ -342,6 +352,13 @@ class QueryMethods:
             expression = cm.expression
             fillna_value = cm.fillna
 
+            # If fill na, temporarily fill the dataframe column na values
+            filled_masks = {}
+            if fillna_value is not None:
+                for col in cm.columns:
+                    filled_masks[col] = df[col].isna()
+                    df.loc[filled_masks[col], col] = fillna_value
+
             try:
                 # Turn [col] into df['col'] for Python eval
                 expr = add_quotes_to_brackets(expression.replace('[', 'df['))
@@ -352,11 +369,14 @@ class QueryMethods:
                 eval_globals = self.registered_functions
                 df[name] = eval(expr, eval_globals, eval_locals)
 
-                # Optional fillna for computed metric (allow 0 and False)
-                if fillna_value is not None:
-                    df[name] = df[name].fillna(fillna_value)
             except Exception as e:
                 raise ValueError(f"Error evaluating computed metric '{name}': {e}") from e
+            
+            # Restore original NaN values
+            if fillna_value is not None:
+                for col in cm.columns:
+                    # Use the same masks to restore values
+                    df.loc[filled_masks[col], col] = pd.NA
 
         # Apply HAVING-like filter
         if having:

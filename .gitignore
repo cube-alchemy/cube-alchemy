@@ -181,3 +181,4 @@ cython_debug/
 .cursorindexingignore
 
 examples/*
+build_and_upload_to_pip.txt
