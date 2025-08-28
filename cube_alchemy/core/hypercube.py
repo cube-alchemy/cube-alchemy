@@ -101,7 +101,7 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
 
             # Build the column-to-table mapping
             self._build_column_to_table_mapping()  # Map each column to its source table
-            
+
             # Automatically add relationships based on shared column names
             self._add_auto_relationships()  # Add relationships for columns with the same name
 
@@ -110,16 +110,9 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
                 return None #no need to continue, there are cycle relationships
 
             self.context_states = {}
-            self.trajectory_cache = {}
-
-            if validate:
-                self._compute_and_cache_trajectories()
-                link_tables_trajectories = self._get_trajectory(self.link_tables.keys())
-            else:
-                link_tables_trajectories = self._find_complete_trajectory(self.link_tables)
             
             # Set the initial state to the unfiltered version of the joined trajectory keys
-            self.context_states['Unfiltered'] = self._join_trajectory_keys(link_tables_trajectories)
+            self.context_states['Unfiltered'] = self._join_trajectory_keys(self._find_complete_trajectory(self.link_tables))
             
             self.applied_filters = {}   # List of applied filters
             self.filter_pointer = {}    # Pointer to the current filter state

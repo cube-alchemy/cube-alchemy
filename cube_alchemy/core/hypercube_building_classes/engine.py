@@ -181,38 +181,10 @@ class Engine:
                 if cycle:
                     return True, cycle
 
-        return False, []
-
-    def _compute_and_cache_trajectories(self):
-               
-        start_time = time.time()
-        self.trajectory_cache = {}
-        
-        all_tables = list(self.tables.keys())
-        total_combinations = 0
-        
-        # Compute for ALL combinations of 2 or more tables
-        for r in range(2, len(all_tables) + 1):
-            for table_subset in combinations(all_tables, r):
-                # Create dictionary of tables for this combination
-                tables_dict = {table_name: self.tables[table_name] for table_name in table_subset}
-                
-                # Find trajectory
-                trajectory = self._find_complete_trajectory(tables_dict)
-                
-                # Store using a tuple of sorted table names for consistent lookup
-                key = tuple(sorted(table_subset))
-                self.trajectory_cache[key] = trajectory
-                total_combinations += 1
-        
-        duration = time.time() - start_time
-        print(f"Precomputed {total_combinations} table trajectories in {duration:.2f} seconds")     
+        return False, []   
 
     def _get_trajectory(self,tables_to_find):
-        key = tuple(sorted(tables_to_find))
-        
-        # Return cached trajectory
-        return self.trajectory_cache.get(key)
+        return self._find_complete_trajectory(tables_to_find)
     
     def visualize_graph(
         self,

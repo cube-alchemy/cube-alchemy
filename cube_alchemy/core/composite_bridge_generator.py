@@ -65,79 +65,56 @@ class CompositeBridgeGenerator:
         return df[columns].astype(str).agg('-'.join, axis=1)
 
     def _create_link_tables(self):
-        """Create link tables for shared columns."""
-        # Filter the matrix to find shared columns (columns present in more than one table)
+        """Create link tables per shared column-combination (size >= 2)."""
+        # 1) Identify shared columns (appear in more than one table)
         shared_columns_matrix = self.column_table_matrix.loc[(self.column_table_matrix.sum(axis=1) > 1)]
+        shared_columns = set(shared_columns_matrix.index.tolist())
 
-        # List of shared columns
-        shared_columns = shared_columns_matrix.index.tolist()
+        # 2) Discover all combos via pairwise table intersections restricted to shared columns
+        table_names = list(self.tables.keys())
+        table_cols = {t: set(df.columns) for t, df in self.tables.items()}
 
-        # Initialize variables to track processed and unprocessed tables
-        unprocessed_tables = set(shared_columns_matrix.columns.tolist())
+        combo_set = set()  # set of tuples of sorted column names
+        for i in range(len(table_names)):
+            for j in range(i + 1, len(table_names)):
+                t1, t2 = table_names[i], table_names[j]
+                inter = (table_cols[t1] & table_cols[t2]) & shared_columns
+                if len(inter) >= 2:
+                    combo_set.add(tuple(sorted(inter)))
 
-        # Continue processing while there are still unprocessed tables
-        while unprocessed_tables:
-            # Start with an arbitrary unprocessed table
-            current_table_name = unprocessed_tables.pop()
-            # Get the shared columns for that table
-            current_columns = [col for col in self.tables[current_table_name].columns if col in shared_columns]
-            # Create a copy of the table's shared columns
-            current_table = self.tables[current_table_name][current_columns]
+        # 3) For each combo, gather participants (tables with all combo columns) and create a composite per combo
+        self.column_combinations = []
+        created_any = False
+        for combo in sorted(combo_set):
+            combo_list = list(combo)
+            participants = [t for t, cols in table_cols.items() if set(combo_list).issubset(cols)]
+            if len(participants) < 2:
+                continue
 
-            # Track tables processed in this iteration
-            processed_in_iteration = [current_table_name]
-            multi_column = False
+            # Track combo once
+            if combo_list not in self.column_combinations:
+                self.column_combinations.append(combo_list)
 
-            # Iterate over the remaining tables to see if they share columns with the current table
-            for next_table_name in list(unprocessed_tables):
-                next_columns = [col for col in self.tables[next_table_name].columns if col in shared_columns]
+            # Build composite df as union of distinct rows of the combo columns
+            comp_df = pd.DataFrame(columns=combo_list)
+            for t in participants:
+                comp_df = pd.concat([comp_df, self.tables[t][combo_list]], ignore_index=True)
+            comp_df = comp_df.drop_duplicates()
 
-                # Find the common columns to join on
-                columns_to_join = list(set(current_columns).intersection(next_columns))
+            # Name includes participants and combo to avoid collisions when same participants share multiple combos
+            composite_table_name = "_composite_" + "_".join(sorted(participants)) + "__by__" + "_".join(combo_list)
+            # Ensure uniqueness just in case
+            base_name = composite_table_name
+            suffix = 1
+            while composite_table_name in self.tables:
+                suffix += 1
+                composite_table_name = f"{base_name}__{suffix}"
 
-                if len(columns_to_join) > 1:
-                    # Track this combination of columns
-                    self.column_combinations.append(columns_to_join)
+            self.tables[composite_table_name] = comp_df
+            self.composite_tables[composite_table_name] = comp_df
+            created_any = True
 
-                    # Perform the outer join on the common columns
-                    current_table = pd.merge(
-                        current_table,
-                        self.tables[next_table_name][next_columns],
-                        on=columns_to_join,
-                        how='outer'
-                    )
-
-                    # Update current columns to reflect the columns of the merged table
-                    current_columns = current_table.columns.tolist()
-
-                    # Mark this table as processed in this iteration
-                    processed_in_iteration.append(next_table_name)
-
-                    multi_column = True
-
-            # After processing all possible joins, add the final composite table to the list
-            if multi_column:
-                current_table = current_table.drop_duplicates()
-                composite_table_name = "_composite_" + "_".join(sorted(processed_in_iteration))
-                self.tables[composite_table_name] = current_table
-                self.composite_tables[composite_table_name] = current_table
-
-            # Remove processed tables from unprocessed set
-            unprocessed_tables -= set(processed_in_iteration)
-
-        # For each composite table, keep only columns that are in any of the column combinations
-        columns_to_keep = set()
-        for combo in self.column_combinations:
-            columns_to_keep.update(combo)
-        for composite_table_name in self.composite_tables:
-            columns_in_table = set(self.tables[composite_table_name].columns)            
-            final_columns = list(set([col for col in columns_in_table if col in columns_to_keep]))
-            self.tables[composite_table_name] = self.tables[composite_table_name][final_columns].drop_duplicates()
-        
-        if self.composite_tables:
-            return True
-        else:
-            return False
+        return created_any
 
     def _apply_composite_keys(self):
         """For all tables, create composite keys based on self.column_combinations."""

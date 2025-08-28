@@ -16,6 +16,36 @@ class AnalyticsComponents:
         fillna: Optional[any] = None, ):
         
         new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, ignore_dimensions, fillna)
+        
+
+        # define metric column indexes and metric keys. To be used on queries
+
+        metric_tables = set()
+        metric_keys = set()
+        metric_columns_indexes = set()                
+
+        for column in new_metric.columns:
+            table_name = self.column_to_table.get(column)
+            if table_name:
+                metric_tables.add(table_name)
+            else:
+                print(f"Warning: Column {column} not found in any table.")
+                continue
+            
+        metric_tables_dict = {table_name: self.tables[table_name] for table_name in metric_tables if table_name is not None}
+
+        trajectory_tables = self._find_complete_trajectory(metric_tables_dict)
+        
+        for table_name in trajectory_tables:
+            if table_name not in self.link_tables:
+                metric_columns_indexes.add(f"_index_{table_name}")
+            for col in self.tables[table_name].columns:
+                if col in self.link_table_keys:
+                    metric_keys.add(col)
+
+        # add metric_columns_indexes and metric_keys to the new metric object to be used right away
+        new_metric.columns_indexes = metric_columns_indexes
+        new_metric.keys = metric_keys
         self.metrics[new_metric.name] = new_metric
     
     def define_computed_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:

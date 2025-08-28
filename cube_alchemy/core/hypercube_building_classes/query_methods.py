@@ -140,37 +140,15 @@ class QueryMethods:
                 no_dimension = True
             results = []          
             for metric in metrics:
-                metric_tables = set()
-                metric_keys = set()
-                metric_columns_indexes = set()                
 
-                for column in metric.columns:
-                    table_name = self.column_to_table.get(column)
-                    if table_name:
-                        metric_tables.add(table_name)
-                    else:
-                        print(f"Warning: Column {column} not found in any table.")
-                        continue
-                    
-                metric_tables_dict = {table_name: self.tables[table_name] for table_name in metric_tables if table_name is not None}
-
-                trajectory_tables = self._find_complete_trajectory(metric_tables_dict)
-                
-                for table_name in trajectory_tables:
-                    if table_name not in self.link_tables:
-                        metric_columns_indexes.add(f"_index_{table_name}")
-                    for col in self.tables[table_name].columns:
-                        if col in self.link_table_keys:
-                            metric_keys.add(col)
-
-                keys_and_dimensions = list(metric_keys | {col for col in dimensions if col not in metric.columns}) # If a dimension is also a metric column (I want to bring all the rows not just distinct)
+                keys_and_dimensions = list(metric.keys | {col for col in dimensions if col not in metric.columns}) # If a dimension is also a metric column (I want to bring all the rows not just distinct)
                 if metrics_list_len == 1:
                     metric_result = df[keys_and_dimensions].drop_duplicates() 
                 else: # copy as each metric has its own set of columns
                     metric_result = df.copy()[keys_and_dimensions].drop_duplicates()
 
-                if len(metric_columns_indexes) > 1:
-                    metric_result = self._fetch_and_merge_columns(list(set(metric.columns + list(metric_columns_indexes))), metric_result, drop_duplicates=True)
+                if len(metric.columns_indexes) > 1:
+                    metric_result = self._fetch_and_merge_columns(list(set(metric.columns + list(metric.columns_indexes))), metric_result, drop_duplicates=True)
                 else:
                     metric_result = self._fetch_and_merge_columns(metric.columns, metric_result)
               
