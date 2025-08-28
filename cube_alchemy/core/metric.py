@@ -67,12 +67,6 @@ class MetricGroup: # group of metrics based on state and query filters
         self.group_filters = group_filters
         self.context_state_name = context_state_name
 
-        # Rename each metric to include the group name in parentheses
-        if self.metric_group_name:
-            for metric in self.metrics:
-                if metric.name and not metric.context_state_name == 'Default':
-                    metric.name = f"{metric.name} ({self.metric_group_name})"
-
 
 class ComputedMetric:
     """Represents a post-aggregation computed metric.
