@@ -832,7 +832,7 @@
 <li><code>row_condition_expression</code>: Filter expression applied to rows before calculating the metric</li>
 <li><code>context_state_name</code>: Which context state this metric operates in</li>
 <li><code>ignore_dimensions</code>: Control how dimensions affect aggregation - <code>True</code> to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or <code>False</code> (default) for normal dimensional aggregation</li>
-<li><code>fillna</code>: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation.</li>
+<li><code>fillna</code>: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation. Note: This parameter applies the same value to all columns. For column-specific NA handling, use <code>@pd.fillna()</code> or <code>@np.nan_to_num()</code> functions directly in the expression.</li>
 </ul>
 <p><strong>Example:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define a revenue metric</span>
@@ -868,6 +868,21 @@
     <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
     <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
     <span class="n">ignore_dimensions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;product_category&#39;</span><span class="p">]</span>  <span class="c1"># Ignore these dimensions, aggregate only by remaining dimensions</span>
+<span class="p">)</span>
+
+<span class="c1"># Advanced NA handling - Using the simple fillna parameter (fills all columns with same value)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue with NA Handling&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span>  <span class="c1"># Fills both qty and price with 0</span>
+<span class="p">)</span>
+
+<span class="c1"># Advanced NA handling - Using @functions for column-specific handling</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue with Column-Specific NA Handling&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;@pd.Series([qty]).fillna(1) * @pd.Series([price]).fillna(0)&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>  <span class="c1"># Fills [qty] with 1 and [price] with 0</span>
 <span class="p">)</span>
 </code></pre></div>
 <p><strong>Syntax Rules</strong></p>

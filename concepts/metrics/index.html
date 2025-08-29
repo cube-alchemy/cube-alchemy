@@ -1075,6 +1075,29 @@
 
 <span class="c1"># Will retrieve the exact same value</span>
 
+<span class="c1"># Advanced handling of missing values with @ functions</span>
+<span class="c1"># While the basic fillna parameter fills all metric columns with the same value:</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span>  <span class="c1"># Fills both [qty] and [price] with 0</span>
+<span class="p">)</span>
+
+<span class="c1"># For column-specific NA handling, use @ functions directly in the expression:</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue with Custom NA Handling&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;@pd.Series([qty]).fillna(1) * @pd.Series([price]).fillna(0)&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>  <span class="c1"># Fills [qty] with 1 and [price] with 0</span>
+<span class="p">)</span>
+
+<span class="c1"># Using np.where for conditional NA handling:</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue with Conditional Defaults&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;@np.where(@pd.isnull([qty]), 0 , [qty])&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
+<span class="p">)</span>
+
 <span class="c1"># You can inspect available registered functions:</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">registered_functions</span>
 </code></pre></div>
