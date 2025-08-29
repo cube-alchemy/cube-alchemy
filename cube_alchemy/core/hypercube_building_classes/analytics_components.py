@@ -47,6 +47,29 @@ class AnalyticsComponents:
         new_metric.columns_indexes = metric_columns_indexes
         new_metric.keys = metric_keys
         self.metrics[new_metric.name] = new_metric
+
+        # Auto-refresh only queries that declared this name as missing
+        try:
+            index = getattr(self, "_queries_missing_by_name", None)
+            if index is not None and new_metric.name in index and index[new_metric.name]:
+                affected = list(index.pop(new_metric.name))
+                for qname in affected:
+                    q = self.queries.get(qname)
+                    if not q:
+                        continue
+                    print(f"Query '{qname}' auto-refreshed due to newly defined metric '{new_metric.name}'.")
+                    self.define_query(
+                        name=qname,
+                        dimensions=q.get("dimensions", []),
+                        metrics=q.get("metrics", []),
+                        computed_metrics=q.get("computed_metrics", []),
+                        having=q.get("having"),
+                        sort=q.get("sort", []),
+                        drop_null_dimensions=q.get("drop_null_dimensions", False),
+                        drop_null_metric_results=q.get("drop_null_metric_results", False),
+                    )
+        except Exception as e:
+            print(f"Warning: failed to auto-refresh queries for metric '{new_metric.name}': {e}")
     
     def define_computed_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:
         """Persist a post-aggregation computed metric as a ComputedMetric instance.
@@ -61,6 +84,29 @@ class AnalyticsComponents:
 
         self.computed_metrics[name] = ComputedMetric(name=name, expression=expression, fillna=fillna)
 
+        # Auto-refresh only queries that declared this name as missing
+        try:
+            index = getattr(self, "_queries_missing_by_name", None)
+            if index is not None and name in index and index[name]:
+                affected = list(index.pop(name))
+                for qname in affected:
+                    q = self.queries.get(qname)
+                    if not q:
+                        continue
+                    print(f"Query '{qname}' auto-refreshed due to newly defined computed metric '{name}'.")
+                    self.define_query(
+                        name=qname,
+                        dimensions=q.get("dimensions", []),
+                        metrics=q.get("metrics", []),
+                        computed_metrics=q.get("computed_metrics", []),
+                        having=q.get("having"),
+                        sort=q.get("sort", []),
+                        drop_null_dimensions=q.get("drop_null_dimensions", False),
+                        drop_null_metric_results=q.get("drop_null_metric_results", False),
+                    )
+        except Exception as e:
+            print(f"Warning: failed to auto-refresh queries for computed metric '{name}': {e}")
+
     def define_query(
         self,
         name: str,
@@ -72,7 +118,8 @@ class AnalyticsComponents:
         drop_null_dimensions: bool = False,
         drop_null_metric_results: bool = False,
     ):
-        dimensions = list(dimensions) 
+        # Normalize dimensions to list but preserve provided order if it's already a list
+        dimensions = list(dimensions)
 
         # Validate metric names exist now, but store only names to keep linkage live
         for metric_name in metrics:
@@ -84,6 +131,120 @@ class AnalyticsComponents:
                 print(f"Computed metric '{computed_metrics_name}' is not defined. Define it with define_computed_metric().")
         
         having_columns: List[str] = extract_columns(having) if having else []
+
+        # --- Precompute hidden (internal) base metrics required ---
+        hidden_metrics: List[str] = []
+        # From computed metrics' expressions
+        for cm_name in computed_metrics:
+            if cm_name in self.computed_metrics:
+                for col in self.computed_metrics[cm_name].columns:
+                    if col in self.metrics and col not in metrics and col not in hidden_metrics:
+                        hidden_metrics.append(col)
+        # From HAVING expression referenced columns
+        for col in having_columns:
+            if col in self.metrics and col not in metrics and col not in hidden_metrics:
+                hidden_metrics.append(col)
+        # From SORT columns
+        for sort_col, _dir in sort:
+            if sort_col in self.metrics and sort_col not in metrics and sort_col not in hidden_metrics:
+                hidden_metrics.append(sort_col)
+
+        # --- Precompute hidden computed metrics and dependency order ---
+        # Any computed metric referenced by requested computed metrics, HAVING, or SORT
+        hidden_computed_metrics: List[str] = []
+        referenced_computed: set[str] = set()
+        for cm_name in computed_metrics:
+            if cm_name in self.computed_metrics:
+                for col in self.computed_metrics[cm_name].columns:
+                    if col in self.computed_metrics and col not in computed_metrics and col not in hidden_computed_metrics:
+                        hidden_computed_metrics.append(col)
+                        referenced_computed.add(col)
+        for col in having_columns:
+            if col in self.computed_metrics and col not in computed_metrics and col not in hidden_computed_metrics:
+                hidden_computed_metrics.append(col)
+                referenced_computed.add(col)
+        for sort_col, _dir in sort:
+            if sort_col in self.computed_metrics and sort_col not in computed_metrics and sort_col not in hidden_computed_metrics:
+                hidden_computed_metrics.append(sort_col)
+                referenced_computed.add(sort_col)
+
+        # Build dependency graph for all computed metrics involved in this query
+        def build_cm_dependencies(names: List[str]) -> Dict[str, List[str]]:
+            deps: Dict[str, List[str]] = {}
+            for n in names:
+                if n not in self.computed_metrics:
+                    continue
+                cm = self.computed_metrics[n]
+                # dependencies are other computed metric names referenced in expression
+                deps[n] = [c for c in cm.columns if c in self.computed_metrics]
+            return deps
+
+        # the set of computed metrics that might need evaluation
+        all_cm_names: List[str] = []
+        for n in computed_metrics + hidden_computed_metrics:
+            if n not in all_cm_names:
+                all_cm_names.append(n)
+        cm_deps = build_cm_dependencies(all_cm_names)
+
+        # Topologically sort computed metrics to a safe evaluation order
+        computed_metrics_ordered: List[str] = []
+        temp_mark: set[str] = set()
+        perm_mark: set[str] = set()
+
+        def visit(node: str):
+            if node in perm_mark:
+                return
+            if node in temp_mark:
+                raise ValueError(f"Cycle detected in computed metrics dependencies involving '{node}'.")
+            temp_mark.add(node)
+            for d in cm_deps.get(node, []):
+                visit(d)
+            temp_mark.remove(node)
+            perm_mark.add(node)
+            if node not in computed_metrics_ordered:
+                computed_metrics_ordered.append(node)
+
+        for node in all_cm_names:
+            visit(node)
+
+        # Build the set of referenced names to track missing items for fast auto-refresh later.
+        # Only consider tokens that are NOT dimensions and are plausible metric/computed metric names.
+        referenced_candidates = set(metrics) | set(computed_metrics)
+        # From computed metrics expressions (only those that exist at the moment)
+        for cm_name in computed_metrics:
+            cm_obj = self.computed_metrics.get(cm_name)
+            if cm_obj:
+                for col in cm_obj.columns:
+                    # Exclude known dimensions
+                    if not getattr(self, "column_to_table", {}).get(col):
+                        referenced_candidates.add(col)
+        # From HAVING and SORT
+        for col in having_columns:
+            if not getattr(self, "column_to_table", {}).get(col):
+                referenced_candidates.add(col)
+        for sc, _ in sort:
+            if not getattr(self, "column_to_table", {}).get(sc):
+                referenced_candidates.add(sc)
+
+        # Names that are not yet defined as metrics/computed metrics
+        missing_names = sorted([n for n in referenced_candidates if n not in self.metrics and n not in self.computed_metrics and n not in self.get_dimensions()])
+
+        # Maintain a reverse index: name -> set(query_names) for O(1) refresh on new definitions
+        if not hasattr(self, "_queries_missing_by_name"):
+            self._queries_missing_by_name = {}
+        # If redefining, remove previous memberships for this query to avoid stale links
+        prev_q = self.queries.get(name)
+        if prev_q is not None:
+            for n in prev_q.get("missing_names", []):
+                s = self._queries_missing_by_name.get(n)
+                if s is not None:
+                    s.discard(name)
+                    if not s:
+                        self._queries_missing_by_name.pop(n, None)
+        # Add current memberships
+        for n in missing_names:
+            self._queries_missing_by_name.setdefault(n, set()).add(name)
+
         self.queries[name] = {
             "dimensions": dimensions,
             "metrics": metrics,
@@ -91,8 +252,18 @@ class AnalyticsComponents:
             "having": having,
             "having_columns": having_columns,
             "sort": sort,
+
+            # Precomputed internal helpers to avoid recomputation at runtime
+            "hidden_metrics": hidden_metrics,
+            "hidden_computed_metrics": hidden_computed_metrics,
+
+            # Full ordered list to evaluate (requested + hidden, in dependency order)
+            "computed_metrics_ordered": computed_metrics_ordered,
+
             "drop_null_dimensions": drop_null_dimensions,
             "drop_null_metric_results": drop_null_metric_results,
+            # Tracking for fast re-definition when missing items get defined later
+            "missing_names": missing_names,
         }
 
     def get_dimensions(self) -> List[str]:

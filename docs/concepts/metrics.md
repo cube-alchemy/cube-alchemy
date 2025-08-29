@@ -252,6 +252,29 @@ cube.define_metric(
 
 # Will retrieve the exact same value
 
+# Advanced handling of missing values with @ functions
+# While the basic fillna parameter fills all metric columns with the same value:
+cube.define_metric(
+    name='Revenue',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    fillna=0  # Fills both [qty] and [price] with 0
+)
+
+# For column-specific NA handling, use @ functions directly in the expression:
+cube.define_metric(
+    name='Revenue with Custom NA Handling',
+    expression='@pd.Series([qty]).fillna(1) * @pd.Series([price]).fillna(0)',
+    aggregation='sum'  # Fills [qty] with 1 and [price] with 0
+)
+
+# Using np.where for conditional NA handling:
+cube.define_metric(
+    name='Revenue with Conditional Defaults',
+    expression='@np.where(@pd.isnull([qty]), 0 , [qty])',
+    aggregation='sum'
+)
+
 # You can inspect available registered functions:
 cube.registered_functions
 ```

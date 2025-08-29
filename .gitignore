@@ -180,5 +180,12 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-examples/*
+cube-alchemy-examples/*
 build_and_upload_to_pip.txt
+
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+/cube-alchemy-examples
+READMEPIP.md

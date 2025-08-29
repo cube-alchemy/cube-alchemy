@@ -8,6 +8,9 @@ exclude mkdocs.yml
 recursive-exclude docs *
 recursive-exclude site *
 
+# Exclude examples
+recursive-exclude cube-alchemy-examples*
+
 # Exclude virtual environment
 recursive-exclude venv *
 
@@ -15,5 +18,4 @@ recursive-exclude venv *
 exclude .gitignore
 exclude .github
 recursive-exclude tests *
-recursive-exclude examples *
 exclude BACKLOG.md

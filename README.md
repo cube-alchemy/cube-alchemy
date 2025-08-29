@@ -188,6 +188,11 @@ For concepts, API specs, advanced features, full examples and Streamlit integrat
 
 - Docs: https://cube-alchemy.info
 
+## Full documentation
+Visit the github repository created for showing more examples and use cases:
+
+- More examples: https://github.com/cube-alchemy/cube-alchemy-examples
+
 ## Creator
 
 Created with 🧠 and ☕ by Juan C. Del Monte

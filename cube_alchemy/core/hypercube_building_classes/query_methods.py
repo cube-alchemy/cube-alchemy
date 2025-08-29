@@ -50,27 +50,9 @@ class QueryMethods:
         if not query:
             raise ValueError(f"Query '{query_name}' not found.")
         
-        # Build full set of metrics to compute:
-        # - Base metrics the query asks for
-        # - Base metrics required by computed metrics' expressions
-        # - Base metrics required by HAVING expression
-        missing_metrics: List[str] = []
-        # From computed metrics' columns
-        for cm_name in query["computed_metrics"]:
-            cm_obj = self.computed_metrics[cm_name]
-            for col in getattr(cm_obj, 'columns', []) or []:
-                if col in self.metrics and col not in query["metrics"] and col not in missing_metrics:
-                    missing_metrics.append(col)
-        # From HAVING's referenced columns (precomputed at define_query)
-        for col in query["having_columns"]:
-            if col in self.metrics and col not in query["metrics"] and col not in missing_metrics:
-                missing_metrics.append(col)
-        # From SORT's referenced columns (metrics that need to be computed for sorting)
-        for sort_col, _dir in query["sort"]:
-            if sort_col in self.metrics and sort_col not in query["metrics"] and sort_col not in missing_metrics:
-                missing_metrics.append(sort_col)
-
-        all_metrics = query["metrics"] + missing_metrics
+        # Build full set of metrics to compute using precomputed hidden metrics
+        hidden_metrics: List[str] = query["hidden_metrics"]
+        all_metrics = query["metrics"] + hidden_metrics
         metric_objects: List[Metric] = []
         for name in all_metrics:
             try:
@@ -84,20 +66,10 @@ class QueryMethods:
             drop_null_dimensions = query["drop_null_dimensions"],
             drop_null_metric_results = query["drop_null_metric_results"]
         )
-        # Apply post-aggregation operations
-        # We may also need to compute computed metrics referenced by HAVING/SORT even if not requested for output
-        missing_computed_metrics: List[str] = []
-        for col in query["having_columns"]:
-            if col in self.computed_metrics and col not in query["computed_metrics"]:
-                missing_computed_metrics.append(col)
-        for sort_col, _dir in query["sort"]:
-            if sort_col in self.computed_metrics and sort_col not in query["computed_metrics"] and sort_col not in missing_computed_metrics:
-                missing_computed_metrics.append(sort_col)
-
-        computed_for_eval = query["computed_metrics"] + missing_computed_metrics
+        # Apply post-aggregation ops: evaluate computed metrics in stored order
         query_result = self._apply_computed_metrics_and_having(
             query_result,
-            computed_for_eval,
+            query["computed_metrics_ordered"],
             query["having"]
         )
 
@@ -313,19 +285,18 @@ class QueryMethods:
         having: Optional[str] = None
     ) -> pd.DataFrame:
         """
-        Post-aggregation stage:
+        Post-aggregation stage with dependency resolution:
         - computed_metrics: list of names referencing persisted computed metrics
         - having: string expression to filter aggregated rows, also using [Column] syntax.
         """
         if df is None or df.empty:
             return df
 
-        # Evaluate computed metrics (resolve names to ComputedMetric instances)
-        for name in (computed_metrics or []):
-            if name not in self.computed_metrics:
-                raise ValueError(
-                    f"Computed metric '{name}' is not defined. Define it first with define_computed_metric()."
-                )
+        if not computed_metrics:
+            computed_metrics = []
+        
+        # Now evaluate metrics in the correct order
+        for name in computed_metrics:
             cm = self.computed_metrics[name]
             expression = cm.expression
             fillna_value = cm.fillna

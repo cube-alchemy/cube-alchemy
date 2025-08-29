@@ -26,7 +26,7 @@ Defines a metric and stores it in the cube object for later use in queries.
 - `row_condition_expression`: Filter expression applied to rows before calculating the metric
 - `context_state_name`: Which context state this metric operates in
 - `ignore_dimensions`: Control how dimensions affect aggregation - `True` to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or `False` (default) for normal dimensional aggregation
-- `fillna`: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation.
+- `fillna`: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation. Note: This parameter applies the same value to all columns. For column-specific NA handling, use `@pd.fillna()` or `@np.nan_to_num()` functions directly in the expression.
 
 **Example:**
 
@@ -64,6 +64,21 @@ cube.define_metric(
     expression='[qty] * [price]',
     aggregation='sum',
     ignore_dimensions=['city', 'product_category']  # Ignore these dimensions, aggregate only by remaining dimensions
+)
+
+# Advanced NA handling - Using the simple fillna parameter (fills all columns with same value)
+cube.define_metric(
+    name='Revenue with NA Handling',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    fillna=0  # Fills both qty and price with 0
+)
+
+# Advanced NA handling - Using @functions for column-specific handling
+cube.define_metric(
+    name='Revenue with Column-Specific NA Handling',
+    expression='@pd.Series([qty]).fillna(1) * @pd.Series([price]).fillna(0)',
+    aggregation='sum'  # Fills [qty] with 1 and [price] with 0
 )
 ```
 

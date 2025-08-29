@@ -50,10 +50,11 @@ class SchemaValidator:
             # Create hypercube directly with original tables for visualization
             diagnostic_cube = Hypercube(reduced_tables_2, validate = False, apply_composite=False)
             print("Visualizing the original tables graph:\n")
-            diagnostic_cube.visualize_graph()
+            diagnostic_cube.visualize_graph(full_column_names=False)
 
             print("\nRelationships after initialization with composite tables:")
-            print(f"Cyclic relationships detected in the hypercube: {' -> '.join(diagnostic_cube.is_cyclic[1])}")
+            cyclic_tables = [table for table in diagnostic_cube.is_cyclic[1] if not table.startswith('_link_table_')]
+            print(f"Cyclic relationships detected in the hypercube: {' -> '.join(cyclic_tables)}")
 
             error_msg = "Cyclic relationships detected in the hypercube"
             raise ValueError(error_msg)
