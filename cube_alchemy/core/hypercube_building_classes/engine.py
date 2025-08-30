@@ -118,10 +118,22 @@ class Engine:
                 final_trajectory.append(trajectory[i])
         return final_trajectory
 
-    def _join_trajectory_keys(
-        self,
-        trajectory: List[str]
-    ) -> Any:
+    def _join_trajectory_keys_single_table(self, trajectory: List[str]) -> Any:
+        """Single-table key space: return the unique index column of the base table."""
+        base_tables = [t for t in self.tables if t not in self.link_tables]
+        if len(base_tables) == 1:
+            t = base_tables[0]
+            idx = f"_index_{t}"
+            # Return just the index column as the key space
+            return self.tables[t][[idx]].copy()
+        # If somehow not a single-table setup, return empty frame
+        return pd.DataFrame()
+
+    def _join_trajectory_keys_multi_table(self, trajectory: List[str]) -> Any:
+        """Multi-table key space: walk the trajectory via relationships and link keys."""
+        if not trajectory:
+            # No trajectory for multi-table implies no link connectivity
+            return pd.DataFrame()
         current_table = trajectory[0]
         current_data = self.tables[current_table]
         visited_tables = [current_table]

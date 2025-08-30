@@ -47,7 +47,12 @@ class FilterMethods:
         new_filter_set = {k: v for k, v in current_filters.items() if k not in dimensions}
         
         self.context_states[context_state_name] = self.context_states['Unfiltered'].copy()
-        self.filter(new_filter_set, is_reset, False, context_state_name)
+        self.filter(
+            new_filter_set,
+            context_state_name=context_state_name,
+            is_reset=is_reset,
+            save_state=False,
+        )
 
         self.applied_filters[context_state_name].append({"op": 'remove', "dimensions": dimensions})
 
@@ -65,17 +70,32 @@ class FilterMethods:
         if direction == 'backward':
             self.context_states[context_state_name] = self.context_states['Unfiltered'].copy()
             self.filter_pointer[context_state_name] -= 1
-            self.filter(self.get_filters(0, context_state_name = context_state_name), True, False, context_state_name) # resets are not saved as a new state
+            self.filter(
+                self.get_filters(0, context_state_name=context_state_name),
+                context_state_name=context_state_name,
+                is_reset=True,
+                save_state=False,
+            )  # resets are not saved as a new state
         elif direction == 'fordward':
             if self.filter_pointer[context_state_name] == len(self.applied_filters[context_state_name]):
                 return False
             self.filter_pointer[context_state_name] += 1
             next_filter = self.applied_filters[context_state_name][self.filter_pointer[context_state_name] - 1] # maybe I should have used the pointer index to match the list index, it is one more for now
             if next_filter['op'] == 'add':
-                self.filter(next_filter['criteria'], True, False, context_state_name)
+                self.filter(
+                    next_filter['criteria'],
+                    context_state_name=context_state_name,
+                    is_reset=True,
+                    save_state=False,
+                )
             else:
                 self.context_states[context_state_name] = self.context_states['Unfiltered'].copy()
-                self.filter(self.get_filters(0, context_state_name = context_state_name), True, False, context_state_name)
+                self.filter(
+                    self.get_filters(0, context_state_name=context_state_name),
+                    context_state_name=context_state_name,
+                    is_reset=True,
+                    save_state=False,
+                )
 
         elif direction == 'all':
             dimensions = []

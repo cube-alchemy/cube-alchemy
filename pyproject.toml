@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cube-alchemy"
-version = "0.1.12"
+version = "0.1.13"
 description = "A lightweight, queryable hypercube engine for multidimensional data analysis"
 readme = "READMEPIP.md"
 authors = [

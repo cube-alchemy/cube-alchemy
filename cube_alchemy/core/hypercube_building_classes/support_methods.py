@@ -21,14 +21,15 @@ class SupportMethods:
                     queue.append((neighbor_table[1], path + [(neighbor_table[0], neighbor_table[1], key1, key2)]))
         return None
 
-    def _fetch_and_merge_columns(
+    def _fetch_and_merge_columns_multi_table(
         self,
         columns_to_fetch: List[str],
         keys_df: pd.DataFrame,
-        drop_duplicates: bool = False 
+        drop_duplicates: bool = False
     ) -> pd.DataFrame:
-        table_columns_tuples = []
-        table_columns = {}
+        """Fast multi-table path: group by table and join on link keys."""
+        table_columns_tuples: List[tuple] = []
+        table_columns: Dict[str, List[str]] = {}
         for column in columns_to_fetch:
             table_name = self.column_to_table.get(column)
             if not table_name:
@@ -40,9 +41,9 @@ class SupportMethods:
             if table_name not in table_columns:
                 table_columns[table_name] = []
             table_columns[table_name].append(column)
-        # Now process each table's columns
+        # Process each table's columns using link table keys
         for table_name, columns in table_columns.items():
-            keys_for_table = []
+            keys_for_table: List[str] = []
             for key in self.link_table_keys:
                 if key in self.tables[table_name].columns:
                     keys_for_table.append(key)
@@ -59,6 +60,39 @@ class SupportMethods:
             if drop_duplicates:
                 keys_df = keys_df.drop_duplicates()
         return keys_df
+
+    def _fetch_and_merge_columns_single_table(
+        self,
+        columns_to_fetch: List[str],
+        keys_df: pd.DataFrame,
+        drop_duplicates: bool = False
+    ) -> pd.DataFrame:
+        """Lightweight single-table fetch: join using the base table index only."""
+        base_table = getattr(self, "_single_table_base", None)
+        if base_table is None:
+            return keys_df
+        idx = f"_index_{base_table}"
+        # Limit to columns from the single base table
+        bring = [c for c in columns_to_fetch if self.column_to_table.get(c) == base_table and c in self.tables[base_table].columns]
+        if not bring:
+            return keys_df
+        out = keys_df
+        if out.empty:
+            # Seed with index + requested columns
+            cols = [idx] + bring if idx in self.tables[base_table].columns else bring
+            out = self.tables[base_table][cols].copy()
+            if drop_duplicates:
+                out = out.drop_duplicates()
+            return out
+        # If index exists, merge directly
+        if idx in out.columns and idx in self.tables[base_table].columns:
+            right = self.tables[base_table][[idx] + bring].drop_duplicates()
+            out = pd.merge(out, right, on=[idx], how='left')
+            if drop_duplicates:
+                out = out.drop_duplicates()
+            return out
+        # No safe join key available; return as-is
+        return out
 
     def _apply_filters_to_dataframe(
         self,
