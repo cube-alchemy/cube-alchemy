@@ -142,13 +142,13 @@ cube.define_metric(
 
 # 4) Define query/ies
 cube.define_query(
-    query_name="sales_analysis",
+    name="sales analysis",
     dimensions={'region', 'category', 'promo_type'},
     metrics=['Revenue', 'Units', 'Margin', 'Number of Sales']
 )
 
 # 5) Execute the query (or queries)
-cube.query("sales_analysis")
+cube.query("sales analysis")
 ```
 
 **Output:**
@@ -163,7 +163,7 @@ cube.query("sales_analysis")
 ```python
 # 6) Apply a filter and query again
 cube.filter({'customer_name': ['Initech']})     
-cube.query("sales_analysis")
+cube.query("sales analysis")
 ```
 
 **Output:**
@@ -197,22 +197,19 @@ Visit the github repository created for showing more examples and use cases:
 
 Created with 🧠 and ☕ by Juan C. Del Monte
 
-<div align="left">
+<p align="center">
   <a href="https://www.linkedin.com/in/juandelmonte/" target="_blank">
     <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
   </a>
-  <br>
   <a href="mailto:delmontejuan92@gmail.com" target="_blank">
     <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" />
   </a>
-  <br>
   <a href="https://github.com/juandelmonte" target="_blank">
     <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
   </a>
-</div>
-<div align="right">
-  <br><br>
-    <a href="https://www.cube-alchemy.com/" target="_blank">
-    <img src="https://img.shields.io/badge/Website-cube--alchemy.com-white?style=for-the-badge&logo=globe&logoColor=black" alt="Website" />
+</p>
+<p align="center">
+  <a href="https://www.cube-alchemy.com/" target="_blank">
+    <img src="https://img.shields.io/badge/cube--alchemy.com-white?style=for-the-badge&logo=globe&logoColor=black" alt="Website" />
   </a>
-</div>
+</p>

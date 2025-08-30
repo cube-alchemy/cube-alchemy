@@ -31,8 +31,11 @@ class Engine:
                 on=column,
                 how='left'
             )
-            #rename the column to differentiate it from the original column
-            self.tables[table_name].rename(columns={column: f'{column} <{table_name}>'}, inplace=True)
+            #rename or drop the column to differentiate it from the original column
+            if self.rename_original_shared_columns:
+                self.tables[table_name].rename(columns={column: f'{column} <{table_name}>'}, inplace=True)
+            else:
+                self.tables[table_name].drop(columns=[column], inplace=True)
 
     def _add_auto_relationships(self) -> None:
         table_names = list(self.tables.keys())

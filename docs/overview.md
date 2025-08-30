@@ -6,12 +6,13 @@ Cube Alchemy transforms your pandas DataFrames into a powerful **hypercube**, cr
 
 - **Automatic Relationships:**  Discovers relationships between your DataFrames by matching shared column names.
     - *Complex Relationship Handling:* Handles composite keys and complex relationships transparently.
-- **Reusable Analytics:** Define metrics and queries once and reuse them across your entire analysis, ensuring consistency and reducing boilerplate code.
+- **Multidimensional Analytics:** Slice, dice, and aggregate your data across any dimension with consistent, reusable metrics and queries that reduce boilerplate code.
 - **Stateful Analysis:** Maintain a filtering context across queries to easily compare different scenarios.
+- **Interactive & Scalable:** Works seamlessly in notebook and data apps (Streamlit/Panel).
 
 ### The Semantic Layer
 
-Map your raw data into a clear and consistent set of analytical assets to work with your hypercube:
+Map your data into a clear and consistent set of analytical assets to work with your hypercube:
 
 - **Dimensions**: The "by" of your analysis—the entities you use to slice and dice data (e.g., `Customer`, `Region`, `Product`).
 - **Metrics**: The key performance indicators (KPIs) you measure (e.g., `Total Revenue`, `Conversion Rate`, `Average Order Value`).

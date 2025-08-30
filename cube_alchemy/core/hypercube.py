@@ -17,6 +17,7 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
+        rename_original_shared_columns: bool = True,
         apply_composite=True,
         validate: bool = True,
         to_be_stored: bool = False,
@@ -25,9 +26,11 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
         self.computed_metrics = {}
         self.queries = {}
         self.registered_functions = {'pd': pd, 'np': np}
+        self.rename_original_shared_columns = rename_original_shared_columns
         if tables is not None:
             self.load_data(
                 tables,
+                rename_original_shared_columns=rename_original_shared_columns,
                 apply_composite=apply_composite,
                 validate=validate,
                 to_be_stored=to_be_stored,
@@ -37,7 +40,8 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
     def load_data(        
         self,
         tables: Dict[str, pd.DataFrame],
-        apply_composite = True,
+        rename_original_shared_columns: bool = True,
+        apply_composite: bool = True,
         validate: bool = True,
         to_be_stored: bool = False,
         reset_all: bool = False
@@ -70,7 +74,7 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
             # Schema is valid, build the actual model with full data
             bridge_generator = None
             if apply_composite:
-                bridge_generator = CompositeBridgeGenerator(tables)
+                bridge_generator = CompositeBridgeGenerator(tables=tables, rename_original_shared_columns=rename_original_shared_columns)
                 self.tables: Dict[str, pd.DataFrame] = bridge_generator.tables
                 self.composite_tables: Optional[Dict[str, pd.DataFrame]] = bridge_generator.composite_tables
                 self.composite_keys: Optional[Dict[str, Any]] = bridge_generator.composite_keys

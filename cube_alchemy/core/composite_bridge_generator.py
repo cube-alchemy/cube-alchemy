@@ -20,7 +20,7 @@ class CompositeBridgeGenerator:
     def __init__(
         self,
         tables: Dict[str, pd.DataFrame],
-        print_info: bool = False
+        rename_original_shared_columns: bool = False
     ) -> None:
         """Initialize the model with tables and create link tables before adding relationships."""
         self.tables: Dict[str, pd.DataFrame] = tables  # all tables (including link tables)
@@ -28,14 +28,11 @@ class CompositeBridgeGenerator:
         self.composite_keys: Dict[str, Any] = {}  # the composite keys for each table
         self.column_combinations: List[Any] = []  # Track shared column combinations
         self.key_mapping: Dict[Any, Any] = {}  # Store the mapping of composite keys to auto-incremented keys
+        self.rename_original_shared_columns = rename_original_shared_columns
         self.column_table_matrix = self._create_column_table_matrix()
 
         # Identify and create link tables based on shared columns
         if self._create_link_tables():
-            if print_info:
-                print("CompositeBridge table/s created")
-                for table in self.composite_tables:
-                    print(' - ', table, '->', self.tables[table].columns.to_list())
 
             # After creating link tables, apply composite keys
             self._apply_composite_keys()
@@ -132,11 +129,15 @@ class CompositeBridgeGenerator:
                         self.composite_keys[table_name] = []
                     self.composite_keys[table_name].append(composite_key_column_name)
 
-                    # Rename the original shared columns, only from non-link tables
-                    if table_name not in self.composite_tables:
-                        for column in columns:
-                            self.tables[table_name].rename(columns={column: f'{column} <{table_name}>'}, inplace=True)
-
+                    # Rename or drop the original shared columns, only from non-composite tables
+                    if self.rename_original_shared_columns:
+                        if table_name not in self.composite_tables:
+                            for column in columns:
+                                self.tables[table_name].rename(columns={column: f'{column} <{table_name}>'}, inplace=True)
+                    else:
+                        if table_name not in self.composite_tables:
+                            for column in columns:
+                                self.tables[table_name].drop(columns=column, inplace=True)
 
     def _replace_with_autonumbered_keys(self):
         """Replace composite keys with auto-incremented integer keys."""
