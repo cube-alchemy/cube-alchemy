@@ -610,6 +610,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#shared-columns-counts-and-distincts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shared columns: counts and distincts
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -807,6 +816,7 @@
 <div class="highlight"><pre><span></span><code><span class="c1"># Option 1: Initialize with data</span>
 <span class="n">Hypercube</span><span class="p">(</span>
   <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="n">rename_original_shared_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -816,6 +826,7 @@
 <span class="n">Hypercube</span><span class="p">()</span>
 <span class="n">load_data</span><span class="p">(</span>
   <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+  <span class="n">rename_original_shared_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
   <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -826,6 +837,9 @@
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>tables</code>: Dictionary mapping table names to pandas DataFrames</li>
+<li><code>rename_original_shared_columns</code>: Controls what happens to shared columns in source tables.  </li>
+<li>True (default): keep them, renamed as <code>&lt;column&gt; (&lt;table_name&gt;)</code>. Enables per‑table counts/aggregations.  </li>
+<li>False: drop them from source tables (values remain in link tables). Saves time and memory if per‑table analysis isn’t needed.  </li>
 <li><code>apply_composite</code>: Whether to automatically create composite keys for multi-column relationships</li>
 <li><code>validate</code>: Whether to validate schema and build trajectory cache during initialization</li>
 <li><code>to_be_stored</code>: Set to True if the hypercube will be serialized/stored (skips Default context state creation)</li>
@@ -835,12 +849,12 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cube_alchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hypercube</span>
 
-<span class="c1"># Option 1: Initialize with data</span>
+<span class="c1"># Option 1: Initialize with data (keep renamed shared columns)</span>
 <span class="n">cube1</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">({</span>
     <span class="s1">&#39;Product&#39;</span><span class="p">:</span> <span class="n">products_df</span><span class="p">,</span>
     <span class="s1">&#39;Customer&#39;</span><span class="p">:</span> <span class="n">customers_df</span><span class="p">,</span>
     <span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">sales_df</span>
-<span class="p">})</span>
+<span class="p">},</span> <span class="n">rename_original_shared_columns</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># Option 2: Initialize empty first, then load data</span>
 <span class="n">cube2</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">()</span>
@@ -848,7 +862,7 @@
     <span class="s1">&#39;Product&#39;</span><span class="p">:</span> <span class="n">products_df</span><span class="p">,</span>
     <span class="s1">&#39;Customer&#39;</span><span class="p">:</span> <span class="n">customers_df</span><span class="p">,</span>
     <span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">sales_df</span>
-<span class="p">})</span>
+<span class="p">},</span> <span class="n">rename_original_shared_columns</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># Reload data in an existing hypercube (e.g., when data is updated)</span>
 <span class="n">cube1</span><span class="o">.</span><span class="n">load_data</span><span class="p">({</span>
@@ -918,6 +932,18 @@
 <span class="c1"># Apply filters specific to this context</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;channel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Email&#39;</span><span class="p">,</span> <span class="s1">&#39;Social&#39;</span><span class="p">]},</span> <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;Marketing Analysis&#39;</span><span class="p">)</span>
 </code></pre></div>
+<h2 id="shared-columns-counts-and-distincts">Shared columns: counts and distincts</h2>
+<p>When multiple tables share a column (for example, <code>customer_id</code>), Cube Alchemy builds a link table containing the distinct values of that column across all participating tables. This has two practical implications:</p>
+<ul>
+<li>Counting on the shared column name (e.g., <code>customer_id</code>) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.</li>
+<li>Counting on a per-table renamed column (e.g., <code>customer_id &lt;orders&gt;</code> or <code>customer_id &lt;customers&gt;</code>) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.</li>
+</ul>
+<p>Example idea:</p>
+<ul>
+<li>Count distinct <code>customer_id</code> (shared) → distinct customers across all linked tables.</li>
+<li>Count distinct <code>customer_id &lt;orders&gt;</code> → distinct customers present in the Orders table specifically.</li>
+</ul>
+<p>Choose the one that matches your analytical intent: cross-table distincts via the shared column, or table-specific distincts via the renamed columns. Note: per-table renamed columns are available only when <code>rename_original_shared_columns=True</code>; set it to False to drop them and reduce memory/processing if you don’t need that analysis.</p>
 
 
 
