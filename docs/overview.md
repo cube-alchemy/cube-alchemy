@@ -9,6 +9,7 @@ Cube Alchemy transforms your pandas DataFrames into a powerful **hypercube**, cr
 - **Multidimensional Analytics:** Slice, dice, and aggregate your data across any dimension with consistent, reusable metrics and queries that reduce boilerplate code.
 - **Stateful Analysis:** Maintain a filtering context across queries to easily compare different scenarios.
 - **Interactive & Scalable:** Works seamlessly in notebook and data apps (Streamlit/Panel).
+- **Framework-Agnostic Visualization:** Flexible plotting system with a clean renderer interface that works with any visualization framework.
 
 ### The Semantic Layer
 
@@ -17,6 +18,7 @@ Map your data into a clear and consistent set of analytical assets to work with 
 - **Dimensions**: The "by" of your analysis—the entities you use to slice and dice data (e.g., `Customer`, `Region`, `Product`).
 - **Metrics**: The key performance indicators (KPIs) you measure (e.g., `Total Revenue`, `Conversion Rate`, `Average Order Value`).
 - **Queries**: The questions you ask of your data, combining metrics and dimensions to produce insights (e.g., *Revenue by Region over Time*).
+- **Plot Configurations**: Visualization definitions that specify how query results should be displayed, with support for multiple views of the same data.
 
 ### Why It Matters
 

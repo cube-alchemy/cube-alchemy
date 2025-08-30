@@ -32,10 +32,10 @@ In Cube Alchemy, the hypercube is not limited to a single table. It combines **m
 
 - **Effortless Queries:** When you request a metric across certain dimensions, the hypercube automatically **traverses** these connections (even across multiple "hops") to gather the necessary data.
 
-- **Consistency:** Define your metrics and dimensions once, and they can be reliably used across the entire data model.
+- **Consistency:** Define your metrics and queries once, and they can be reliably used across the entire data model.
 
 ---
 
 > **Important Note: Avoid Circular Dependencies**
 >
-> For the hypercube to function correctly, your data model must be a **Directed Acyclic Graph (DAG)**. This means you must avoid **cyclic relationships** (or circular references). Such cycles break the logic of data traversal and can lead to incorrect or infinite aggregations.
+> For the hypercube to function correctly, your data model must be a **Directed Acyclic Graph (DAG)**. This means you must avoid **cyclic relationships** (or circular references). Such cycles break the logic of data traversal and can lead to incorrect aggregations.

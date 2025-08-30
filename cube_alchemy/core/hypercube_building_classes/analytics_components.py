@@ -266,6 +266,21 @@ class AnalyticsComponents:
             "missing_names": missing_names,
         }
 
+        # if there exists a plot configured with this query, we might need to update it
+        if name in self.plot_configs:
+            print(f"Plot configuration for query '{name}' will be updated due to query re-definition.")
+            for plot_name, plot_config in self.plot_configs[name].items():
+                new_plot = plot_config
+                new_plot['dimensions'] = plot_config.get('_input_dimensions', [])
+                new_plot['metrics'] = plot_config.get('_input_metrics', [])
+
+                # if the query has more (or less) dimensions/metrics, we need to update the plot config too
+                self.define_plot(
+                    query_name=name,
+                    plot_name=plot_name,
+                    **new_plot
+                )
+
     def get_dimensions(self) -> List[str]:
         dimensions = set()
         for table_name, table in self.tables.items():

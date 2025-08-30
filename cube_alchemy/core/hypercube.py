@@ -8,12 +8,13 @@ from .hypercube_building_classes.analytics_components import AnalyticsComponents
 from .hypercube_building_classes.support_methods import SupportMethods
 from .hypercube_building_classes.query_methods import QueryMethods
 from .hypercube_building_classes.filter_methods import FilterMethods
+from .hypercube_building_classes.plotting_components import PlottingComponents
 
 # hypercube supporting classes
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 
-class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods):
+class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods, PlottingComponents):
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
@@ -22,6 +23,9 @@ class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, Suppor
         validate: bool = True,
         to_be_stored: bool = False,
     ) -> None:
+        # Initialize the PlottingComponents class
+        PlottingComponents.__init__(self)
+        
         self.metrics = {}
         self.computed_metrics = {}
         self.queries = {}
