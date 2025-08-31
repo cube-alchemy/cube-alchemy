@@ -10,7 +10,8 @@ define_metric(
     metric_filters: Optional[Dict[str, Any]] = None,
     row_condition_expression: Optional[str] = None,
     context_state_name: str = 'Default',
-    ignore_dimensions: Optional[Union[bool, List[str]]] = False,
+    ignore_dimensions: Union[bool, List[str]] = False,
+    ignore_context_filters: Union[bool, List[str]] = False,
     fillna: Optional[any] = None
 )
 ```
@@ -26,6 +27,7 @@ Defines a metric and stores it in the cube object for later use in queries.
 - `row_condition_expression`: Filter expression applied to rows before calculating the metric
 - `context_state_name`: Which context state this metric operates in
 - `ignore_dimensions`: Control how dimensions affect aggregation - `True` to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or `False` (default) for normal dimensional aggregation
+ - `ignore_context_filters`: Control how context filters affect this metric – `True` to ignore all context filters when evaluating the metric, a list of filter keys to ignore only those specific context filters, or `False` (default) to respect the context filters. When a list is provided, remaining context filters still apply, and any `metric_filters` are applied on top. Note: `ignore_context_filters=True` is effectively the same as evaluating the metric in the `Unfiltered` context (i.e., like setting `context_state_name='Unfiltered'` for this metric).
 - `fillna`: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation. Note: This parameter applies the same value to all columns. For column-specific NA handling, use `@pd.fillna()` or `@np.nan_to_num()` functions directly in the expression.
 
 **Example:**
@@ -64,6 +66,22 @@ cube.define_metric(
     expression='[qty] * [price]',
     aggregation='sum',
     ignore_dimensions=['city', 'product_category']  # Ignore these dimensions, aggregate only by remaining dimensions
+)
+
+# Ignore context filters completely for a metric (compute as if unfiltered context)
+cube.define_metric(
+    name='Revenue (All Context)',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_context_filters=True
+)
+
+# Ignore only certain context filters for a metric (others still apply)
+cube.define_metric(
+    name='Revenue (Ignoring Country Filter)',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_context_filters=['country']  # the metric ignores the 'country' filter from the current context
 )
 
 # Advanced NA handling - Using the simple fillna parameter (fills all columns with same value)

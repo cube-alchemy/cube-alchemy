@@ -201,59 +201,6 @@ class Engine:
     def _get_trajectory(self,tables_to_find):
         return self._find_complete_trajectory(tables_to_find)
     
-    def visualize_graph(
-        self,
-        layout_type: str = 'spring',
-        w: int = 20,
-        h: int = 14,
-        full_column_names: bool = True 
-    ) -> None:
-        graph = nx.DiGraph()
-        node_labels = {}
-        for table_name, df in self.tables.items():
-            # Use all columns but the internal use ones
-            columns = [col for col in df.columns if not col.startswith('_key_') and not col.startswith('_index_') and not col.startswith('_composite_key_')]
-            if table_name.startswith('_composite_') or not full_column_names:
-                columns = [re.sub(r' <.*>', '', col) for col in columns]         
-            columns_str = "\n".join(columns)  
-            if table_name in self.link_tables:
-                label = table_name.replace('_link_table_', '').replace('_composite_key_', '_c_')
-            else:
-                if table_name.startswith('_composite_'):
-                    _len_ct = len('Composite Table')
-                    label = f"Composite Table\n{'-' * _len_ct}\n{columns_str}"
-                else:
-                    label = f"{table_name}\n{'-' * len(table_name)}\n{columns_str}"
-            graph.add_node(table_name)
-            node_labels[table_name] = label
-        for (table1, table2), (key1, key2) in self.relationships.items():
-            graph.add_edge(table1, table2)
-        if layout_type == 'spring':
-            pos = nx.spring_layout(graph)
-        elif layout_type == 'circular':
-            pos = nx.circular_layout(graph)
-        elif layout_type == 'shell':
-            pos = nx.shell_layout(graph)
-        elif layout_type == 'random':
-            pos = nx.random_layout(graph)
-        elif layout_type == 'kamada_kawai':
-            pos = nx.kamada_kawai_layout(graph)
-        elif layout_type == 'spectral':
-            pos = nx.spectral_layout(graph)
-        elif layout_type == 'planar':
-            pos = nx.planar_layout(graph)
-        elif layout_type == 'spiral':
-            pos = nx.spiral_layout(graph)
-        else:
-            raise ValueError(f"Unknown layout type: {layout_type}")
-        plt.figure(figsize=(w, h))
-        nx.draw(graph, pos, with_labels=False, node_size=4000, node_color='white', font_size=8, arrows=True)
-        nx.draw_networkx_labels(graph, pos, labels=node_labels, font_size=9, font_family="sans-serif")
-        edge_labels = nx.get_edge_attributes(graph, 'label')
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
-        plt.title("Tables and Relationships")
-        plt.show()
-
     def set_context_state(
         self,
         context_state_name: str,

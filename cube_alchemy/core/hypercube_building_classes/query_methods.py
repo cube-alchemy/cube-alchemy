@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from ..metric import Metric, MetricGroup, ComputedMetric
 from typing import Dict, List, Any, Optional
+import copy
 
 def add_quotes_to_brackets(expression: str) -> str:
                     return re.sub(r'\[(.*?)\]', r"['\1']", expression)
@@ -237,7 +238,9 @@ class QueryMethods:
         # if no metrics are provided, return the dimensions (uses Default state and no filters, if want to use state and/or filters, use _single_state_and_filter_query or dimensions method instead)
         if len(metrics) == 0:
             return self._single_state_and_filter_query(dimensions, drop_null_dimensions = drop_null_dimensions, drop_null_metric_results = drop_null_metric_results)
-        elif len(metrics) == 1:
+        # Mutate metrics filters if required
+        self._apply_metrics_ignore_filters(metrics)
+        if len(metrics) == 1:
             # If there is only one metric, we can use _single_state_and_filter_query directly
             metric = metrics[0]
             return self._single_state_and_filter_query(dimensions, [metric], metric.metric_filters, metric.context_state_name, drop_null_dimensions = drop_null_dimensions, drop_null_metric_results = drop_null_metric_results)
@@ -337,3 +340,32 @@ class QueryMethods:
                 raise ValueError(f"Error applying HAVING expression '{having}': {e}") from e
 
         return df
+
+    def _apply_metrics_ignore_filters(self, metrics: List[Metric]):
+        """
+        Metrics can ignore specific context filters.
+        We temporarily create a new metric object with the same properties as the original and change its context and filters to match the desired state.
+        """
+        for i, metric in enumerate(metrics):
+            if not metric.ignore_context_filters:
+                continue
+            new_metric = copy.deepcopy(metric)
+            # check if ignore filters is bool
+            if isinstance(metric.ignore_context_filters, bool) and metric.ignore_context_filters:
+                new_metric.context_state_name = 'Unfiltered'
+                # metric specific filters will apply to only the Unfiltered context
+            else:  # metric.ignore_context_filters is a list, ignore the specific filters of its context's filters
+                new_filters = self.get_filters(context_state_name=new_metric.context_state_name) or {}
+                for ignored_filter in new_metric.ignore_context_filters:
+                    new_filters.pop(ignored_filter, None)
+                # If the metric has metric-specific filters we will use them on top of the reduced context filters
+                if metric.metric_filters:
+                    new_filters.update(metric.metric_filters)
+                # Now reset the metric filters by using the Unfiltered context and applying the new filters composed
+                # by reduced context filters plus the metric filters
+                new_metric.context_state_name = 'Unfiltered'
+                new_metric.metric_filters = new_filters
+
+            # now from metrics, replace the original metric with the new metric. 
+            # This leaves the original metric intact and the new metric (updated on the fly depending on context) will be used instead for the query.
+            metrics[i] = new_metric

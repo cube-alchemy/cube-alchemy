@@ -1,24 +1,27 @@
 from typing import Dict, List, Optional, Any, Union, Tuple
 import pandas as pd
-from cube_alchemy.plot_renderer import PlotRenderer
+from cube_alchemy.plotting import PlotRenderer, MatplotlibRenderer, PlotConfigResolver, DefaultPlotConfigResolver
+import copy
 
 class PlottingComponents:
     """Component for managing plot configurations for queries."""
     def __init__(self):
-        # Structure: {query_name: {plot_name: plot_config}}
-        if not hasattr(self, 'plot_configs'):
-            self.plot_configs: Dict[str, Dict[str, Dict[str, Any]]] = {}
-        # Default plot name for each query
-        if not hasattr(self, 'default_plots'):
-            self.default_plots: Dict[str, str] = {}
-    # Default renderer (initially None - must be set with set_plot_renderer)
-        self.plot_renderer = None
+        # Consolidated plotting state per query:
+        # plotting_components = {
+        #   query_name: { 'default': <plot_name or None>, 'plots': { <plot_name>: <plot_config> } }
+        # }
+        if not hasattr(self, 'plotting_components'):
+            self.plotting_components: Dict[str, Dict[str, Any]] = {}
+        # Default renderer
+        self._plot_renderer: PlotRenderer = MatplotlibRenderer()
+        # Default config resolver
+        self._config_resolver: PlotConfigResolver = DefaultPlotConfigResolver()
 
     def define_plot(
         self,
         query_name: str,
-        plot_name: str = "Default",
-        plot_type: str = "bar",
+        plot_name: Optional[str] = None,
+        plot_type: Optional[str] = None,
         dimensions: Optional[List[str]] = None,
         metrics: Optional[List[str]] = None,
         color_by: Optional[str] = None,
@@ -30,12 +33,11 @@ class PlottingComponents:
         sort_values: bool = False,
         sort_ascending: bool = True,
         limit: Optional[int] = None,
-        secondary_y: Optional[List[str]] = None,
         formatter: Optional[Dict[str, str]] = None,
         annotations: Optional[Dict[str, Any]] = None,
         custom_options: Optional[Dict[str, Any]] = None,
         set_as_default: bool = True,
-    ) -> "PlottingComponents":
+    ):
         """Define a plot configuration for a query.
         
         Args:
@@ -75,9 +77,21 @@ class PlottingComponents:
         else:
             mets = metrics
 
+        # Decide plot type: use provided one, otherwise pick the first suggestion (fallback to 'table').
+        if plot_type is None:
+            suggestions = self.suggest_plot_types(query_name)
+            chosen_plot_type = suggestions[0]['plot_type']
+        else:
+            chosen_plot_type = plot_type
+        
+        plot_name_is_null = False
+        if plot_name is None:
+            plot_name = f'{chosen_plot_type} plot'
+            plot_name_is_null = True
+
         # Create plot configuration (new schema)
         plot_config = {
-            'plot_type': plot_type,
+            'plot_type': chosen_plot_type,
             'dimensions': dims,
             'metrics': mets,
             'color_by': color_by,
@@ -89,27 +103,24 @@ class PlottingComponents:
             'sort_values': sort_values,
             'sort_ascending': sort_ascending,
             'limit': limit,
-            'secondary_y': secondary_y,
             'formatter': formatter,
             'annotations': annotations,
-            'custom_options': custom_options or {},
+            'custom_options': (custom_options or {}),
             '_input_dimensions': dimensions, #store original user input to refresh in case of query changes after plot definition
             '_input_metrics': metrics,
         }
         
-        # Initialize plot_configs for this query if not exists
-        if query_name not in self.plot_configs:
-            self.plot_configs[query_name] = {}
-        
+        # Ensure container for this query
+        qstate = self.plotting_components.setdefault(query_name, {'default': None, 'plots': {}})
         # Store the plot configuration
-        self.plot_configs[query_name][plot_name] = plot_config
-        
+        qstate['plots'][plot_name] = plot_config
         # Set as default if requested or if it's the first plot for this query
-        if set_as_default or query_name not in self.default_plots:
-            self.default_plots[query_name] = plot_name
+        if set_as_default or not qstate['default']:
+            qstate['default'] = plot_name
         
-        return self
-    
+        if plot_name_is_null:
+            print(f"Generated plot config: {plot_name}")
+
     def set_default_plot(self, query_name: str, plot_name: str) -> "PlottingComponents":
         """Set the default plot for a query.
         
@@ -120,10 +131,10 @@ class PlottingComponents:
         if not hasattr(self, 'queries') or query_name not in getattr(self, 'queries', {}):
             raise ValueError(f"Query '{query_name}' not defined")
         
-        if query_name not in self.plot_configs or plot_name not in self.plot_configs[query_name]:
+        qstate = self.plotting_components.get(query_name)
+        if not qstate or plot_name not in qstate.get('plots', {}):
             raise ValueError(f"Plot '{plot_name}' not found for query '{query_name}'")
-        
-        self.default_plots[query_name] = plot_name
+        qstate['default'] = plot_name
         return self
     
     def get_plot_config(self, query_name: str, plot_name: Optional[str] = None) -> Dict[str, Any]:
@@ -139,19 +150,22 @@ class PlottingComponents:
         if not hasattr(self, 'queries') or query_name not in getattr(self, 'queries', {}):
             raise ValueError(f"Query '{query_name}' not defined")
         
-        if query_name not in self.plot_configs:
+        qstate = self.plotting_components.get(query_name)
+        if not qstate or not qstate.get('plots'):
             raise ValueError(f"Query '{query_name}' has no plot configurations")
         
         # Use specified plot_name or the default
         if plot_name is None:
-            plot_name = self.default_plots.get(query_name)
+            plot_name = qstate.get('default')
             if plot_name is None:
                 raise ValueError(f"No default plot defined for query '{query_name}'")
+            else:
+                print(f"Using default plot config: {plot_name}")
         
-        if plot_name not in self.plot_configs[query_name]:
-            raise ValueError(f"Plot '{plot_name}' not found for query '{query_name}'")
+        if plot_name not in qstate['plots']:
+            raise ValueError(f"'{plot_name}' Plot Config not found for query '{query_name}'")
         
-        return self.plot_configs[query_name][plot_name]
+        return qstate['plots'][plot_name]
     
     def list_plots(self, query_name: str) -> List[str]:
         """List all available plot configurations for a query.
@@ -165,51 +179,55 @@ class PlottingComponents:
         if not hasattr(self, 'queries') or query_name not in getattr(self, 'queries', {}):
             return []
         
-        if query_name not in self.plot_configs:
+        qstate = self.plotting_components.get(query_name)
+        if not qstate:
             return []
-        
-        return list(self.plot_configs[query_name].keys())
+        return list(qstate.get('plots', {}).keys())
     
-    def prepare_plot_data(self, query_name: str, plot_name: Optional[str] = None, 
-                         **kwargs) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """
-        Prepare data for plotting by applying the plot configuration.
+    def _prepare_plot_data(
+            self, 
+            query_name: str, 
+            plot_name: Optional[str] = None, 
+            plot_type: Optional[str] = None, 
+            **kwargs) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         
-        Args:
-            query_name: Name of the query to prepare data for
-            plot_name: Name of the plot configuration (default: use the default plot)
-            **kwargs: Override plot configuration parameters
-            
-        Returns:
-            Tuple of (prepared data, plot config)
-        """
         if not hasattr(self, 'queries') or query_name not in getattr(self, 'queries', {}):
             raise ValueError(f"Query '{query_name}' not defined")
             
         # Get the query result
         plot_df = self.query(query_name)
         
-        # Get plot configuration (or create a default one if not exists)
+        # Get plot configuration (or create a default one if not exists). We get a deep copy as it might need to change for this specific plot.
         try:
-            config = self.get_plot_config(query_name, plot_name).copy()
+            config = self.get_plot_config(query_name, plot_name)
+            config = copy.deepcopy(config) #deep copy to avoid modifying the stored default config
+            # Override plot type if passed
+            if plot_type is not None:
+                config['plot_type'] = plot_type
         except ValueError:
-            if plot_name == None:
-                print("No plot name specified, using default bar chart")
+            # Decide plot type: prefer explicit, else choose the first suggestion or 'table'
+            if plot_type is None:
+                suggestions = self.suggest_plot_types(query_name)
+                chosen_plot_type = suggestions[0]['plot_type']
             else:
-                print(f"Plot '{plot_name}' not found for query '{query_name}'. Using default bar chart.")
-            # Auto-create a default config based on query definition
-            query_def = self.queries[query_name]
-            dimensions = query_def.get('dimensions', []) or []
-            metrics = (query_def.get('metrics', []) or []) + (query_def.get('computed_metrics', []) or [])
-            
-            config = {
-                'plot_type': 'bar',
-                'dimensions': dimensions,
-                'metrics': metrics,
-                'title': query_name
-            }
-        
-        # Override config with kwargs (only known keys)
+                chosen_plot_type = plot_type
+
+            # No suitable config found. Auto-create one (Default or the provided name)
+            if plot_name is None:
+                auto_plot_name = f'Default {chosen_plot_type} < system generated >'
+            else:
+                auto_plot_name = f'{plot_name} {chosen_plot_type} < system generated >'
+
+            self.define_plot(
+                query_name,
+                plot_name=auto_plot_name,
+                plot_type=chosen_plot_type
+            )
+            print(f"Auto-generated {chosen_plot_type} plot config: {auto_plot_name}")
+            # Now get the newly defined plot config
+            config = self.get_plot_config(query_name, plot_name=auto_plot_name)
+            config = copy.deepcopy(config) 
+
         for k, v in kwargs.items():
             if k in config:
                 config[k] = v
@@ -251,48 +269,35 @@ class PlottingComponents:
         d = len(dims)
         m = len(mets)
 
-        suggestions: List[Dict[str, Any]] = []
-        if d >= 1 and m >= 1:
-            # One dimension, one or more metrics
-            suggestions.append({'plot_type': 'bar', 'description': 'Bar chart', 'options': {}})
-            suggestions.append({'plot_type': 'line', 'description': 'Line chart', 'options': {}})
-            suggestions.append({'plot_type': 'area', 'description': 'Area chart', 'options': {}})
-        if d >= 2 and m >= 1:
-            # Two dimensions for grouping
-            suggestions.append({'plot_type': 'bar', 'description': 'Grouped bars (2nd dimension as groups)', 'options': {'stacked': False}})
-            suggestions.append({'plot_type': 'bar', 'description': 'Stacked bars (2nd dimension as stacks)', 'options': {'stacked': True}})
+        return self._config_resolver.suggest(d, m)
 
-        return suggestions
-
-    def plot(self, query_name: str, plot_name: Optional[str] = None, renderer: Optional[PlotRenderer] = None, **kwargs):
-        """
-        Plot the results of a query using a provided renderer.
-        
+    def plot(
+        self, 
+        query_name: str, 
+        plot_name: Optional[str] = None, 
+        plot_type: Optional[str] = None,
+        renderer: Optional[PlotRenderer] = None, 
+        **kwargs):
+        """        
         Args:
             query_name: Name of the query to visualize
             plot_name: Name of the plot configuration (default: use the default plot)
             renderer: PlotRenderer implementation (default: use the default renderer)
-            **kwargs: Additional arguments to override plot configuration or pass to the renderer
-            
-        Returns:
-            Whatever the renderer returns
-            
-        Raises:
-            ValueError: If no renderer is provided and no default renderer is set
+            **kwargs: Additional arguments to override plot configuration or pass to the renderer.
+                     Recognized: show (bool, default True) to display the figure in notebooks.
         """
-        plot_df, config = self.prepare_plot_data(query_name, plot_name, **kwargs)
+        plot_df, config = self._prepare_plot_data(query_name, plot_name, plot_type, **kwargs)
         if renderer is not None:
             return renderer.render(plot_df, config, **kwargs)
-        elif self.plot_renderer is not None: #Use default renderer set to Hypercube
-            return self.plot_renderer.render(plot_df, config, **kwargs)
+        elif self._plot_renderer is not None: #Use default renderer set to Hypercube
+            return self._plot_renderer.render(plot_df, config, **kwargs)
         else:
-            raise ValueError("No plot renderer provided. Use the 'renderer' parameter or set a default renderer with 'set_plot_renderer'.")
+            raise ValueError("Plot Rendered failed. set a default renderer with 'set_plot_renderer'.")
 
     def set_plot_renderer(self, renderer: PlotRenderer):
-        """
-        Set the plot renderer to be used for visualizations.
+        # Delegate to the property setter for validation
+        self._plot_renderer = renderer
 
-        Args:
-            renderer: An instance of a PlotRenderer implementation
-        """
-        self.plot_renderer = renderer
+    def set_config_resolver(self, resolver: PlotConfigResolver):
+        # Optional helper to change resolver with validation
+        self._config_resolver = resolver

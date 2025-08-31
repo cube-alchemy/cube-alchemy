@@ -16,7 +16,8 @@ class Metric:
         metric_filters: Optional[Dict[str, Any]] = None,
         row_condition_expression: Optional[str] = None, 
         context_state_name: str = 'Default',
-        ignore_dimensions: Optional[Union[bool, List[str]]] = False,
+        ignore_dimensions: Union[bool, List[str]] = False,
+        ignore_context_filters: Union[bool, List[str]] = False,
         fillna: Optional[any] = None, 
     ) -> None:
         self.name = name
@@ -27,6 +28,7 @@ class Metric:
         self.metric_filters = metric_filters
         self.context_state_name = context_state_name
         self.ignore_dimensions = ignore_dimensions
+        self.ignore_context_filters = ignore_context_filters
         self.fillna = fillna
 
         # Required for query processing. It will be populated during metric definition depending on the columns used and the DAG of the specific hypercube where it is being defined.
@@ -54,6 +56,7 @@ class Metric:
             "metric_filters": self.metric_filters,
             "context_state_name": self.context_state_name,
             "ignore_dimensions": self.ignore_dimensions,
+            "ignore_context_filters": self.ignore_context_filters,
             "fillna": self.fillna,
         }
 

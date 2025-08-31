@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional
 
 # hypercube building classes
 from .hypercube_building_classes.engine import Engine
+from .hypercube_building_classes.graph_visualizer import GraphVisualizer
 from .hypercube_building_classes.analytics_components import AnalyticsComponents
 from .hypercube_building_classes.support_methods import SupportMethods
 from .hypercube_building_classes.query_methods import QueryMethods
@@ -14,7 +15,7 @@ from .hypercube_building_classes.plotting_components import PlottingComponents
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 
-class Hypercube(Engine, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods, PlottingComponents):
+class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods, PlottingComponents):
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,

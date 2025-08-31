@@ -111,6 +111,7 @@ For more sophisticated analysis, metrics support several powerful options:
 - **Metric filters**: Apply specific filters only for a particular metric
 - **Row conditions**: Pre-filter rows before calculating the metric
 - **Ignore Dimensions**: Control dimensional aggregation behavior
+- **Ignore Context Filters (per metric)**: Let a metric ignore all or some of the active context filters
 - **Custom functions**: Use your own Python functions for complex logic
 
 Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.
@@ -130,6 +131,22 @@ cube.define_metric(
     expression='[qty] * [price]',
     aggregation='sum',
     metric_filters={'region': ['North', 'West']}
+)
+
+# Ignore all context filters only for this metric (computed over the Unfiltered state)
+cube.define_metric(
+    name='Revenue (All Context)',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_context_filters=True
+)
+
+# Ignore only some context filters (e.g., ignore the country filter, respect the rest)
+cube.define_metric(
+    name='Revenue (Ignoring Country Filter)',
+    expression='[qty] * [price]',
+    aggregation='sum',
+    ignore_context_filters=['country']
 )
 
 # Create a new Context State
@@ -175,6 +192,13 @@ cube.define_query(
 # Execute the query
 result = cube.query("advanced_analysis")
 ```
+
+**How ignore_context_filters works**
+
+When a metric specifies `ignore_context_filters`:
+
+- If set to `True`, the metric is evaluated against the Unfiltered context (equivalent to using `context_state_name='Unfiltered'` for that metric). Any `metric_filters` on the metric still apply.
+- If set to a list of dimensions, the metric is evaluated against its context state with those specific filters removed; then the metric's own `metric_filters` (if any) are applied on top.
 
 ## Custom Functions
 

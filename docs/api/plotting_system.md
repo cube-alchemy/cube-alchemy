@@ -169,7 +169,6 @@ def define_plot(
     sort_values: bool = False,
     sort_ascending: bool = True,
     limit: Optional[int] = None,
-    secondary_y: Optional[List[str]] = None,
     formatter: Optional[Dict[str, str]] = None,
     annotations: Optional[Dict[str, Any]] = None,
     custom_options: Optional[Dict[str, Any]] = None,

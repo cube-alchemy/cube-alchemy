@@ -115,11 +115,4 @@ class SupportMethods:
             return df[columns_init]  # Return DataFrame with original columns
         else:
             return df
-        
-    def print_model(self) -> None:
-        print('tables:\n')
-        for table in self.tables:
-            print(table, '->\n', self.tables[table], '\n\n')
-        print('\nrelationships:\n ')
-        for r in self.relationships:
-            print(r, '-', self.relationships[r])
+

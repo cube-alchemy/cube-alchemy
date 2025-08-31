@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Dict, Any
-from .abc import PlotRenderer
+from .plot_renderer import PlotRenderer
 
 # Define StreamlitRenderer
 class StreamlitRenderer(PlotRenderer):

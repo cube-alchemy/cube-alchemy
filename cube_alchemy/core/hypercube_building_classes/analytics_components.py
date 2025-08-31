@@ -13,10 +13,10 @@ class AnalyticsComponents:
         row_condition_expression: Optional[str] = None, 
         context_state_name: str = 'Default',
         ignore_dimensions: bool = False,
-        fillna: Optional[any] = None, ):
-        
-        new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, ignore_dimensions, fillna)
-        
+        ignore_context_filters: bool = False,
+        fillna: Optional[any] = None):
+
+        new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, ignore_dimensions, ignore_context_filters, fillna)
 
         # define metric column indexes and metric keys. To be used on queries
 
@@ -267,12 +267,15 @@ class AnalyticsComponents:
         }
 
         # if there exists a plot configured with this query, we might need to update it
-        if name in self.plot_configs:
-            print(f"Plot configuration for query '{name}' will be updated due to query re-definition.")
-            for plot_name, plot_config in self.plot_configs[name].items():
+        q_state = getattr(self, 'plotting_components', {}).get(name)
+        if q_state and q_state.get('plots'):
+            print(f"Plots configuration for query '{name}' will be updated due to query re-definition.")
+            for plot_name, plot_config in q_state['plots'].items():
                 new_plot = plot_config
                 new_plot['dimensions'] = plot_config.get('_input_dimensions', [])
                 new_plot['metrics'] = plot_config.get('_input_metrics', [])
+                new_plot.pop('_input_dimensions', None)
+                new_plot.pop('_input_metrics', None)
 
                 # if the query has more (or less) dimensions/metrics, we need to update the plot config too
                 self.define_plot(
