@@ -20,14 +20,23 @@ class GraphVisualizer:
 
         for table_name, df in self.tables.items():
             # Use all columns but the internal use ones
-            columns = [
-                col.replace('_composite_key_', '_c_').replace('_key_','') for col in df.columns.to_list()
-                if not col.startswith('_index_')
-                and not col.startswith('_composite_key_')
-            ]
-            if not full_column_names:
-                # When not showing full names, exclude columns that carry a table-suffix like ' <table>' entirely
-                columns = [col for col in columns if not re.search(r' <.*>', col)]
+            if self.rename_original_shared_columns:
+                columns = [
+                    col.replace('_composite_key_', '_c_') for col in df.columns.to_list()
+                    if not col.startswith('_key_') and not col.startswith('_index_')
+                    and not col.startswith('_composite_key_')
+                ]
+            else:
+                columns = [
+                    col.replace('_composite_key_', '_c_').replace('_key_','') for col in df.columns.to_list()
+                    if not col.startswith('_index_')
+                    and not col.startswith('_composite_key_')
+                ]
+
+            if not full_column_names and self.rename_original_shared_columns:
+                # When not showing full names, rename columns that carry a table-suffix like ' <table>' entirely
+                columns = [re.sub(r' <.*>', '', col) for col in columns]
+                #columns = [col for col in columns if not re.search(r' <.*>', col)]
 
             columns_str = "\n".join(columns)
 

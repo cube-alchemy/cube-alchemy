@@ -1,10 +1,10 @@
 
 import re
 import pandas as pd
-import numpy as np
-from ..metric import Metric, MetricGroup, ComputedMetric
-from typing import Dict, List, Any, Optional
+from ..metric import Metric, MetricGroup
+from typing import Dict, List, Any, Optional, Tuple
 import copy
+import uuid
 
 def add_quotes_to_brackets(expression: str) -> str:
                     return re.sub(r'\[(.*?)\]', r"['\1']", expression)
@@ -46,11 +46,56 @@ class QueryMethods:
         """Register variables/functions available to DataFrame.query via @name."""
         self.registered_functions.update(kwargs)
 
-    def query(self, query_name: str, return_internal_metrics: bool = False):
-        query = self.queries.get(query_name)
-        if not query:
-            raise ValueError(f"Query '{query_name}' not found.")
-        
+    def query(
+        self, 
+        query_name: Optional[str] = None,
+        # on the fly queries
+        options: Optional[Dict[str, Any]] = None,
+        _retrieve_query_name: Optional[str] = False # Internal use, to plot ad hoc queries
+    ):
+
+        if options is None:
+            query = self.queries.get(query_name)
+            if not query:
+                raise ValueError(f"Query '{query_name}' not found.")
+            new_query_name = None
+        # Define an ad-hoc query with the provided parameters
+        else:
+            base = self.queries.get(query_name) or {}
+
+            uuid_str = str(uuid.uuid4())[:8]
+            new_query_name = f"**ad-hoc** ({uuid_str})" if not query_name else f"**ad-hoc** ({query_name}) ({uuid_str})"
+
+            def pick(key: str, default):
+                if key in options:
+                    val = options.get(key)
+                    if val is None:
+                        return base.get(key, default)
+                    return val
+                return base.get(key, default)
+
+            dims = pick("dimensions", [])
+            mets = pick("metrics", [])
+            cmets = pick("computed_metrics", [])
+            having = pick("having", None)
+            sort = pick("sort", [])
+            drop_null_dimensions = pick("drop_null_dimensions", False)
+            drop_null_metric_results = pick("drop_null_metric_results", False)
+
+            # Always re-run define_query to recompute hidden/ordered deps
+            self.define_query(
+                name=new_query_name,
+                dimensions=dims,
+                metrics=mets,
+                computed_metrics=cmets,
+                having=having,
+                sort=sort,
+                drop_null_dimensions=drop_null_dimensions,
+                drop_null_metric_results=drop_null_metric_results
+            )
+            query = self.queries.get(new_query_name)
+            print(f'New query defined: {new_query_name}')
+
         # Build full set of metrics to compute using precomputed hidden metrics
         hidden_metrics: List[str] = query["hidden_metrics"]
         all_metrics = query["metrics"] + hidden_metrics
@@ -79,13 +124,13 @@ class QueryMethods:
             by = [c for c, _ in query["sort"]]
             ascending = [str(d).lower() == 'asc' for _, d in query["sort"]]
             query_result = query_result.sort_values(by=by, ascending=ascending)
-
-        if return_internal_metrics:
-            return query_result
-        else:
-            # Return only requested dimensions, metrics, and computed metrics
-            return query_result[query["dimensions"] + query["metrics"] + query["computed_metrics"]]
         
+        final_result = query_result[query["dimensions"] + query["metrics"] + query["computed_metrics"]]
+
+        if _retrieve_query_name:
+            return new_query_name or query_name, final_result
+        return final_result
+
         # I use this method to avoid calling and processing the indexes multiple times when there are multiple metrics with the same context_states and filters, which I assume is the most common case.
     
     def _single_state_and_filter_query(
@@ -100,10 +145,11 @@ class QueryMethods:
         
         
         metrics_list_len = len(metrics)
+
+        no_dimension = False
         if len(dimensions) == 0:
             no_dimension = True
-        else:
-            no_dimension = False
+            fake_dim_to_group_by = '<all>'
 
         if metrics_list_len == 0:
             df = self.dimensions(dimensions, False, context_state_name, query_filters)
@@ -119,8 +165,8 @@ class QueryMethods:
                 metric_result = self._fetch_and_merge_columns(all_relevant_columns, df)[all_relevant_columns].drop_duplicates()
 
                 if no_dimension: # fake dimension to group by, will be deleted later
-                    df['<all>'] = 1
-                    dimensions = ['<all>']
+                    metric_result[fake_dim_to_group_by] = True
+                    dimensions = [fake_dim_to_group_by]
 
                 # Store masks for NaN values before filling
                 filled_masks = {}
@@ -184,7 +230,7 @@ class QueryMethods:
             for result in results[1:]:
                 final_result = pd.merge(final_result, result, on=dimensions, how='outer')
             if no_dimension:
-                final_result.drop('<all>', axis=1, inplace=True)
+                final_result.drop(fake_dim_to_group_by, axis=1, inplace=True)
 
             return final_result
 

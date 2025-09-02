@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional, Union, Callable, Tuple
 from ..metric import Metric, ComputedMetric, extract_columns
 import re
+import warnings
 
 class AnalyticsComponents:
     
@@ -18,7 +19,7 @@ class AnalyticsComponents:
 
         new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, ignore_dimensions, ignore_context_filters, fillna)
 
-        # define metric column indexes and metric keys. To be used on queries
+        # define metric column indexes. To be used on queries to traverse the tree (for the metrics we want to bring not the distinct values but all the rows involving its columns)
 
         metric_tables = set()
         metric_columns_indexes = set()                
@@ -28,8 +29,8 @@ class AnalyticsComponents:
             if table_name:
                 metric_tables.add(table_name)
             else:
-                print(f"Warning: Column {column} not found in any table.")
-                continue
+                warnings.warn(f"Column {column} not found in any table.")
+
             
         metric_tables_dict = {table_name: self.tables[table_name] for table_name in metric_tables if table_name is not None}
 
@@ -39,7 +40,7 @@ class AnalyticsComponents:
             if table_name not in self.link_tables:
                 metric_columns_indexes.add(f"_index_{table_name}")
 
-        # add metric_columns_indexes to the new metric object to be used right away
+        # add metric_columns_indexes to the new metric object 
         new_metric.columns_indexes = list(metric_columns_indexes)
         self.metrics[new_metric.name] = new_metric
 
@@ -163,7 +164,7 @@ class AnalyticsComponents:
                 hidden_computed_metrics.append(sort_col)
                 referenced_computed.add(sort_col)
 
-        # Build dependency graph for all computed metrics involved in this query
+        # Build dependency graph for all computed metrics involved in this query (we need to execute them in order to work)
         def build_cm_dependencies(names: List[str]) -> Dict[str, List[str]]:
             deps: Dict[str, List[str]] = {}
             for n in names:
@@ -202,7 +203,7 @@ class AnalyticsComponents:
         for node in all_cm_names:
             visit(node)
 
-        # Build the set of referenced names to track missing items for fast auto-refresh later.
+        # Build the set of referenced names to track missing items for fast auto-refresh.
         # Only consider tokens that are NOT dimensions and are plausible metric/computed metric names.
         referenced_candidates = set(metrics) | set(computed_metrics)
         # From computed metrics expressions (only those that exist at the moment)
@@ -210,16 +211,12 @@ class AnalyticsComponents:
             cm_obj = self.computed_metrics.get(cm_name)
             if cm_obj:
                 for col in cm_obj.columns:
-                    # Exclude known dimensions
-                    if not getattr(self, "column_to_table", {}).get(col):
-                        referenced_candidates.add(col)
+                    referenced_candidates.add(col)
         # From HAVING and SORT
         for col in having_columns:
-            if not getattr(self, "column_to_table", {}).get(col):
-                referenced_candidates.add(col)
+            referenced_candidates.add(col)
         for sc, _ in sort:
-            if not getattr(self, "column_to_table", {}).get(sc):
-                referenced_candidates.add(sc)
+            referenced_candidates.add(sc)
 
         # Names that are not yet defined as metrics/computed metrics
         missing_names = sorted([n for n in referenced_candidates if n not in self.metrics and n not in self.computed_metrics and n not in self.get_dimensions()])
