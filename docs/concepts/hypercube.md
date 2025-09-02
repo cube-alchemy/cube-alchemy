@@ -40,4 +40,4 @@ In Cube Alchemy, the hypercube is not limited to a single table. It combines **m
 
 > **Important Note: Avoid Circular Dependencies**
 >
-> For the hypercube to function correctly, your data model must be a **Acyclic Graph**. This means you must avoid **cyclic relationships** (or circular references). Such cycles break the logic of data traversal and can lead to incorrect aggregations.
+> For the hypercube to function correctly, your data model must be a **Acyclic Graph**. This means you must avoid **cyclic relationships** (or circular references). Such cycles create ambiguous join paths that break the logic of data traversal and aggregations.

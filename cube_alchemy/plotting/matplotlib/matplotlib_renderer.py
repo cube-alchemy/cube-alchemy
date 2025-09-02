@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Dict, Any
-from ..plot_renderer import PlotRenderer
+from ..abc_plot_renderer import PlotRenderer
 from .handlers import PLOT_HANDLERS
 import matplotlib.pyplot as plt
 

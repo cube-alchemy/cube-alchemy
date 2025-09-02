@@ -20,6 +20,7 @@ dependencies = [
     "networkx>=3.5,<4.0",
     "matplotlib>=3.10.3,<4.0",
     "pandas>=2.0.0,<3.0",
+    "pyyaml>=6.0.0,<7.0",
 ]
 
 [project.urls]
@@ -28,4 +29,12 @@ dependencies = [
 "Bug Tracker" = "https://github.com/cube-alchemy/cube-alchemy/issues"
 
 [tool.setuptools]
-packages = ["cube_alchemy", "cube_alchemy.core", "cube_alchemy.core.hypercube_building_classes"]
+packages = [
+    "cube_alchemy",
+    "cube_alchemy.core",
+    "cube_alchemy.core.hypercube_building_classes",
+    "cube_alchemy.model_definitions",
+    "cube_alchemy.model_definitions.sources",
+    "cube_alchemy.model_definitions.repository",
+    "cube_alchemy.model_definitions.validation",
+]
