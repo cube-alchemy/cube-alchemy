@@ -21,7 +21,6 @@ class AnalyticsComponents:
         # define metric column indexes and metric keys. To be used on queries
 
         metric_tables = set()
-        metric_keys = set()
         metric_columns_indexes = set()                
 
         for column in new_metric.columns:
@@ -39,13 +38,9 @@ class AnalyticsComponents:
         for table_name in trajectory_tables:
             if table_name not in self.link_tables:
                 metric_columns_indexes.add(f"_index_{table_name}")
-            for col in self.tables[table_name].columns:
-                if col in self.link_table_keys:
-                    metric_keys.add(col)
 
-        # add metric_columns_indexes and metric_keys to the new metric object to be used right away
-        new_metric.columns_indexes = metric_columns_indexes
-        new_metric.keys = metric_keys
+        # add metric_columns_indexes to the new metric object to be used right away
+        new_metric.columns_indexes = list(metric_columns_indexes)
         self.metrics[new_metric.name] = new_metric
 
         # Auto-refresh only queries that declared this name as missing

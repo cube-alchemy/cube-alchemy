@@ -31,9 +31,8 @@ class Metric:
         self.ignore_context_filters = ignore_context_filters
         self.fillna = fillna
 
-        # Required for query processing. It will be populated during metric definition depending on the columns used and the DAG of the specific hypercube where it is being defined.
-        self.keys = {}
-        self.columns_indexes = {}
+        # Required for query processing.
+        self.columns_indexes = []
     
     def get_metric_details(self):
         import inspect

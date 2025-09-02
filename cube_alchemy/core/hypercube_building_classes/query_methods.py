@@ -97,34 +97,31 @@ class QueryMethods:
         drop_null_dimensions: bool = False,
         drop_null_metric_results: bool = False
     ) -> pd.DataFrame:
-        no_dimension = False
+        
+        
         metrics_list_len = len(metrics)
+        if len(dimensions) == 0:
+            no_dimension = True
+        else:
+            no_dimension = False
+
         if metrics_list_len == 0:
             df = self.dimensions(dimensions, False, context_state_name, query_filters)
             return df
         else:
-            if len(dimensions) > 0:
-                df = self.dimensions(dimensions, True, context_state_name, query_filters)          
-            else:
-                df = self.context_states[context_state_name].copy() # I copy the state DataFrame to avoid modifying the original state
-                df = self._apply_filters_to_dataframe(df, query_filters)
-                df['<all>'] = 1
-                dimensions = ['<all>']
-                no_dimension = True
             results = []          
             for metric in metrics:
 
-                keys_and_dimensions = list(metric.keys | {col for col in dimensions if col not in metric.columns}) # If a dimension is also a metric column (I want to bring all the rows not just distinct)
-                if metrics_list_len == 1:
-                    metric_result = df[keys_and_dimensions].drop_duplicates() 
-                else: # copy as each metric has its own set of columns
-                    metric_result = df.copy()[keys_and_dimensions].drop_duplicates()
+                df = self.context_states[context_state_name].copy() # I copy the state DataFrame to avoid modifying the original state
+                df = self._apply_filters_to_dataframe(df, query_filters)
 
-                if len(metric.columns_indexes) > 1:
-                    metric_result = self._fetch_and_merge_columns(list(set(metric.columns + list(metric.columns_indexes))), metric_result, drop_duplicates=True)
-                else:
-                    metric_result = self._fetch_and_merge_columns(metric.columns, metric_result)
-              
+                all_relevant_columns = list(set(dimensions + metric.columns + metric.columns_indexes))
+                metric_result = self._fetch_and_merge_columns(all_relevant_columns, df)[all_relevant_columns].drop_duplicates()
+
+                if no_dimension: # fake dimension to group by, will be deleted later
+                    df['<all>'] = 1
+                    dimensions = ['<all>']
+
                 # Store masks for NaN values before filling
                 filled_masks = {}
                 if metric.fillna is not None:
