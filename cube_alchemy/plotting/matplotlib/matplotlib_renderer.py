@@ -62,9 +62,3 @@ class MatplotlibRenderer(PlotRenderer):
         plt.close(fig)
 
         return fig
-
-    def _category_labels(self, df: pd.DataFrame, dims: list) -> pd.Series:
-        # Kept for backward compatibility if ever used externally; not used by new handlers.
-        if dims:
-            return df[dims].astype(str).agg(' | '.join, axis=1)
-        return pd.Series(['All'] * len(df), index=df.index)

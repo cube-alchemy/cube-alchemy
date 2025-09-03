@@ -2,77 +2,72 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from cube_alchemy.model_definitions import Catalog, YAMLDefinitionSource, DefinitionRepository, InMemoryRepository
+from cube_alchemy.catalogs import Catalog, Source, YAMLSource, ModelYAMLSource, Repository, InMemoryRepository
 
 
-class ModelDefinitions:
-    """Hypercube component to sync model definitions (metrics, queries, plots) with a Catalog.
+class ModelCatalog:
+    """Hypercube component to sync model analytics (metrics, computed metrics, queries) and plotting (plot configs) components with a Catalog.
 
-    Usage on a Hypercube instance (mixed in via multiple inheritance):
-      - cube.definitions_set_yaml(p)            # set the YAML file path and then attach it to the hypercube
-        - cube._definitions_attach_yaml(p)       # attach a YAML file to the hypercube as the source
-      - cube.definitions_refresh_into_cube()    # load from YAML -> catalog -> define_* into cube
-      - cube.definitions_pull_from_cube()       # extract cube -> catalog repo
-      - cube.definitions_save(path?)            # save current repo -> YAML
-      - cube.definitions_list(kind)             # helper to inspect loaded items
+    Usage on a Hypercube instance:
+    - cube.set_yaml_model_catalog(p*)    # set the YAML file path of model catalog source and then attach it to the hypercube
+    - cube.load_from_model_catalog()     # load from source -> catalog repo -> define_* into cube
+    - cube.save_to_model_catalog(path?)  # save current cube -> catalog repo -> catalog source
     """
 
-    # I am making this implementation tight to yaml definition source, but it could be generalized to any type of source, just need to re-write the yaml specific methods.
-    # ---------- lifecycle ----------
+    # Currently YAML-first for convenience. Generic hooks (set_model_catalog) allow plugging any other DefinitionSource/Repository.
+    
     def __init__(self) -> None:
-        # Late-bound wiring: call definitions_set_yaml when ready
-        self._definitions_repo: Optional[DefinitionRepository] = None
-        self._definitions_source: Optional[YAMLDefinitionSource] = None
-        self._definitions_catalog: Optional[Catalog] = None
-        # Remember the YAML file path bound to this cube (if any)
-        self._definitions_yaml_path = None
+        self.model_catalog: Optional[Catalog] = None
+        # YAML file path bound to this cube for model catalog
+        self._model_yaml_path: Optional[Path] = None
 
-    # ---------- source wiring ----------
-    def definitions_get_yaml_path(self) -> Optional[Path]:
-        """Return the remembered YAML path (if attached)."""
-        return self._definitions_yaml_path
-
-    def definitions_set_yaml(self, path: Optional[str], use_current_directory: bool = True, create_if_missing: bool = True) -> Path:
+    # ---------- YAMLsource wiring ----------
+    def set_yaml_model_catalog(self, path: Optional[str] = None, use_current_directory: bool = True, create_if_missing: bool = True, default_yaml_name: Optional[str] = None) -> Path:
         """Set the YAML file path to use for model definitions, and attach it to this cube."""
-        default_yaml_name = "model_definitions.yaml"
+        if default_yaml_name is None:
+            default_yaml_name = "model_catalog.yaml"
         if path is None:
             path = default_yaml_name
         p = (Path.cwd() / path) if use_current_directory else Path(path)
         if not p.exists() and create_if_missing:
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(
-                "metrics: {}\ncomputed_metrics: {}\nqueries: {}\nplots: {}\n",
+                "metrics: \ncomputed_metrics: \nqueries:",
                 encoding="utf-8",
             )
-        self._definitions_yaml_path = p.resolve()
-        self._definitions_attach_yaml()
-        print(f'Attached YAML definitions from {self._definitions_yaml_path}')
-        return self._definitions_yaml_path
+        self._model_yaml_path = p.resolve()
+        # Use the model-aware YAML source here; generic YAMLSource stays domain-agnostic
+        source = ModelYAMLSource(p)
+        self.set_model_catalog([source])
+        print(f"Attached YAML definitions from {self._model_yaml_path} to the model catalog.")
+        return self._model_yaml_path
 
-    def _definitions_attach_yaml(self) -> None:
-
-        p = self._definitions_yaml_path
-
-        source = YAMLDefinitionSource(p)
-        repo = InMemoryRepository()
-        catalog = Catalog([source], repo)
-
-        self._definitions_source = source
-        self._definitions_repo = repo
-        self._definitions_catalog = catalog
+    def get_yaml_path_model_catalog(self) -> Optional[Path]:
+        """Return the remembered YAML path (if attached)."""
+        return self._model_yaml_path
+    
+    # ---------- generic source wiring ---------
+    def set_model_catalog(self, sources: Iterable[Source], repo: Optional[Repository] = None) -> None:
+        """Attach multiple DefinitionSources (merged by Catalog)."""
+        src_list = list(sources)
+        repo = repo or InMemoryRepository()
+        catalog = Catalog(src_list, repo)
+        self.model_catalog = catalog
 
     # ---------- high-level operations ----------
-    def definitions_refresh_into_cube(self, kinds: Optional[Iterable[str]] = None) -> None:
+    def load_from_model_catalog(self, kinds: Optional[Iterable[str]] = None, clear_repo: bool = False, reload_sources: bool = True) -> None:
         """Load from the active source into the Catalog, then apply to this cube.
         Order: metrics -> computed_metrics -> queries -> plots.
+        clear_repo: If True, clear the existing repo before refreshing from source.
+        reload_sources: If True, reload the sources before refreshing. This disables the cache and ensures that any changes in the source definitions are reflected in the Catalog.
         """
-        catalog = self._require_catalog_()
-        catalog.refresh(kinds=kinds)
+        catalog = self._require_model_catalog_()
+        catalog.refresh(kinds=kinds, reload_sources=reload_sources, clear_repo=clear_repo)
         self._apply_catalog_to_cube_(catalog, kinds=kinds)
 
-    def definitions_pull_from_cube(self) -> None:
+    def _model_catalog_pull_from_cube(self) -> None:
         """Extract current cube definitions into the Catalog repository (does not save)."""
-        catalog = self._require_catalog_()
+        catalog = self._require_model_catalog_()
         repo = self._require_repo_()
 
         # Clear repo by deleting existing entries
@@ -88,18 +83,24 @@ class ModelDefinitions:
                 spec.setdefault("name", name)
                 repo.put(kind, name, spec)
 
-    def definitions_save_to_yaml(self, filepath: Optional[str | Path] = None) -> None:
-        """Persist current Catalog repository to YAML (via YAMLDefinitionSource)."""
-        self.definitions_pull_from_cube()
-        catalog = self._require_catalog_()
-        # If no explicit filepath provided, prefer stored YAML path when available
-        target = Path(filepath) if filepath is not None else (self._definitions_yaml_path or None)
-        catalog.save(target)
-        print(f'Saved model definitions to {target}')
-
-    def definitions_list(self, kind: Optional[str] = None) -> List[str]:
-        catalog = self._require_catalog_()
-        return catalog.list(kind)
+    def save_to_model_catalog(self) -> None: # Cube -> Repo -> Source
+        # Ensure repo reflects current cube state
+        self._model_catalog_pull_from_cube()
+        catalog = self._require_model_catalog_()
+        # Build data structure from repo
+        data: Dict[str, Dict[str, Any]] = {}
+        for kind, name in catalog.repo.list():
+            data.setdefault(kind, {})
+            spec = catalog.get(kind, name)
+            if spec is not None:
+                data[kind][name] = spec
+        # Save through all sources
+        if not getattr(catalog, 'sources', None):
+            raise RuntimeError("No sources attached to Catalog; cannot save.")
+        for source in catalog.sources:
+            # Each source decides how to persist
+            source.save(data)
+        print(f"Saved model definitions via {len(catalog.sources)} source(s). {'YAML file ->' + str(self._model_yaml_path) if self._model_yaml_path else ''}.")
 
     # ---------- mapping: Catalog -> cube ----------
     def _apply_catalog_to_cube_(self, catalog: Catalog, kinds: Optional[Iterable[str]] = None) -> None:
@@ -276,14 +277,12 @@ class ModelDefinitions:
         return data
 
     # ---------- guards ----------
-    def _require_catalog_(self) -> Catalog:
-        if not self._definitions_catalog:
-            raise RuntimeError("No definitions source attached. Call definitions_set_yaml_path() first.")
-        return self._definitions_catalog
+    def _require_model_catalog_(self) -> Catalog:
+        if not self.model_catalog:
+            raise RuntimeError("No definitions source attached. Call set_yaml_model_catalog(...) or model_catalog_attach_source(...) first.")
+        return self.model_catalog
 
-    def _require_repo_(self) -> DefinitionRepository:
-        if not self._definitions_repo:
+    def _require_repo_(self) -> Repository:
+        if not self.model_catalog.repo:
             raise RuntimeError("Catalog repository not initialized.")
-        return self._definitions_repo
-
-    
+        return self.model_catalog.repo

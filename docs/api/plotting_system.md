@@ -38,7 +38,7 @@ When you import and use Cube Alchemy's Hypercube, you don't automatically import
 
 ### 1. Define Query and Plot Configurations
 
-Plot configurations are stored separately from queries, allowing multiple visualizations for the same data and ensuring they persist even if queries are redefined:
+Plot configurations are associated with queries but stored separately from the query definition, allowing multiple visualizations for the same data and easy reuse:
 
 ```python
 # Define a query first (dimensions/metrics)
@@ -74,7 +74,7 @@ cube.define_plot(
 Create a renderer that implements the `PlotRenderer` interface:
 
 ```python
-from cube_alchemy.plot_renderer import PlotRenderer
+from cube_alchemy.plotting import PlotRenderer
 import matplotlib.pyplot as plt
 
 class MatplotlibRenderer(PlotRenderer):
@@ -232,3 +232,7 @@ You can create custom renderers for any visualization framework by implementing 
 ## Examples
 
 Check out the [examples folder](https://github.com/cube-alchemy/cube-alchemy-examples) for complete examples using different renderers with Cube Alchemy.
+
+## Persisting Plot Configurations
+
+Plot configurations can be saved/loaded with the Model Catalog (YAML-backed by default). See API: Model Catalog for how plots are serialized alongside metrics, queries, and computed metrics.

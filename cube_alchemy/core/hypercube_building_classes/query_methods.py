@@ -199,28 +199,32 @@ class QueryMethods:
 
                 # Handle ignore_dimensions (ignore all or specific dimensions)
                 if metric.ignore_dimensions:
+                    all_dims = metric_result[dimensions].drop_duplicates()
                     if isinstance(metric.ignore_dimensions, list):
                         # Exclude specified dimensions (partial ignore)
                         group_dims = [d for d in dimensions if d not in metric.ignore_dimensions]
                         if group_dims:
                             # Group by remaining dimensions
-                            agg_result = metric_result.groupby(group_dims, dropna=drop_null_dimensions)[metric.name].agg(metric.aggregation).reset_index()
+                            agg_fn = self._resolve_aggregation(metric.aggregation)
+                            agg_result = metric_result.groupby(group_dims, dropna=drop_null_dimensions)[metric.name].agg(agg_fn).reset_index()
                             # Get all dimension combinations to join back
-                            all_dims = df[dimensions].drop_duplicates()
                             metric_result = pd.merge(all_dims, agg_result, on=group_dims, how='left')
                         else:
                             # If all dimensions are excluded, calculate grand total
-                            total_agg_val = metric_result[metric.name].agg(metric.aggregation)
-                            metric_result = df[dimensions].drop_duplicates()
+                            agg_fn = self._resolve_aggregation(metric.aggregation)
+                            total_agg_val = metric_result[metric.name].agg(agg_fn)
+                            metric_result = all_dims
                             metric_result[metric.name] = total_agg_val
                     else:
                         # Boolean True - ignore all dimensions (grand total)
-                        total_agg_val = metric_result[metric.name].agg(metric.aggregation)
-                        metric_result = df[dimensions].drop_duplicates()
+                        agg_fn = self._resolve_aggregation(metric.aggregation)
+                        total_agg_val = metric_result[metric.name].agg(agg_fn)
+                        metric_result = all_dims
                         metric_result[metric.name] = total_agg_val
                 else:
                     # Normal aggregation with all dimensions
-                    metric_result = metric_result.groupby(dimensions, dropna=drop_null_dimensions)[metric.name].agg(metric.aggregation).reset_index()
+                    agg_fn = self._resolve_aggregation(metric.aggregation)
+                    metric_result = metric_result.groupby(dimensions, dropna=drop_null_dimensions)[metric.name].agg(agg_fn).reset_index()
                 
                 if drop_null_metric_results:
                     metric_result = metric_result.dropna(subset=[metric.name])
@@ -412,3 +416,75 @@ class QueryMethods:
             # now from metrics, replace the original metric with the new metric. 
             # This leaves the original metric intact and the new metric (updated on the fly depending on context) will be used instead for the query.
             metrics[i] = new_metric
+    
+    def _resolve_aggregation(self, agg: Any) -> Any:
+        """Normalize aggregation spec into something pandas .agg(...) accepts.
+        Supports:
+        - pandas-native strings (sum, mean, nunique, ...)
+        - friendly aliases (count_distinct -> nunique, avg -> mean)
+        - names or dotted paths resolvable via self.registered_functions (e.g., 'np.nanmean')
+        - callables (returned as-is)
+        - list/tuple/dict containers resolved recursively
+        """
+        if agg is None:
+            return agg
+        if callable(agg):
+            return agg
+        # Alias map
+        aliases: Dict[str, Any] = {
+            # pandas-native (pass-through)
+            "sum": "sum",
+            "mean": "mean",
+            "min": "min",
+            "max": "max",
+            "median": "median",
+            "std": "std",
+            "var": "var",
+            "count": "count",
+            "size": "size",
+            "first": "first",
+            "last": "last",
+            "prod": "prod",
+            "any": "any",
+            "all": "all",
+            "nunique": "nunique",
+            # friendly aliases
+            "avg": "mean",
+            "count_distinct": "nunique",
+            "distinct_count": "nunique",
+            "countdistinct": "nunique",
+        }
+        def norm(s: str) -> str:
+            return s.strip().replace(" ", "_").replace("-", "_").lower()
+        if isinstance(agg, str):
+            key = norm(agg)
+            if key in aliases:
+                return aliases[key]
+            # Try registry lookup
+            registry = getattr(self, "registered_functions", {}) or {}
+            # exact match first
+            cand = registry.get(agg) or registry.get(key)
+            if callable(cand):
+                return cand
+            # dotted resolution like 'np.nanmean'
+            if "." in agg and registry:
+                head, *rest = agg.split(".")
+                base = registry.get(head)
+                if base is not None:
+                    obj: Any = base
+                    ok = True
+                    for part in rest:
+                        if hasattr(obj, part):
+                            obj = getattr(obj, part)
+                        else:
+                            ok = False
+                            break
+                    if ok and callable(obj):
+                        return obj
+            # Fallback: let pandas attempt to resolve string
+            return agg
+        if isinstance(agg, (list, tuple)):
+            return type(agg)(self._resolve_aggregation(a) for a in agg)
+        if isinstance(agg, dict):
+            return {k: self._resolve_aggregation(v) for k, v in agg.items()}
+        return agg

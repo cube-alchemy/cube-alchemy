@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, List
-from ..abc import DefinitionRepository, Spec, Key
+from ..abc import Repository, Spec, Key
 
 
-class InMemoryRepository(DefinitionRepository):
+class InMemoryRepository(Repository):
     def __init__(self) -> None:
         self._data: Dict[str, Dict[str, Spec]] = {}
 

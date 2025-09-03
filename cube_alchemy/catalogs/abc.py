@@ -1,12 +1,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import os
 from typing import Any, Dict, Iterable, Iterator, Optional, Tuple
 
 Spec = Dict[str, Any]
 Key = Tuple[str, str]  # (kind, name)
 
 
-class DefinitionSource(ABC):
+class Source(ABC):
     """Read-only provider of model definition specs from any backend (yaml, db, web, etc)."""
 
     @abstractmethod
@@ -23,9 +24,16 @@ class DefinitionSource(ABC):
     def get(self, kind: str, name: str) -> Optional[Spec]:
         """Return the spec for (kind, name) if present."""
         raise NotImplementedError
+    
+    @abstractmethod
+    def save(self, data: Dict[str, Dict[str, Spec]], filepath: Optional[os.PathLike[str] | str] = None) -> None:
+        """Persist the provided definitions to this source.
 
+        Implementations may use an internal default location when filepath is None.
+        """
+        raise NotImplementedError
 
-class DefinitionRepository(ABC):
+class Repository(ABC):
     """Mutable storage for normalized specs."""
 
     @abstractmethod

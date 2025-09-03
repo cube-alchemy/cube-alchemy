@@ -2,18 +2,35 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Any
-from .abc import DefinitionSource, DefinitionRepository, Spec, Key
-
+from .abc import Source, Repository, Spec, Key
+import warnings
 
 class Catalog:
     """Facade to load and query model definitions from one or more sources."""
 
-    def __init__(self, sources: Iterable[DefinitionSource], repository: DefinitionRepository) -> None:
+    def __init__(self, sources: Iterable[Source], repository: Repository) -> None:
         self.sources = list(sources)
         self.repo = repository
+        if len(sources) > 1:
+            warnings.warn("Catalog: Multiple sources attached; reads will merge and saves will broadcast repo to all sources.")
 
-    def refresh(self, kinds: Optional[Iterable[str]] = None) -> None:
+    def refresh(self, kinds: Optional[Iterable[str]] = None, clear_repo: bool = False, reload_sources: bool = False) -> None:
         target_kinds = set(kinds) if kinds else None
+
+        # Optionally reload sources (if they implement .reload())
+        if reload_sources:
+            for source in self.sources:
+                reload_fn = getattr(source, "reload", None)
+                if callable(reload_fn):
+                    reload_fn()
+
+        # Optionally clear repo so YAML fully replaces previous state
+        if clear_repo:
+            for k, n in list(self.repo.list()):
+                if (target_kinds is None) or (k in target_kinds):
+                    self.repo.delete(k, n)
+
+        # Load from sources
         for source in self.sources:
             for (kind, name), spec in source.iter_definitions():
                 if target_kinds and kind not in target_kinds:
@@ -28,13 +45,6 @@ class Catalog:
 
     def list(self, kind: Optional[str] = None) -> List[str]:
         return sorted({name for k, name in self.repo.list(kind=kind)})
-
-    # Convenience helpers (extend as needed)
-    def get_metric(self, name: str) -> Optional[Spec]:
-        return self.get("metrics", name)
-
-    def list_metrics(self) -> List[str]:
-        return self.list("metrics")
     
     def add(self, kind: str, name: str, spec: Spec) -> None:
         """Add a new definition."""
@@ -57,38 +67,3 @@ class Catalog:
     def add_kind(self, kind: str) -> None:
         """Add a new kind (section)."""
         self.repo.add_kind(kind)
-    
-    def save(self, filepath: Optional[os.PathLike[str] | str] = None) -> None:
-        """
-        Save the current state of the repository back to a YAML file.
-        
-        Args:
-            filepath: Optional custom filepath. If not provided, it will use 
-                    the filepath from the first YAMLDefinitionSource in sources.
-        """
-        from .sources.yaml_single_file import YAMLDefinitionSource
-        
-        # Find the first YAML source to use its save_to_file method
-        yaml_source = None
-        for source in self.sources:
-            if isinstance(source, YAMLDefinitionSource):
-                yaml_source = source
-                break
-        
-        if not yaml_source:
-            raise ValueError("No YAMLDefinitionSource found in sources")
-        
-        # Convert repository contents to the expected data structure
-        data: Dict[str, Dict[str, Spec]] = {}
-        
-        # Get all kinds and items from the repository
-        for kind, name in self.repo.list():
-            if kind not in data:
-                data[kind] = {}
-            
-            spec = self.get(kind, name)
-            if spec:
-                data[kind][name] = spec
-        
-        # Save using the YAML source
-        yaml_source.save_to_file(data, filepath)

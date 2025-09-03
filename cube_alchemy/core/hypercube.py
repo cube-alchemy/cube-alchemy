@@ -10,13 +10,13 @@ from .hypercube_building_classes.support_methods import SupportMethods
 from .hypercube_building_classes.query_methods import QueryMethods
 from .hypercube_building_classes.filter_methods import FilterMethods
 from .hypercube_building_classes.plotting_components import PlottingComponents
-from .hypercube_building_classes.model_definitions import ModelDefinitions
+from .hypercube_building_classes.model_catalog import ModelCatalog
 
 # hypercube supporting classes
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 
-class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods, PlottingComponents, ModelDefinitions):
+class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods, PlottingComponents, ModelCatalog):
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
@@ -27,8 +27,8 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
     ) -> None:
         # Initialize the PlottingComponents class
         PlottingComponents.__init__(self)
-        # Initialize the ModelDefinitions component
-        ModelDefinitions.__init__(self)
+        # Initialize the ModelCatalog component
+        ModelCatalog.__init__(self)
 
         self.metrics = {}
         self.computed_metrics = {}

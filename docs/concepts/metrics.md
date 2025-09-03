@@ -309,4 +309,7 @@ cube.registered_functions
 Metric aggregation allows you to pass custom functions directly while expression functions need to be registered on the hypercube first and referenced with `@function_name`. This difference exists due to their roles in the processing pipeline:
 
 - **Expression functions** operate inside within dataframe rows before aggregation
+
 - **Aggregation functions** work outside on the grouped data
+
+So you can in fact pass even lambda functions to the aggregations. Please bear in mind that if not registered, these functions cannot be persisted into model_catalog Sources, for instance you define a metric using a lambda function then <lambda> is stored on your YAML model catalog and on the way back when trying to read it python will not know how to interpret that. So if working with external model catalog is a good practice to register all the functions that are going to be used in your hypercube.

@@ -109,7 +109,7 @@ cube = Hypercube({
 
 # Inspect your new hypercube model (shared columns are now the edges)
 
-cube.visualize_graph(w=12, h=10, full_column_names=False)
+cube.visualize_graph(full_column_names=False)
 ```
 
 ![Hypercube Graph Visualization](images/hypercube_graph.png)
