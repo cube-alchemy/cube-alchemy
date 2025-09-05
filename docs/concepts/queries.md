@@ -112,6 +112,37 @@ Notes:
 
 - Computed metrics reference columns present in the aggregated result (metrics and dimensions).
 
+### Effective dimensions
+
+Effective dimensions are the dimensions that actually determine how a metric is aggregated. They are derived from the query’s dimensions after applying the metric’s `ignore_dimensions` setting:
+
+- `ignore_dimensions=False` (default): effective dimensions = query dimensions.
+- `ignore_dimensions` is a list: effective dimensions = query dimensions minus those listed.
+- `ignore_dimensions=True`: no effective dimensions (grand total).
+
+Nested metrics use the same effective dimensions in both inner and outer steps; `nested.dimensions` are added only for the inner step.
+
+## Nested aggregation (inner → outer)
+
+Use `nested` on a metric to aggregate in two steps: first by `nested.dimensions` (inner), then at the query dimensions (outer).
+
+- Inner: aggregate the metric by the effective dimensions plus `nested.dimensions`.
+- Outer: aggregate those inner results by the effective dimensions. If you display extra dimensions, results are broadcast to them.
+
+Note: `ignore_dimensions` sets the metric’s effective dimensions and applies to both steps so results stay unbiased and consistent.
+
+Minimal example:
+
+```python
+cube.define_metric(
+    name='Avg Product Revenue',
+    expression='[qty] * [price]',
+    aggregation='mean',
+    nested={'dimensions': 'Product', 'aggregation': 'sum'},
+    ignore_dimensions=['Store']  # compute at Country-level; broadcast when displaying Store
+)
+```
+
 ## Working with Filters
 
 Queries automatically respect all active filters on your hypercube, allowing you to:

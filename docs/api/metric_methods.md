@@ -12,7 +12,8 @@ define_metric(
     context_state_name: str = 'Default',
     ignore_dimensions: Union[bool, List[str]] = False,
     ignore_context_filters: Union[bool, List[str]] = False,
-    fillna: Optional[any] = None
+    fillna: Optional[any] = None,
+    nested: Optional[Dict[str, Any]] = None,
 )
 ```
 
@@ -29,6 +30,10 @@ Defines a metric and stores it in the cube object for later use in queries.
 - `ignore_dimensions`: Control how dimensions affect aggregation - `True` to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or `False` (default) for normal dimensional aggregation
  - `ignore_context_filters`: Control how context filters affect this metric – `True` to ignore all context filters when evaluating the metric, a list of filter keys to ignore only those specific context filters, or `False` (default) to respect the context filters. When a list is provided, remaining context filters still apply, and any `metric_filters` are applied on top. Note: `ignore_context_filters=True` is effectively the same as evaluating the metric in the `Unfiltered` context (i.e., like setting `context_state_name='Unfiltered'` for this metric).
 - `fillna`: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation. Note: This parameter applies the same value to all columns. For column-specific NA handling, use `@pd.fillna()` or `@np.nan_to_num()` functions directly in the expression.
+- `nested`: Nested inner aggregation. Dict with:
+    - `dimensions`: str | list[str] (required). Inner grouping keys in addition to the query’s outer dimensions.
+    - `aggregation`: str | callable (optional, defaults to `'sum'`). How to aggregate the metric expression at the inner dimensions.
+    - `compose`: str template or callable(row)->str (optional). If present, formats each inner aggregated row into a string, e.g. `"{Product}: {value}"`, enabling outer string aggregations like `concat`.
 
 **Example:**
 
@@ -97,6 +102,41 @@ cube.define_metric(
     name='Revenue with Column-Specific NA Handling',
     expression='@pd.Series([qty]).fillna(1) * @pd.Series([price]).fillna(0)',
     aggregation='sum'  # Fills [qty] with 1 and [price] with 0
+)
+
+# Nested aggregation: sum per Product, then outer mean across the query dimensions
+cube.define_metric(
+    name='Avg Product Revenue',
+    expression='[qty] * [price]',
+    aggregation='mean',               # outer agg
+    nested={'dimensions': 'Product', 'aggregation': 'sum'}
+)
+
+# Concatenate inner groups into a single string: build "Product: sum" per product and join
+# A built-in 'concat' alias is available; you can also register a custom one via register_function.
+cube.define_metric(
+    name='Product Sums (concat)',
+    expression='[amount]',
+    aggregation='concat',
+    nested={'dimensions': 'Product', 'aggregation': 'sum', 'compose': '{Product}: {value}'}
+)
+```
+
+### Notes on `nested` + `ignore_dimensions`
+
+- `ignore_dimensions` establishes the effective dimensions for the metric. When present, the same effective dimensions are used for the inner (nested) aggregation too. This avoids bias from grouping at a finer level in the inner step.
+- If `ignore_dimensions=True`, the metric computes a grand total in both steps and then broadcasts it to the requested query dimensions.
+- If `ignore_dimensions` is a list, the outer effective dimensions are the query dimensions minus those entries. The inner step groups by those effective dimensions plus `nested.dimensions`.
+
+Minimal example:
+
+```python
+cube.define_metric(
+    name='Avg per Product (Country-level)',
+    expression='[revenue]',
+    aggregation='mean',  # outer
+    nested={'dimensions': 'Product', 'aggregation': 'sum'},  # inner
+    ignore_dimensions=['Store']
 )
 ```
 

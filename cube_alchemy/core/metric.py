@@ -1,5 +1,7 @@
 import re
 from typing import Optional, List, Callable, Union, Any, Dict
+import copy
+from .spec_validators import normalize_nested
 
 def extract_columns(text: str = None) -> List[str]:
         # Extract the columns by looking for text between square brackets
@@ -14,11 +16,12 @@ class Metric:
         expression: Optional[str] = None,
         aggregation: Optional[Union[str, Callable[[Any], Any]]] = None,
         metric_filters: Optional[Dict[str, Any]] = None,
-        row_condition_expression: Optional[str] = None, 
+        row_condition_expression: Optional[str] = None,
         context_state_name: str = 'Default',
         ignore_dimensions: Union[bool, List[str]] = False,
         ignore_context_filters: Union[bool, List[str]] = False,
-        fillna: Optional[any] = None, 
+        fillna: Optional[any] = None,
+        nested: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.name = name
         self.expression = expression
@@ -30,10 +33,23 @@ class Metric:
         self.ignore_dimensions = ignore_dimensions
         self.ignore_context_filters = ignore_context_filters
         self.fillna = fillna
+        # Normalize/validate nested spec with a reusable helper
+        self.nested = normalize_nested(nested, aggregation)
 
-        # Required for query processing.
+        # define nested dimensions if any, on queries we will need to bring those dimensions too
+        self.nested_dimensions = []
+        if self.nested:
+            dim_nested = self.nested.get('dimensions')
+            if dim_nested:
+                if isinstance(dim_nested, str):
+                    self.nested_dimensions = [dim_nested]
+                else:
+                    self.nested_dimensions = list(dim_nested)
+
+        # Required for query processing. As indexes depend on hypercube inner traversal, they will be set on metric definition in hypercube. It comes handy to store this on the metric as they will be used repeatedly during query execution.
         self.columns_indexes = []
-    
+        self.query_relevant_columns = []  # (expression columns + nested dimensions + columns indexes)
+
     def get_metric_details(self):
         import inspect
         #return a dictionary with metric details
@@ -57,6 +73,7 @@ class Metric:
             "ignore_dimensions": self.ignore_dimensions,
             "ignore_context_filters": self.ignore_context_filters,
             "fillna": self.fillna,
+            "nested": self.nested,
         }
 
 class MetricGroup: # group of metrics based on state and query filters
@@ -67,7 +84,6 @@ class MetricGroup: # group of metrics based on state and query filters
             group_filters: Optional[Dict[str, Any]] = None, 
             context_state_name: str = 'Default'
     ) -> None:
-        import copy
         self.metric_group_name = metric_group_name
         self.metrics = copy.deepcopy(metrics)  # Ensure we work with a copy of the metrics
         self.group_filters = group_filters

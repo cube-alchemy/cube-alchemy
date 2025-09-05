@@ -97,8 +97,7 @@ class QueryMethods:
             print(f'New query defined: {new_query_name}')
 
         # Build full set of metrics to compute using precomputed hidden metrics
-        hidden_metrics: List[str] = query["hidden_metrics"]
-        all_metrics = query["metrics"] + hidden_metrics
+        all_metrics = query["metrics"] + query["hidden_metrics"]
         metric_objects: List[Metric] = []
         for name in all_metrics:
             try:
@@ -121,9 +120,12 @@ class QueryMethods:
 
         # Sort if requested (list of tuples: [(column, 'asc'|'desc'), ...])
         if query["sort"]:
-            by = [c for c, _ in query["sort"]]
-            ascending = [str(d).lower() == 'asc' for _, d in query["sort"]]
-            query_result = query_result.sort_values(by=by, ascending=ascending)
+            # Only sort by columns that exist in the result to avoid errors in ad-hoc/no-dimension cases
+            by_dirs = [(c, d) for c, d in query["sort"] if c in query_result.columns]
+            if by_dirs:
+                by = [c for c, _ in by_dirs]
+                ascending = [str(d).lower() == 'asc' for _, d in by_dirs]
+                query_result = query_result.sort_values(by=by, ascending=ascending)
         
         final_result = query_result[query["dimensions"] + query["metrics"] + query["computed_metrics"]]
 
@@ -142,31 +144,45 @@ class QueryMethods:
         drop_null_dimensions: bool = False,
         drop_null_metric_results: bool = False
     ) -> pd.DataFrame:
-        
-        
         metrics_list_len = len(metrics)
 
-        no_dimension = False
-        if len(dimensions) == 0:
-            no_dimension = True
-            fake_dim_to_group_by = '<all>'
+        # Preserve original dimensions and establish merge/group keys
+        original_dimensions = list(dimensions)
+        no_dimension = len(original_dimensions) == 0
+        fake_dim_to_group_by = '<all>'
+        dimensions = [fake_dim_to_group_by] if no_dimension else original_dimensions
 
         if metrics_list_len == 0:
-            df = self.dimensions(dimensions, False, context_state_name, query_filters)
+            df = self.dimensions(original_dimensions, False, context_state_name, query_filters)
             return df
         else:
-            results = []          
+            results = []
+            count = 0
             for metric in metrics:
-
-                df = self.context_states[context_state_name].copy() # I copy the state DataFrame to avoid modifying the original state
+                df = self.context_states[context_state_name].copy()  # copy state DataFrame to avoid modifying original
                 df = self._apply_filters_to_dataframe(df, query_filters)
 
-                all_relevant_columns = list(set(dimensions + metric.columns + metric.columns_indexes))
-                metric_result = self._fetch_and_merge_columns(all_relevant_columns, df)[all_relevant_columns].drop_duplicates()
+                # Compute per-metric effective dimensions once (used for nested and outer aggregation)
+                if metric.ignore_dimensions is False:
+                    metric_effective_dims = list(original_dimensions)
+                    base_dimensions_changed = False
+                elif metric.ignore_dimensions is True:
+                    metric_effective_dims: List[str] = []
+                    base_dimensions_changed = True
+                elif isinstance(metric.ignore_dimensions, list):
+                    ignore_set = set(metric.ignore_dimensions)
+                    metric_effective_dims = [d for d in original_dimensions if d not in ignore_set]
+                    if tuple(metric_effective_dims) != tuple(original_dimensions):
+                        base_dimensions_changed = True
+                else:
+                    raise ValueError(f"Invalid value for ignore_dimensions: {metric.ignore_dimensions}")
 
-                if no_dimension: # fake dimension to group by, will be deleted later
+                # Fetch only what this metric needs: effective dims + metric-relevant columns
+                all_relevant_columns = list(set(metric_effective_dims + metric.query_relevant_columns))
+                metric_result = self._fetch_and_merge_columns(all_relevant_columns, df)[all_relevant_columns].drop_duplicates(subset=all_relevant_columns, ignore_index=True)
+
+                if no_dimension:  # fake dimension to group by, will be deleted later
                     metric_result[fake_dim_to_group_by] = True
-                    dimensions = [fake_dim_to_group_by]
 
                 # Store masks for NaN values before filling
                 filled_masks = {}
@@ -176,60 +192,71 @@ class QueryMethods:
                         metric_result.loc[filled_masks[col], col] = metric.fillna
 
                 try:
-                    # If metric has row condition filter down the data based on it
+                    # Row-condition filter
                     if metric.row_condition_expression:
                         row_condition_expr = brackets_to_backticks(metric.row_condition_expression)
                         metric_result = metric_result.query(row_condition_expr, engine='python', local_dict=self.registered_functions)
-                    
+
+                    # Evaluate the metric expression
                     expr = add_quotes_to_brackets(metric.expression.replace('[', 'metric_result['))
-                    # Turn @name into name so Python eval can see it in globals
                     expr = re.sub(r'@([A-Za-z_]\w*)', r'\1', expr)
                     eval_locals = {'metric_result': metric_result}
                     eval_globals = self.registered_functions
                     metric_result[metric.name] = eval(expr, eval_globals, eval_locals)
-                    
+
                 except Exception as e:
                     print(f"Error evaluating metric expression: {e}")
                     return None
-                
-                # Restore original NaN values in source columns (can be relevant if a metric column is also a dimension)
+
+
+                # Restore original NaN values
                 if metric.fillna is not None:
                     for col, mask in filled_masks.items():
                         metric_result.loc[mask, col] = pd.NA
 
-                # Handle ignore_dimensions (ignore all or specific dimensions)
-                if metric.ignore_dimensions:
-                    all_dims = metric_result[dimensions].drop_duplicates()
-                    if isinstance(metric.ignore_dimensions, list):
-                        # Exclude specified dimensions (partial ignore)
-                        group_dims = [d for d in dimensions if d not in metric.ignore_dimensions]
-                        if group_dims:
-                            # Group by remaining dimensions
-                            agg_fn = self._resolve_aggregation(metric.aggregation)
-                            agg_result = metric_result.groupby(group_dims, dropna=drop_null_dimensions)[metric.name].agg(agg_fn).reset_index()
-                            # Get all dimension combinations to join back
-                            metric_result = pd.merge(all_dims, agg_result, on=group_dims, how='left')
+                # Nested: inner step uses metric_effective_dims + nested.dimensions
+                if metric.nested:
+                    metric_result = self._apply_nested(
+                        metric_result=metric_result,
+                        metric_name=metric.name,
+                        outer_dimensions=metric_effective_dims,
+                        nested_spec=metric.nested,
+                        drop_null_dimensions=drop_null_dimensions,
+                    )
+
+                # Unified outer aggregation (same path for nested/non-nested)
+                agg_fn = self._resolve_aggregation(metric.aggregation)
+                if metric_effective_dims:
+                    agg_result = (
+                        metric_result
+                        .groupby(metric_effective_dims, dropna=drop_null_dimensions)[metric.name]
+                        .agg(agg_fn)
+                        .reset_index()
+                    )
+                    # Broadcast only if some query dimensions were ignored
+                    if base_dimensions_changed:
+                        # Efficiently get all requested query-dimension combinations (filtered)
+                        if no_dimension:
+                            outer_combos = pd.DataFrame({fake_dim_to_group_by: [True]})
                         else:
-                            # If all dimensions are excluded, calculate grand total
-                            agg_fn = self._resolve_aggregation(metric.aggregation)
-                            total_agg_val = metric_result[metric.name].agg(agg_fn)
-                            metric_result = all_dims
-                            metric_result[metric.name] = total_agg_val
+                            outer_combos = self.dimensions(original_dimensions, False, context_state_name, query_filters)
+                        metric_result = pd.merge(outer_combos, agg_result, on=metric_effective_dims, how='left')
                     else:
-                        # Boolean True - ignore all dimensions (grand total)
-                        agg_fn = self._resolve_aggregation(metric.aggregation)
-                        total_agg_val = metric_result[metric.name].agg(agg_fn)
-                        metric_result = all_dims
-                        metric_result[metric.name] = total_agg_val
+                        metric_result = agg_result
                 else:
-                    # Normal aggregation with all dimensions
-                    agg_fn = self._resolve_aggregation(metric.aggregation)
-                    metric_result = metric_result.groupby(dimensions, dropna=drop_null_dimensions)[metric.name].agg(agg_fn).reset_index()
-                
+                    # Grand total: compute scalar and fill across all requested combos
+                    total_agg_val = metric_result[metric.name].agg(agg_fn)
+                    if no_dimension:
+                        outer_combos = pd.DataFrame({fake_dim_to_group_by: [True]})
+                    else:
+                        outer_combos = self.dimensions(original_dimensions, False, context_state_name, query_filters)
+                    metric_result = outer_combos
+                    metric_result[metric.name] = total_agg_val
+
                 if drop_null_metric_results:
                     metric_result = metric_result.dropna(subset=[metric.name])
+
                 results.append(metric_result)
-                
             final_result = results[0]
             for result in results[1:]:
                 final_result = pd.merge(final_result, result, on=dimensions, how='outer')
@@ -327,6 +354,56 @@ class QueryMethods:
                 for result in results[1:]:
                     final_result = pd.merge(final_result, result, on=dimensions, how='outer')
         return final_result
+
+    def _apply_nested(
+        self,
+        metric_result: pd.DataFrame,
+        metric_name: str,
+        outer_dimensions: List[str],
+        nested_spec: Dict[str, Any],
+        drop_null_dimensions: bool,
+    ) -> pd.DataFrame:
+        """
+        Inner aggregate and optional compose step to support concat over inner rows.
+        nested_spec keys:
+        - dimensions: List[str] of inner grouping dimensions
+        - aggregation: inner aggregation function/name (default 'sum')
+        - compose (optional): str template or callable(row)->str to transform each inner aggregated row
+        """
+        # Normalize inner dimensions list
+        by_val = nested_spec.get('dimensions') if isinstance(nested_spec, dict) else None
+        if isinstance(by_val, str):
+            inner_by: List[str] = [by_val]
+        else:
+            inner_by = list(by_val or [])
+
+        inner_agg = self._resolve_aggregation(nested_spec.get('aggregation', 'sum')) if isinstance(nested_spec, dict) else 'sum'
+
+        # Inner aggregation by outer dims + inner_by
+        gb_inner = list(dict.fromkeys([*outer_dimensions, *inner_by]))
+        inner_df = (
+            metric_result
+            .groupby(gb_inner, dropna=drop_null_dimensions)[metric_name]
+            .agg(inner_agg)
+            .reset_index()
+        )
+
+        # Optional compose formatting: convert the aggregated value into a labeled string per inner row
+        compose = nested_spec.get('compose') if isinstance(nested_spec, dict) else None
+        if compose is not None:
+            if isinstance(compose, str):
+                # Build a context with group-by keys and {value}
+                def _fmt_row(r):
+                    ctx = {k: r[k] for k in gb_inner if k in r}
+                    ctx['value'] = r[metric_name]
+                    return compose.format(**ctx)
+                inner_df[metric_name] = inner_df.apply(_fmt_row, axis=1)
+            elif callable(compose):
+                inner_df[metric_name] = inner_df.apply(compose, axis=1)
+            else:
+                raise TypeError("nested.compose must be a str template or a callable(row)->str.")
+
+        return inner_df
 
     def _apply_computed_metrics_and_having(
         self,
@@ -453,6 +530,8 @@ class QueryMethods:
             "count_distinct": "nunique",
             "distinct_count": "nunique",
             "countdistinct": "nunique",
+            # string helpers
+            "concat": lambda s: ", ".join(map(str, s.dropna())),
         }
         def norm(s: str) -> str:
             return s.strip().replace(" ", "_").replace("-", "_").lower()

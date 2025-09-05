@@ -140,6 +140,7 @@ class ModelCatalog:
             ignore_dimensions=spec.get("ignore_dimensions", False),
             ignore_context_filters=spec.get("ignore_context_filters", False),
             fillna=spec.get("fillna"),
+            nested=spec.get("nested"),
         )
 
     def _apply_computed_metric_(self, name: str, spec: Dict[str, Any]) -> None:

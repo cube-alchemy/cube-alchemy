@@ -15,9 +15,21 @@ class AnalyticsComponents:
         context_state_name: str = 'Default',
         ignore_dimensions: bool = False,
         ignore_context_filters: bool = False,
-        fillna: Optional[any] = None):
+        fillna: Optional[any] = None,
+        nested: Optional[Dict[str, Any]] = None):
 
-        new_metric = Metric(name,expression, aggregation, metric_filters, row_condition_expression, context_state_name, ignore_dimensions, ignore_context_filters, fillna)
+        new_metric = Metric(
+            name,
+            expression,
+            aggregation,
+            metric_filters,
+            row_condition_expression,
+            context_state_name,
+            ignore_dimensions,
+            ignore_context_filters,
+            fillna,
+            nested,
+        )
 
         # define metric column indexes. To be used on queries to traverse the tree (for the metrics we want to bring not the distinct values but all the rows involving its columns)
 
@@ -44,28 +56,10 @@ class AnalyticsComponents:
         new_metric.columns_indexes = list(metric_columns_indexes)
         self.metrics[new_metric.name] = new_metric
 
+        new_metric.query_relevant_columns = list(set(new_metric.nested_dimensions + new_metric.columns + new_metric.columns_indexes))
+
         # Auto-refresh only queries that declared this name as missing
-        try:
-            index = getattr(self, "_queries_missing_by_name", None)
-            if index is not None and new_metric.name in index and index[new_metric.name]:
-                affected = list(index.pop(new_metric.name))
-                for qname in affected:
-                    q = self.queries.get(qname)
-                    if not q:
-                        continue
-                    print(f"Query '{qname}' auto-refreshed due to newly defined metric '{new_metric.name}'.")
-                    self.define_query(
-                        name=qname,
-                        dimensions=q.get("dimensions", []),
-                        metrics=q.get("metrics", []),
-                        computed_metrics=q.get("computed_metrics", []),
-                        having=q.get("having"),
-                        sort=q.get("sort", []),
-                        drop_null_dimensions=q.get("drop_null_dimensions", False),
-                        drop_null_metric_results=q.get("drop_null_metric_results", False),
-                    )
-        except Exception as e:
-            print(f"Warning: failed to auto-refresh queries for metric '{new_metric.name}': {e}")
+        self._refresh_queries_declaring_missing_metrics(name, is_computed_metric=False)
     
     def define_computed_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:
         """Persist a post-aggregation computed metric as a ComputedMetric instance.
@@ -81,6 +75,10 @@ class AnalyticsComponents:
         self.computed_metrics[name] = ComputedMetric(name=name, expression=expression, fillna=fillna)
 
         # Auto-refresh only queries that declared this name as missing
+        self._refresh_queries_declaring_missing_metrics(name, is_computed_metric=True)
+
+    def _refresh_queries_declaring_missing_metrics(self, name: str, is_computed_metric: bool) -> None:
+        # Auto-refresh only queries that declared this name as missing
         try:
             index = getattr(self, "_queries_missing_by_name", None)
             if index is not None and name in index and index[name]:
@@ -89,7 +87,8 @@ class AnalyticsComponents:
                     q = self.queries.get(qname)
                     if not q:
                         continue
-                    print(f"Query '{qname}' auto-refreshed due to newly defined computed metric '{name}'.")
+                    metric_type = 'computed' if is_computed_metric else 'base'
+                    print(f"Query '{qname}' auto-refreshed due to newly defined {metric_type} metric '{name}'.")
                     self.define_query(
                         name=qname,
                         dimensions=q.get("dimensions", []),
@@ -101,7 +100,8 @@ class AnalyticsComponents:
                         drop_null_metric_results=q.get("drop_null_metric_results", False),
                     )
         except Exception as e:
-            print(f"Warning: failed to auto-refresh queries for computed metric '{name}': {e}")
+            if len(self.queries)>0:
+                print(f"Warning: failed to auto-refresh queries for metric '{name}': {e}")
 
     def define_query(
         self,
@@ -205,21 +205,21 @@ class AnalyticsComponents:
 
         # Build the set of referenced names to track missing items for fast auto-refresh.
         # Only consider tokens that are NOT dimensions and are plausible metric/computed metric names.
-        referenced_candidates = set(metrics) | set(computed_metrics)
+        all_used_columns = set(metrics) | set(computed_metrics)
         # From computed metrics expressions (only those that exist at the moment)
         for cm_name in computed_metrics:
             cm_obj = self.computed_metrics.get(cm_name)
             if cm_obj:
                 for col in cm_obj.columns:
-                    referenced_candidates.add(col)
+                    all_used_columns.add(col)
         # From HAVING and SORT
         for col in having_columns:
-            referenced_candidates.add(col)
+            all_used_columns.add(col)
         for sc, _ in sort:
-            referenced_candidates.add(sc)
+            all_used_columns.add(sc)
 
         # Names that are not yet defined as metrics/computed metrics
-        missing_names = sorted([n for n in referenced_candidates if n not in self.metrics and n not in self.computed_metrics and n not in self.get_dimensions()])
+        missing_column_names = sorted([n for n in all_used_columns if n not in self.metrics and n not in self.computed_metrics and n not in self.get_dimensions()])
 
         # Maintain a reverse index: name -> set(query_names) for O(1) refresh on new definitions
         if not hasattr(self, "_queries_missing_by_name"):
@@ -227,14 +227,14 @@ class AnalyticsComponents:
         # If redefining, remove previous memberships for this query to avoid stale links
         prev_q = self.queries.get(name)
         if prev_q is not None:
-            for n in prev_q.get("missing_names", []):
+            for n in prev_q.get("missing_column_names", []):
                 s = self._queries_missing_by_name.get(n)
                 if s is not None:
                     s.discard(name)
                     if not s:
                         self._queries_missing_by_name.pop(n, None)
         # Add current memberships
-        for n in missing_names:
+        for n in missing_column_names:
             self._queries_missing_by_name.setdefault(n, set()).add(name)
 
         self.queries[name] = {
@@ -255,7 +255,7 @@ class AnalyticsComponents:
             "drop_null_dimensions": drop_null_dimensions,
             "drop_null_metric_results": drop_null_metric_results,
             # Tracking for fast re-definition when missing items get defined later
-            "missing_names": missing_names,
+            "missing_column_names": missing_column_names,
         }
 
         # if there exists a plot configured with this query, we might need to update it
