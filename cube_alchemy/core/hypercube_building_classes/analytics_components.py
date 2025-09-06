@@ -11,13 +11,13 @@ class AnalyticsComponents:
         expression: Optional[str] = None,
         aggregation: Optional[Union[str, Callable[[Any], Any]]] = None,
         metric_filters: Optional[Dict[str, Any]] = None,
-        row_condition_expression: Optional[str] = None, 
+        row_condition_expression: Optional[str] = None,
         context_state_name: str = 'Default',
         ignore_dimensions: bool = False,
         ignore_context_filters: bool = False,
-        fillna: Optional[any] = None,
-        nested: Optional[Dict[str, Any]] = None):
-
+        fillna: Optional[Any] = None,
+        nested: Optional[Dict[str, Any]] = None,
+    ) -> None:
         new_metric = Metric(
             name,
             expression,
@@ -31,10 +31,9 @@ class AnalyticsComponents:
             nested,
         )
 
-        # define metric column indexes. To be used on queries to traverse the tree (for the metrics we want to bring not the distinct values but all the rows involving its columns)
-
-        metric_tables = set()
-        metric_columns_indexes = set()                
+        # define metric column indexes. To be used on queries to traverse the tree
+        metric_tables: set[str] = set()
+        metric_columns_indexes: set[str] = set()
 
         for column in new_metric.columns:
             table_name = self.column_to_table.get(column)
@@ -43,23 +42,22 @@ class AnalyticsComponents:
             else:
                 warnings.warn(f"Column {column} not found in any table.")
 
-            
-        metric_tables_dict = {table_name: self.tables[table_name] for table_name in metric_tables if table_name is not None}
-
+        metric_tables_dict = {tname: self.tables[tname] for tname in metric_tables if tname is not None}
         trajectory_tables = self._find_complete_trajectory(metric_tables_dict)
-        
-        for table_name in trajectory_tables:
-            if table_name not in self.link_tables:
-                metric_columns_indexes.add(f"_index_{table_name}")
 
-        # add metric_columns_indexes to the new metric object 
+        for tname in trajectory_tables:
+            if tname not in self.link_tables:
+                metric_columns_indexes.add(f"_index_{tname}")
+
+        # add metric_columns_indexes to the new metric object
         new_metric.columns_indexes = list(metric_columns_indexes)
         self.metrics[new_metric.name] = new_metric
 
         new_metric.query_relevant_columns = list(set(new_metric.nested_dimensions + new_metric.columns + new_metric.columns_indexes))
 
-        # Auto-refresh only queries that declared this name as missing
-        self._refresh_queries_declaring_missing_metrics(name, is_computed_metric=False)
+        # Register and refresh dependents (queries referencing this metric, even if previously missing)
+        self._refresh_queries_dependent_on(new_metric.name, is_computed_metric=False)
+        # Targeted refresh handled by dependency index
     
     def define_computed_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:
         """Persist a post-aggregation computed metric as a ComputedMetric instance.
@@ -74,34 +72,9 @@ class AnalyticsComponents:
 
         self.computed_metrics[name] = ComputedMetric(name=name, expression=expression, fillna=fillna)
 
-        # Auto-refresh only queries that declared this name as missing
-        self._refresh_queries_declaring_missing_metrics(name, is_computed_metric=True)
-
-    def _refresh_queries_declaring_missing_metrics(self, name: str, is_computed_metric: bool) -> None:
-        # Auto-refresh only queries that declared this name as missing
-        try:
-            index = getattr(self, "_queries_missing_by_name", None)
-            if index is not None and name in index and index[name]:
-                affected = list(index.pop(name))
-                for qname in affected:
-                    q = self.queries.get(qname)
-                    if not q:
-                        continue
-                    metric_type = 'computed' if is_computed_metric else 'base'
-                    print(f"Query '{qname}' auto-refreshed due to newly defined {metric_type} metric '{name}'.")
-                    self.define_query(
-                        name=qname,
-                        dimensions=q.get("dimensions", []),
-                        metrics=q.get("metrics", []),
-                        computed_metrics=q.get("computed_metrics", []),
-                        having=q.get("having"),
-                        sort=q.get("sort", []),
-                        drop_null_dimensions=q.get("drop_null_dimensions", False),
-                        drop_null_metric_results=q.get("drop_null_metric_results", False),
-                    )
-        except Exception as e:
-            if len(self.queries)>0:
-                print(f"Warning: failed to auto-refresh queries for metric '{name}': {e}")
+        # Register and refresh dependents (queries referencing this computed metric, even if previously missing)
+        self._refresh_queries_dependent_on(name, is_computed_metric=True)
+        # Targeted refresh handled by dependency index
 
     def define_query(
         self,
@@ -204,7 +177,6 @@ class AnalyticsComponents:
             visit(node)
 
         # Build the set of referenced names to track missing items for fast auto-refresh.
-        # Only consider tokens that are NOT dimensions and are plausible metric/computed metric names.
         all_used_columns = set(metrics) | set(computed_metrics)
         # From computed metrics expressions (only those that exist at the moment)
         for cm_name in computed_metrics:
@@ -218,24 +190,35 @@ class AnalyticsComponents:
         for sc, _ in sort:
             all_used_columns.add(sc)
 
-        # Names that are not yet defined as metrics/computed metrics
+        # Only consider tokens that are NOT dimensions and are plausible metric/computed metric names.
         missing_column_names = sorted([n for n in all_used_columns if n not in self.metrics and n not in self.computed_metrics and n not in self.get_dimensions()])
 
-        # Maintain a reverse index: name -> set(query_names) for O(1) refresh on new definitions
-        if not hasattr(self, "_queries_missing_by_name"):
-            self._queries_missing_by_name = {}
-        # If redefining, remove previous memberships for this query to avoid stale links
-        prev_q = self.queries.get(name)
-        if prev_q is not None:
-            for n in prev_q.get("missing_column_names", []):
-                s = self._queries_missing_by_name.get(n)
-                if s is not None:
-                    s.discard(name)
-                    if not s:
-                        self._queries_missing_by_name.pop(n, None)
-        # Add current memberships
-        for n in missing_column_names:
-            self._queries_missing_by_name.setdefault(n, set()).add(name)
+        # Register dependency edges for targeted refreshes
+        try:
+            if hasattr(self, '_dep_index') and self._dep_index is not None:
+                # Remove old edges pointing to this query to avoid accumulation
+                self._dep_index.remove_query(name)
+                # Sources:
+                # - explicit + hidden base metrics
+                # - explicit + hidden computed metrics
+                dep_sources = set(metrics) | set(hidden_metrics) | set(computed_metrics) | set(hidden_computed_metrics)
+
+                # Include HAVING/SORT tokens only if they resolve to existing metric/computed metric names.
+                # Missing HAVING/SORT tokens will be captured via missing_column_names below.
+                for col in having_columns:
+                    if col in self.metrics or col in self.computed_metrics:
+                        dep_sources.add(col)
+                for sort_col, _ in sort:
+                    if sort_col in self.metrics or sort_col in self.computed_metrics:
+                        dep_sources.add(sort_col)
+
+                # Add unresolved tokens (not metrics, not computed metrics, not dimensions)
+                dep_sources |= set(missing_column_names)
+                for src in dep_sources:
+                    self._dep_index.add(src, 'query', name)
+        except Exception as _:
+            # Non-fatal if dependency registration fails
+            pass
 
         self.queries[name] = {
             "dimensions": dimensions,
@@ -262,6 +245,13 @@ class AnalyticsComponents:
         q_state = getattr(self, 'plotting_components', {}).get(name)
         if q_state and q_state.get('plots'):
             print(f"Plots configuration for query '{name}' will be updated due to query re-definition.")
+            # Remove existing edges query->plot to avoid stale duplicates
+            try:
+                if hasattr(self, '_dep_index') and self._dep_index is not None:
+                    for plot_name in list(q_state['plots'].keys()):
+                        self._dep_index.remove_plot(plot_name)
+            except Exception:
+                pass
             for plot_name, plot_config in q_state['plots'].items():
                 new_plot = plot_config
                 new_plot['dimensions'] = plot_config.get('_input_dimensions', [])
@@ -275,6 +265,37 @@ class AnalyticsComponents:
                     plot_name=plot_name,
                     **new_plot
                 )
+
+    def _refresh_queries_dependent_on(self, metric_name: str, is_computed_metric: bool) -> None:
+        """Refresh queries that depend on the given metric/computed metric using the dependency index."""
+        try:
+            index = getattr(self, '_dep_index', None)
+            if not index:
+                return
+            dependents = list(index.get(metric_name))
+            if not dependents:
+                return
+            for kind, qname in dependents:
+                if kind != 'query':
+                    continue
+                q = self.queries.get(qname)
+                if not q:
+                    continue
+                metric_type = 'computed' if is_computed_metric else 'base'
+                print(f"Query '{qname}' auto-refreshed due to newly defined {metric_type} metric '{metric_name}'.")
+                self.define_query(
+                    name=qname,
+                    dimensions=q.get("dimensions", []),
+                    metrics=q.get("metrics", []),
+                    computed_metrics=q.get("computed_metrics", []),
+                    having=q.get("having"),
+                    sort=q.get("sort", []),
+                    drop_null_dimensions=q.get("drop_null_dimensions", False),
+                    drop_null_metric_results=q.get("drop_null_metric_results", False),
+                )
+        except Exception as e:
+            if len(getattr(self, 'queries', {})) > 0:
+                print(f"Warning: failed to auto-refresh dependents for '{metric_name}': {e}")
 
     def get_dimensions(self) -> List[str]:
         dimensions = set()
@@ -335,3 +356,74 @@ class AnalyticsComponents:
             "sort": query.get('sort'),
         }
         return query_formatted
+
+    # --- Deletion hooks and debug helpers ---
+    def delete_query(self, name: str) -> None:
+        """Remove a query definition and its dependency edges."""
+        if name in self.queries:
+            self.queries.pop(name, None)
+    # No legacy reverse index to clean
+        # Clean dependency edges
+        try:
+            if hasattr(self, '_dep_index') and self._dep_index is not None:
+                self._dep_index.remove_query(name)
+        except Exception:
+            pass
+        # Remove plotting configs tied to this query, and their edges
+        try:
+            qstate = getattr(self, 'plotting_components', {}).pop(name, None)
+            if qstate and 'plots' in qstate:
+                for plot_name in list(qstate['plots'].keys()):
+                    if hasattr(self, '_dep_index') and self._dep_index is not None:
+                        self._dep_index.remove_plot(plot_name)
+        except Exception:
+            pass
+
+    def delete_metric(self, name: str) -> None:
+        """Remove a base metric; dependent queries will still reference the name and be marked missing until redefined."""
+        self.metrics.pop(name, None)
+        # No reverse-refresh on deletion; edges remain from name->query for future redefinition
+
+    def delete_computed_metric(self, name: str) -> None:
+        """Remove a computed metric; dependent queries will still reference the name and be marked missing until redefined."""
+        self.computed_metrics.pop(name, None)
+        # No reverse-refresh on deletion
+
+    def debug_dependencies(self) -> Dict[str, Any]:
+        """Return a full snapshot of dependency edges (all sources -> dependents)."""
+        try:
+            if hasattr(self, '_dep_index') and self._dep_index is not None:
+                snap = self._dep_index.snapshot()
+                # Convert tuples to lists for easier serialization if needed
+                return {src: [list(dep) for dep in deps] for src, deps in snap.items()}
+        except Exception:
+            pass
+        return {}
+
+    def debug_missing_dependencies(self) -> Dict[str, Any]:
+        """Return only unresolved dependency edges.
+
+        A source is considered unresolved if it is NOT one of:
+        - a defined base metric name
+        - a defined computed metric name
+        - a known dimension
+        - a defined query name (queries act as sources for plot dependents)
+        """
+        try:
+            if hasattr(self, '_dep_index') and self._dep_index is not None:
+                snap = self._dep_index.snapshot()
+                dims = set(self.get_dimensions()) if hasattr(self, 'tables') else set()
+                queries = set(self.queries.keys()) if hasattr(self, 'queries') else set()
+                filtered = {}
+                for src, deps in snap.items():
+                    if (
+                        src not in self.metrics
+                        and src not in self.computed_metrics
+                        and src not in dims
+                        and src not in queries
+                    ):
+                        filtered[src] = [list(dep) for dep in deps]
+                return filtered
+        except Exception:
+            pass
+        return {}

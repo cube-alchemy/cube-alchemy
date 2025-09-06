@@ -11,6 +11,7 @@ from .hypercube_building_classes.query_methods import QueryMethods
 from .hypercube_building_classes.filter_methods import FilterMethods
 from .hypercube_building_classes.plotting_components import PlottingComponents
 from .hypercube_building_classes.model_catalog import ModelCatalog
+from .hypercube_building_classes.dependency_index import DependencyIndex
 
 # hypercube supporting classes
 from .schema_validator import SchemaValidator
@@ -29,6 +30,9 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
         PlottingComponents.__init__(self)
         # Initialize the ModelCatalog component
         ModelCatalog.__init__(self)
+
+        # Modular dependency index for queries/metrics/plots
+        self._dep_index = DependencyIndex()
 
         self.metrics = {}
         self.computed_metrics = {}
@@ -59,6 +63,9 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
             self.computed_metrics = {}
             self.queries = {}
             self.registered_functions = {'pd': pd,'np': np}
+            # Clear dependency graph when resetting model
+            if hasattr(self, '_dep_index'):
+                self._dep_index.clear()
         try:
             # clean data if existing
             self.tables: Dict[str, pd.DataFrame] = {}

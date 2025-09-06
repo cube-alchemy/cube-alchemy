@@ -121,6 +121,13 @@ class PlottingComponents:
         if plot_name_is_null:
             print(f"Generated plot config: {plot_name}")
 
+        # Register dependency: query_name -> plot
+        try:
+            if hasattr(self, '_dep_index') and self._dep_index is not None:
+                self._dep_index.add(query_name, 'plot', plot_name)
+        except Exception:
+            pass
+
     def get_plots(self, query_name: str) -> Dict[str, Dict[str, Any]]:
         """Get all plot configurations for a query.
 
@@ -366,3 +373,20 @@ class PlottingComponents:
     def set_config_resolver(self, resolver: PlotConfigResolver):
         # Optional helper to change resolver with validation
         self._config_resolver = resolver
+
+    def delete_plot(self, query_name: str, plot_name: str) -> None:
+        """Remove a plot configuration and its dependency edge."""
+        qstate = self.plotting_components.get(query_name)
+        if not qstate:
+            return
+        if plot_name in qstate.get('plots', {}):
+            qstate['plots'].pop(plot_name, None)
+            if qstate.get('default') == plot_name:
+                # pick another default if available
+                remaining = list(qstate.get('plots', {}).keys())
+                qstate['default'] = remaining[0] if remaining else None
+        try:
+            if hasattr(self, '_dep_index') and self._dep_index is not None:
+                self._dep_index.remove_plot(plot_name)
+        except Exception:
+            pass
