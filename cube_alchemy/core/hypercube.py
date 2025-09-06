@@ -1,23 +1,24 @@
+import logging
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, Optional
 
 # hypercube building classes
-from .hypercube_building_classes.engine import Engine
-from .hypercube_building_classes.graph_visualizer import GraphVisualizer
-from .hypercube_building_classes.analytics_components import AnalyticsComponents
-from .hypercube_building_classes.support_methods import SupportMethods
-from .hypercube_building_classes.query_methods import QueryMethods
-from .hypercube_building_classes.filter_methods import FilterMethods
-from .hypercube_building_classes.plotting_components import PlottingComponents
-from .hypercube_building_classes.model_catalog import ModelCatalog
-from .hypercube_building_classes.dependency_index import DependencyIndex
+from .hypercube_mixins.engine import Engine
+from .hypercube_mixins.graph_visualizer import GraphVisualizer
+from .hypercube_mixins.model_catalog import ModelCatalog
+from .hypercube_mixins.analytics_specs import AnalyticsSpecs
+from .hypercube_mixins.filter import Filter
+from .hypercube_mixins.query import Query
+from .hypercube_mixins.plotting import Plotting
+from .hypercube_mixins.logger import Logger
 
-# hypercube supporting classes
+# hypercube supporting dependencies
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
+from .dependency_index import DependencyIndex
 
-class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, FilterMethods, SupportMethods, PlottingComponents, ModelCatalog):
+class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, Filter, Query, Plotting):
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
@@ -25,14 +26,20 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
         apply_composite=True,
         validate: bool = True,
         to_be_stored: bool = False,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        # Initialize the PlottingComponents class
-        PlottingComponents.__init__(self)
+        # Initialize the Plotting class
+        Plotting.__init__(self)
         # Initialize the ModelCatalog component
         ModelCatalog.__init__(self)
 
-        # Modular dependency index for queries/metrics/plots
-        self._dep_index = DependencyIndex()
+        # Logger (optional)
+        self._log = logger or logging.getLogger(__name__)
+
+        # Bind supporting dependencies
+        self._dep_index = DependencyIndex() # Modular dependency index for queries/metrics/plots
+        self._validator = SchemaValidator
+        self._bridge_factory = CompositeBridgeGenerator
 
         self.metrics = {}
         self.computed_metrics = {}
@@ -75,21 +82,21 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
 
             if validate:
                 list_of_tables = list(tables.keys())
-                print("Initializing DataModel with provided tables:", list_of_tables)
+                self._log.info("Initializing DataModel with provided tables: %s", list_of_tables)
                 # 1. Validate schema structure using sample data
-                SchemaValidator.validate(tables)
+                self._validator.validate(tables)
 
-                print("Hypercube schema validated successfully. Loading full data..")
+                self._log.info("Hypercube schema validated successfully. Loading full data..")
 
             # Store input table columns for reference
-            reduced_input_tables, _ = SchemaValidator._create_sample_tables(tables)
+            reduced_input_tables, _ = self._validator._create_sample_tables(tables)
             for table_name in reduced_input_tables:
                 self.input_tables_columns[table_name] = reduced_input_tables[table_name].columns.to_list()
 
             # Schema is valid, build the actual model with full data
             bridge_generator = None
             if apply_composite:
-                bridge_generator = CompositeBridgeGenerator(tables=tables, rename_original_shared_columns=rename_original_shared_columns)
+                bridge_generator = self._bridge_factory(tables=tables, rename_original_shared_columns=rename_original_shared_columns)
                 self.tables: Dict[str, pd.DataFrame] = bridge_generator.tables
                 self.composite_tables: Optional[Dict[str, pd.DataFrame]] = bridge_generator.composite_tables
                 self.composite_keys: Optional[Dict[str, Any]] = bridge_generator.composite_keys
@@ -126,6 +133,7 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
             self._add_auto_relationships()  # Add relationships for columns with the same name
 
             # If there are no link keys and exactly one base table, declare the table index as the key space. This way it's easy to use and keep the hypercube functionality intact.
+            # (Some sort of Strategy Pattern is under the hood here)
             base_tables = [t for t in self.tables if t not in self.link_tables]
             if not self.link_table_keys and len(base_tables) == 1:
                 self.link_table_keys = [f"_index_{base_tables[0]}"]
@@ -163,17 +171,17 @@ class Hypercube(Engine, GraphVisualizer, AnalyticsComponents, QueryMethods, Filt
             if validate:
                 if getattr(self, 'composite_keys', None):
                     if len(self.composite_keys) > 0:
-                        print("Hypercube loaded successfully with composite keys.")
+                        self._log.info("Hypercube loaded successfully with composite keys.")
                     else:
-                        print("Hypercube loaded successfully")
+                        self._log.info("Hypercube loaded successfully")
                 else:
-                    print("Hypercube loaded successfully")
+                    self._log.info("Hypercube loaded successfully")
 
         except ValueError as e:
             # Re-raise ValueError exceptions to be caught by calling code
-            print(f"DataModel initialization failed: {str(e)}")
+            self._log.error("DataModel initialization failed: %s", str(e))
             raise
         except Exception as e:
             # Catch other exceptions, log them, and re-raise with a clear message
-            print(f"An error occurred during DataModel initialization: {str(e)}")
+            self._log.exception("An error occurred during DataModel initialization: %s", str(e))
             raise ValueError(f"DataModel initialization failed: {str(e)}")

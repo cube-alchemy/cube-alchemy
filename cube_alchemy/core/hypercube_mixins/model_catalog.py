@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -39,7 +40,7 @@ class ModelCatalog:
         # Use the model-aware YAML source here; generic YAMLSource stays domain-agnostic
         source = ModelYAMLSource(p)
         self.set_model_catalog([source])
-        print(f"Attached YAML definitions from {self._model_yaml_path} to the model catalog.")
+        self.log().info("Attached YAML definitions from %s to the model catalog.", self._model_yaml_path)
         return self._model_yaml_path
 
     def get_yaml_path_model_catalog(self) -> Optional[Path]:
@@ -100,7 +101,11 @@ class ModelCatalog:
         for source in catalog.sources:
             # Each source decides how to persist
             source.save(data)
-        print(f"Saved model definitions via {len(catalog.sources)} source(s). {'YAML file ->' + str(self._model_yaml_path) if self._model_yaml_path else ''}.")
+        self.log().info(
+            "Saved model definitions via %s source(s). %s",
+            len(catalog.sources),
+            ('YAML file ->' + str(self._model_yaml_path)) if self._model_yaml_path else ''
+        )
 
     # ---------- mapping: Catalog -> cube ----------
     def _apply_catalog_to_cube_(self, catalog: Catalog, kinds: Optional[Iterable[str]] = None) -> None:

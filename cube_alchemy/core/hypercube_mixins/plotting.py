@@ -1,9 +1,10 @@
+import logging
 from typing import Dict, List, Optional, Any, Union, Tuple
 import pandas as pd
 from cube_alchemy.plotting import PlotRenderer, MatplotlibRenderer, PlotConfigResolver, DefaultPlotConfigResolver
 import copy
 
-class PlottingComponents:
+class Plotting:
     """Component for managing plot configurations for queries."""
     def __init__(self):
         # Consolidated plotting state per query:
@@ -119,7 +120,7 @@ class PlottingComponents:
             qstate['default'] = plot_name
         
         if plot_name_is_null:
-            print(f"Generated plot config: {plot_name}")
+            self.log().info("Generated plot config: %s", plot_name)
 
         # Register dependency: query_name -> plot
         try:
@@ -135,7 +136,7 @@ class PlottingComponents:
             query_name: Name of the query
         """
         if not hasattr(self, 'queries') or query_name not in getattr(self, 'queries', {}):
-            print(f"Query '{query_name}' is not defined. Define it with define_query().")
+            self.log().warning("Query '%s' is not defined. Define it with define_query().", query_name)
 
         qstate = self.plotting_components.get(query_name)
         if not qstate:
@@ -172,7 +173,7 @@ class PlottingComponents:
             plot_name: Name of the plot to set as default
         """
         if not hasattr(self, 'queries') or query_name not in getattr(self, 'queries', {}):
-            print(f"Query '{query_name}' is not defined. Define it with define_query().")
+            self.log().warning("Query '%s' is not defined. Define it with define_query().", query_name)
 
         qstate = self.plotting_components.get(query_name)
         if not qstate:
@@ -287,7 +288,7 @@ class PlottingComponents:
                 plot_name=auto_plot_name,
                 plot_type=chosen_plot_type
             )
-            print(f"Auto-generated {chosen_plot_type} plot config: {auto_plot_name}")
+            self.log().info("Auto-generated %s plot config: %s", chosen_plot_type, auto_plot_name)
             # Now get the newly defined plot config
             config = self.get_plot_config(query_name, plot_name=auto_plot_name)
             config = copy.deepcopy(config) 

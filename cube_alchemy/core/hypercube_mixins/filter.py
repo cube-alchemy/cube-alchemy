@@ -1,7 +1,8 @@
-
+import logging
 from typing import Dict, List, Any
+import pandas as pd
 
-class FilterMethods:
+class Filter:
 
     def filter(
         self,
@@ -137,18 +138,6 @@ class FilterMethods:
                         del filters_state[dim]
         return filters_state
     
-    def _truncate_filter_history(
-        self,
-        context_state_name: str = 'Default'
-    ) -> bool:
-        if context_state_name == 'Unfiltered':
-            raise ValueError("Cannot use 'Unfiltered' state. Please use a different state name.")
-        
-        # truncate index if pointer is not at the end (re-writes the applied filters)
-        if self.filter_pointer[context_state_name] < len(self.applied_filters[context_state_name]):
-            self.applied_filters[context_state_name] = self.applied_filters[context_state_name][:self.filter_pointer[context_state_name]]
-        return True
-    
     def get_filtered_dimensions(
         self,
         off_set: int = 0,
@@ -179,3 +168,54 @@ class FilterMethods:
                 seen.add(dim)
                 result.insert(0, dim)
         return result
+    
+    def set_context_state(
+        self,
+        context_state_name: str,
+        base_context_state_name: str = 'Unfiltered'
+    ) -> bool:
+        if context_state_name == 'Unfiltered':
+            raise ValueError("Cannot use 'Unfiltered' state name. Please use a different state name.")
+        try:
+            self.context_states[context_state_name] = self.context_states[base_context_state_name].copy()
+            self.applied_filters[context_state_name]  =  [] 
+            self.filter_pointer[context_state_name]  = 0 
+            return True
+        except Exception as e:
+            self.log().error("Error setting state '%s': %s", context_state_name, e)
+            return False
+        
+    def _apply_filters_to_dataframe(
+        self,
+        df: pd.DataFrame,
+        criteria: Dict[str, List[Any]]
+    ) -> pd.DataFrame:
+        if criteria:
+            dimensions = list(criteria.keys())
+            columns_init = df.columns.tolist()  # Preserve original columns
+            columns_to_fetch = [col for col in dimensions if col not in df.columns]
+            if len(columns_to_fetch) > 0:
+                # Fetch only columns that are not already in the DataFrame
+                df = self._fetch_and_merge_columns(columns_to_fetch, df)
+            # Apply filters based on the criteria
+            for column, values in criteria.items():
+                if column in df.columns:
+                    df = df[df[column].isin(values)]
+                else:
+                    self.log().warning("Warning: Column %s not found in DataFrame.", column)
+            return df[columns_init]  # Return DataFrame with original columns
+        else:
+            return df
+    
+    def _truncate_filter_history(
+        self,
+        context_state_name: str = 'Default'
+    ) -> bool:
+        if context_state_name == 'Unfiltered':
+            raise ValueError("Cannot use 'Unfiltered' state. Please use a different state name.")
+        
+        # truncate index if pointer is not at the end (re-writes the applied filters)
+        if self.filter_pointer[context_state_name] < len(self.applied_filters[context_state_name]):
+            self.applied_filters[context_state_name] = self.applied_filters[context_state_name][:self.filter_pointer[context_state_name]]
+        return True
+    

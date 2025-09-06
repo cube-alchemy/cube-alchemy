@@ -1,9 +1,10 @@
+import logging
 from typing import List, Dict, Any, Optional, Union, Callable, Tuple
 from ..metric import Metric, ComputedMetric, extract_columns
 import re
 import warnings
 
-class AnalyticsComponents:
+class AnalyticsSpecs:
     
     def define_metric(
         self,
@@ -93,11 +94,13 @@ class AnalyticsComponents:
         # Validate metric names exist now, but store only names to keep linkage live
         for metric_name in metrics:
             if metric_name not in self.metrics:
-                print(f"Metric '{metric_name}' is not defined. Define it with define_metric().")
+                self.log().warning(f"Metric '{metric_name}' is not defined when defining query '{name}'. Define it with define_metric().")
 
         for computed_metrics_name in computed_metrics:
             if computed_metrics_name not in self.computed_metrics:
-                print(f"Computed metric '{computed_metrics_name}' is not defined. Define it with define_computed_metric().")
+                self.log().warning(
+                    f"Computed metric '{computed_metrics_name}' is not defined when defining query '{name}'. Define it with define_computed_metric()."
+                )
         
         having_columns: List[str] = extract_columns(having) if having else []
 
@@ -244,7 +247,7 @@ class AnalyticsComponents:
         # if there exists a plot configured with this query, we might need to update it
         q_state = getattr(self, 'plotting_components', {}).get(name)
         if q_state and q_state.get('plots'):
-            print(f"Plots configuration for query '{name}' will be updated due to query re-definition.")
+            self.log().info("Plots configuration for query '%s' will be updated due to query re-definition.", name)
             # Remove existing edges query->plot to avoid stale duplicates
             try:
                 if hasattr(self, '_dep_index') and self._dep_index is not None:
@@ -282,7 +285,10 @@ class AnalyticsComponents:
                 if not q:
                     continue
                 metric_type = 'computed' if is_computed_metric else 'base'
-                print(f"Query '{qname}' auto-refreshed due to newly defined {metric_type} metric '{metric_name}'.")
+                self.log().info(
+                    "Query '%s' auto-refreshed due to newly defined %s metric '%s'.",
+                    qname, metric_type, metric_name
+                )
                 self.define_query(
                     name=qname,
                     dimensions=q.get("dimensions", []),
@@ -295,7 +301,7 @@ class AnalyticsComponents:
                 )
         except Exception as e:
             if len(getattr(self, 'queries', {})) > 0:
-                print(f"Warning: failed to auto-refresh dependents for '{metric_name}': {e}")
+                self.log().warning("Failed to auto-refresh dependents for '%s': %s", metric_name, e)
 
     def get_dimensions(self) -> List[str]:
         dimensions = set()

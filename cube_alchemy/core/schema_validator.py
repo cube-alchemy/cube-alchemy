@@ -1,8 +1,10 @@
-
+import logging
 from typing import Dict, Tuple, TYPE_CHECKING
 import pandas as pd
 import copy # I need a deep copy to ensure complete isolation of the sample tables from the original data
 import re
+  
+logger = logging.getLogger(__name__)
   
 
 class SchemaValidator:
@@ -45,16 +47,16 @@ class SchemaValidator:
         is_valid = not hypercube.is_cyclic[0]
         
         if not is_valid:
-            print("Hypercube initialization failed due to cyclic relationships or other issues.")
+            logger.error("Hypercube initialization failed due to cyclic relationships or other issues.")
 
             # Create hypercube directly with original tables for visualization
             diagnostic_cube = Hypercube(reduced_tables_2, validate = False, apply_composite=False)
-            print("Visualizing the original tables graph:\n")
+            logger.info("Visualizing the original tables graph...")
             diagnostic_cube.visualize_graph(full_column_names=False)
 
-            print("\nRelationships after initialization with composite tables:")
+            logger.info("Relationships after initialization with composite tables:")
             cyclic_tables = [table for table in diagnostic_cube.is_cyclic[1] if not table.startswith('_link_table_')]
-            print(f"Cyclic relationships detected in the hypercube: {' -> '.join(cyclic_tables)}")
+            logger.error("Cyclic relationships detected in the hypercube: %s", ' -> '.join(cyclic_tables))
 
             error_msg = "Cyclic relationships detected in the hypercube"
             raise ValueError(error_msg)

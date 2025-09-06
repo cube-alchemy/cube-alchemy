@@ -1,4 +1,4 @@
-
+import logging
 import re
 import pandas as pd
 from ..metric import Metric, MetricGroup
@@ -16,7 +16,7 @@ def brackets_to_backticks(expression: str) -> str:
     """
     return re.sub(r'\[(.*?)\]', lambda m: f"`{m.group(1)}`", expression)
 
-class QueryMethods:
+class Query:
     def dimension(self, dimension:str,
         context_state_name: str = 'Default',
         query_filters: Optional[Dict[str, Any]] = None) -> List[str]:
@@ -94,7 +94,7 @@ class QueryMethods:
                 drop_null_metric_results=drop_null_metric_results
             )
             query = self.queries.get(new_query_name)
-            print(f'New query defined: {new_query_name}')
+            self.log().info("New query defined: %s", new_query_name)
 
         # Build full set of metrics to compute using precomputed hidden metrics
         all_metrics = query["metrics"] + query["hidden_metrics"]
@@ -205,7 +205,7 @@ class QueryMethods:
                     metric_result[metric.name] = eval(expr, eval_globals, eval_locals)
 
                 except Exception as e:
-                    print(f"Error evaluating metric expression: {e}")
+                    self.log().error("Error evaluating metric expression: %s", e)
                     return None
 
 
