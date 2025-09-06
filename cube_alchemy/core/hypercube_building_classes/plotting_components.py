@@ -13,7 +13,7 @@ class PlottingComponents:
         if not hasattr(self, 'plotting_components'):
             self.plotting_components: Dict[str, Dict[str, Any]] = {}
         # Default renderer
-        self._plot_renderer: PlotRenderer = MatplotlibRenderer()
+        self.plot_renderer: PlotRenderer = MatplotlibRenderer()
         # Default config resolver
         self._config_resolver: PlotConfigResolver = DefaultPlotConfigResolver()
 
@@ -352,7 +352,7 @@ class PlottingComponents:
                      Recognized: show (bool, default True) to display the figure in notebooks.
         """
         plot_df, config_or_configs = self._prepare_plot_data(query_name, query_options, plot_name, plot_type, **kwargs)
-        rend = renderer or self._plot_renderer
+        rend = renderer or self.plot_renderer
         if rend is None:
             raise ValueError("Plot Rendered failed. set a default renderer with 'set_plot_renderer'.")
 
@@ -368,7 +368,7 @@ class PlottingComponents:
 
     def set_plot_renderer(self, renderer: PlotRenderer):
         # Delegate to the property setter for validation
-        self._plot_renderer = renderer
+        self.plot_renderer = renderer
 
     def set_config_resolver(self, resolver: PlotConfigResolver):
         # Optional helper to change resolver with validation

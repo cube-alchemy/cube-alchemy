@@ -61,6 +61,31 @@ This design allows Cube Alchemy to integrate with any visualization framework in
 - Plotly for interactive visualizations
 - Etc
 
+### Registering a Custom Plot
+
+You can add new plot types at runtime. The simplest handler accepts only a DataFrame; the renderer also supports richer signatures.
+
+```python
+def custom_render(df, dims, mets):
+    print("dims:", dims)
+    print("mets:", mets)
+    print(df)
+
+cube.plot_renderer.register_plot("custom", custom_render) ## This will work on the default Matplotlib Renderer, it adds a new rendering function to it which can be called for all plot_types = custom
+
+cube.plot('Your Query', plot_type="custom")
+
+## Or use a brand new renderer that knows how to render the plot_type = custom
+my_renderer = CustomRenderer()
+cube.plot('Your Query', renderer = my_renderer, plot_type="custom")
+
+# Note: register_plot() is not part of PlotRenderer (ABC) but a special method for the Default MatplotlibRenderer installed with the Hypercube. If you use custom a renderer it will not be there.
+```
+
+Notes:
+- Registration is per Python run; call it during startup or from a module that’s imported early.
+- The same `plot_type` name will override an existing handler.
+
 ## Why a Separate Interface?
 
 The plotting system is implemented as a separate interface from the core Hypercube because:
