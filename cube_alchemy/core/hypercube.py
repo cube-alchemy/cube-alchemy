@@ -11,6 +11,7 @@ from .hypercube_mixins.analytics_specs import AnalyticsSpecs
 from .hypercube_mixins.filter import Filter
 from .hypercube_mixins.query import Query
 from .hypercube_mixins.plotting import Plotting
+from .hypercube_mixins.enrichment import Enrichment
 from .hypercube_mixins.logger import Logger
 
 # supporting components
@@ -18,7 +19,7 @@ from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 from .dependency_index import DependencyIndex
 
-class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, Filter, Query, Plotting):
+class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, Filter, Query, Plotting, Enrichment):
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
@@ -33,6 +34,8 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
     ) -> None:
         # Initialize the Plotting class
         Plotting.__init__(self)
+        # Initialize the Enrichment class
+        Enrichment.__init__(self)
         # Initialize the ModelCatalog component
         ModelCatalog.__init__(self)
 

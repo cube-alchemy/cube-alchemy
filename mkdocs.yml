@@ -54,7 +54,7 @@ nav:
     - Hypercube: api/hypercube.md
     - Metrics: api/metric_methods.md
     - Queries: api/query_methods.md
-    - Inspect: api/analytics_assets.md
+    - Analytics Specs: api/analytics_specs.md
     - Filters: api/filter_methods.md
     - Plotting System: api/plotting_system.md
     - Model Catalog: api/model_catalog.md

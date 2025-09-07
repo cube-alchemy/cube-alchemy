@@ -5,6 +5,7 @@ from ..metric import Metric, MetricGroup
 from typing import Dict, List, Any, Optional, Tuple
 import copy
 import uuid
+import warnings
 
 def add_quotes_to_brackets(expression: str) -> str:
                     return re.sub(r'\[(.*?)\]', r"['\1']", expression)
@@ -64,7 +65,7 @@ class Query:
             base = self.queries.get(query_name) or {}
 
             uuid_str = str(uuid.uuid4())[:8]
-            new_query_name = f"**ad-hoc** ({uuid_str})" if not query_name else f"**ad-hoc** ({query_name}) ({uuid_str})"
+            new_query_name = f"**ad-hoc** ({uuid_str})" if not query_name else f"**query modified** ({query_name}) ({uuid_str})"
 
             def pick(key: str, default):
                 if key in options:
@@ -112,11 +113,22 @@ class Query:
             drop_null_metric_results = query["drop_null_metric_results"]
         )
         # Apply post-aggregation ops: evaluate computed metrics in stored order
-        query_result = self._apply_computed_metrics_and_having(
-            query_result,
-            query["computed_metrics_ordered"],
-            query["having"]
-        )
+        query_result = self._apply_computed_metrics(query_result, query["computed_metrics_ordered"])
+
+        # Auto-apply ALL enrichers configured for this query (transformer->params)
+        columns_enrichment: list[str] = []
+        estate = self.enrichment_components.get(query_name)
+        if estate:
+            columns_before_enrichment = set(query_result.columns)
+            for transformer, params in (estate or {}).items():
+                try:
+                    query_result = self.enrich(df=query_result, transformer=transformer, params=params)
+                except Exception as e:
+                    self.log().warning(f'Enrichment {transformer} for query {query_name} failed: {e}. Skipping.')
+            columns_after_enrichment = set(query_result.columns)
+            columns_enrichment = list(columns_after_enrichment - columns_before_enrichment)
+
+        query_result = self._apply_having(query_result, query["having"])
 
         # Sort if requested (list of tuples: [(column, 'asc'|'desc'), ...])
         if query["sort"]:
@@ -126,8 +138,8 @@ class Query:
                 by = [c for c, _ in by_dirs]
                 ascending = [str(d).lower() == 'asc' for _, d in by_dirs]
                 query_result = query_result.sort_values(by=by, ascending=ascending)
-        
-        final_result = query_result[query["dimensions"] + query["metrics"] + query["computed_metrics"]]
+
+        final_result = query_result[query["dimensions"] + query["metrics"] + query["computed_metrics"] + columns_enrichment]
 
         if _retrieve_query_name:
             return new_query_name or query_name, final_result
@@ -405,11 +417,10 @@ class Query:
 
         return inner_df
 
-    def _apply_computed_metrics_and_having(
+    def _apply_computed_metrics(
         self,
         df: pd.DataFrame,
-        computed_metrics: Optional[List[str]] = None,
-        having: Optional[str] = None
+        computed_metrics: Optional[List[str]] = None
     ) -> pd.DataFrame:
         """
         Post-aggregation stage with dependency resolution:
@@ -453,7 +464,13 @@ class Query:
                 for col in cm.columns:
                     # Use the same masks to restore values
                     df.loc[filled_masks[col], col] = pd.NA
+        return df
 
+    def _apply_having(
+        self,
+        df: pd.DataFrame,
+        having: Optional[str] = None
+    ) -> pd.DataFrame:
         # Apply HAVING-like filter
         if having:
             try:
@@ -462,7 +479,6 @@ class Query:
                 df = df.query(having_expr, engine='python', local_dict=self.registered_functions)
             except Exception as e:
                 raise ValueError(f"Error applying HAVING expression '{having}': {e}") from e
-
         return df
 
     def _apply_metrics_ignore_filters(self, metrics: List[Metric]):

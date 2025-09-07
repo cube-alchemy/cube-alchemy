@@ -64,7 +64,7 @@ class ModelCatalog:
         """
         catalog = self._require_model_catalog_()
         catalog.refresh(kinds=kinds, reload_sources=reload_sources, clear_repo=clear_repo)
-        self._apply_catalog_to_cube_(catalog, kinds=kinds)
+        self._apply_catalog_to_hypercube(catalog, kinds=kinds)
 
     def _model_catalog_pull_from_cube(self) -> None:
         """Extract current cube definitions into the Catalog repository (does not save)."""
@@ -107,8 +107,8 @@ class ModelCatalog:
             ('YAML file ->' + str(self._model_yaml_path)) if self._model_yaml_path else ''
         )
 
-    # ---------- mapping: Catalog -> cube ----------
-    def _apply_catalog_to_cube_(self, catalog: Catalog, kinds: Optional[Iterable[str]] = None) -> None:
+    # ---------- Catalog -> cube ----------
+    def _apply_catalog_to_hypercube(self, catalog: Catalog, kinds: Optional[Iterable[str]] = None) -> None:
         kinds_set = set(kinds) if kinds else None
 
         def _do(k: str) -> bool:
@@ -117,24 +117,29 @@ class ModelCatalog:
         if _do("metrics"):
             for name in catalog.list("metrics"):
                 spec = catalog.get("metrics", name) or {}
-                self._apply_metric_(name, spec)
+                self._apply_metric_to_hypercube(name, spec)
 
         if _do("computed_metrics"):
             for name in catalog.list("computed_metrics"):
                 spec = catalog.get("computed_metrics", name) or {}
-                self._apply_computed_metric_(name, spec)
+                self._apply_computed_metric_to_hypercube(name, spec)
 
         if _do("queries"):
             for name in catalog.list("queries"):
                 spec = catalog.get("queries", name) or {}
-                self._apply_query_(name, spec)
+                self._apply_query_to_hypercube(name, spec)
 
         if _do("plots"):
             for name in catalog.list("plots"):
                 spec = catalog.get("plots", name) or {}
-                self._apply_plot_(name, spec)
+                self._apply_plot_to_hypercube(name, spec)
 
-    def _apply_metric_(self, name: str, spec: Dict[str, Any]) -> None:
+        if _do("enrichers"):
+            for name in catalog.list("enrichers"):
+                spec = catalog.get("enrichers", name) or {}
+                self._apply_enricher_to_hypercube(name, spec)
+
+    def _apply_metric_to_hypercube(self, name: str, spec: Dict[str, Any]) -> None:
         self.define_metric(
             name=name,
             expression=spec.get("expression"),
@@ -148,14 +153,14 @@ class ModelCatalog:
             nested=spec.get("nested"),
         )
 
-    def _apply_computed_metric_(self, name: str, spec: Dict[str, Any]) -> None:
+    def _apply_computed_metric_to_hypercube(self, name: str, spec: Dict[str, Any]) -> None:
         self.define_computed_metric(
             name=name,
             expression=str(spec.get("expression", "")),
             fillna=spec.get("fillna"),
         )
 
-    def _parse_sort_(self, sort_val: Any) -> List[Tuple[str, str]]:
+    def _parse_sort_to_hypercube(self, sort_val: Any) -> List[Tuple[str, str]]:
         out: List[Tuple[str, str]] = []
         if not sort_val:
             return out
@@ -174,19 +179,19 @@ class ModelCatalog:
                     out.append((col, direction))
         return out
 
-    def _apply_query_(self, name: str, spec: Dict[str, Any]) -> None:
+    def _apply_query_to_hypercube(self, name: str, spec: Dict[str, Any]) -> None:
         self.define_query(
             name=name,
             dimensions=spec.get("dimensions", []) or [],
             metrics=spec.get("metrics", []) or [],
             computed_metrics=spec.get("computed_metrics", []) or [],
             having=spec.get("having"),
-            sort=self._parse_sort_(spec.get("sort")),
+            sort=self._parse_sort_to_hypercube(spec.get("sort")),
             drop_null_dimensions=spec.get("drop_null_dimensions", False),
             drop_null_metric_results=spec.get("drop_null_metric_results", False),
         )
 
-    def _apply_plot_(self, plot_name: str, spec: Dict[str, Any]) -> None:
+    def _apply_plot_to_hypercube(self, plot_name: str, spec: Dict[str, Any]) -> None:
         query_name = spec.get("query")
         if not query_name:
             raise ValueError(f"Plot '{plot_name}' missing 'query' reference")
@@ -218,6 +223,27 @@ class ModelCatalog:
             set_as_default=set_default,
         )
 
+    def _apply_enricher_to_hypercube(self, enricher_name: str, spec: Dict[str, Any]) -> None:
+        """Apply a saved enricher config to the cube for a given query (single-step model)."""
+        query_name = spec.get("query")
+        if not query_name:
+            raise ValueError(f"Enricher '{enricher_name}' missing 'query' reference")
+
+        transformer = spec.get("transformer") or enricher_name
+        params = spec.get("params") or {}
+        if not transformer:
+            raise ValueError(f"Enricher '{enricher_name}' missing 'transformer'")
+        self.define_enrichment(
+            query_name=query_name,
+            transformer=transformer,
+            params=params,
+        )
+        # Strict keys
+        allowed_keys = {"query", "transformer", "params", "kind", "name"}
+        unexpected = set(spec.keys()) - allowed_keys
+        if unexpected:
+            raise ValueError(f"Unsupported keys in enricher spec for '{enricher_name}': {sorted(unexpected)}")
+
     # ---------- mapping: cube -> specs ----------
     def _extract_cube_to_specs_(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
         data: Dict[str, Dict[str, Dict[str, Any]]] = {
@@ -225,6 +251,7 @@ class ModelCatalog:
             "computed_metrics": {},
             "queries": {},
             "plots": {},
+            "enrichers": {},
         }
 
         # Metrics
@@ -279,6 +306,14 @@ class ModelCatalog:
                     out.pop("_input_dimensions", None)
                     out.pop("_input_metrics", None)
                     data["plots"][plot_name] = out
+
+        # Enrichers: per-query mapping transformer->params; flatten
+        enrichment_state = getattr(self, "enrichment_components", {})
+        if isinstance(enrichment_state, dict):
+            for query_name, estate in enrichment_state.items():
+                for transformer, params in (estate or {}).items():
+                    out = {"transformer": transformer, "params": dict(params or {}), "query": query_name}
+                    data["enrichers"][transformer] = out
 
         return data
 
