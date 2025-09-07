@@ -1,9 +1,123 @@
 import logging
 import pandas as pd
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Protocol
 from collections import deque
 
+
+class JoinStrategy(Protocol):
+    """Strategy interface for joining keys and fetching columns.
+
+    Implementations operate on the Engine context (self) and can leverage
+    its tables, relationships, and metadata. Each strategy should assume
+    the Engine instance has been fully initialized (link tables, mapping, etc.).
+    """
+
+    def join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
+        ...
+
+    def fetch_and_merge_columns(
+        self,
+        columns_to_fetch: List[str],
+        keys_df: pd.DataFrame,
+        drop_duplicates: bool = False,
+    ) -> pd.DataFrame:
+        ...
+
+
+class SingleTableJoinStrategy:
+    """Join strategy for single-table models.
+
+    Uses the base table index as the key space and performs lightweight fetches.
+    """
+
+    def __init__(self, engine: "Engine", base_table: str) -> None:
+        self.engine = engine
+        self.base_table = base_table
+
+    def join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
+        # Delegate to existing, battle-tested helper
+        return self.engine._join_trajectory_keys_single_table(trajectory)
+
+    def fetch_and_merge_columns(
+        self,
+        columns_to_fetch: List[str],
+        keys_df: pd.DataFrame,
+        drop_duplicates: bool = False,
+    ) -> pd.DataFrame:
+        # Delegate to existing helper
+        return self.engine._fetch_and_merge_columns_single_table(
+            columns_to_fetch, keys_df, drop_duplicates
+        )
+
+
+class MultiTableJoinStrategy:
+    """Join strategy for multi-table models.
+
+    Walks the relationship graph and joins via link table keys.
+    """
+
+    def __init__(self, engine: "Engine") -> None:
+        self.engine = engine
+
+    def join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
+        return self.engine._join_trajectory_keys_multi_table(trajectory)
+
+    def fetch_and_merge_columns(
+        self,
+        columns_to_fetch: List[str],
+        keys_df: pd.DataFrame,
+        drop_duplicates: bool = False,
+    ) -> pd.DataFrame:
+        return self.engine._fetch_and_merge_columns_multi_table(
+            columns_to_fetch, keys_df, drop_duplicates
+        )
+
 class Engine:
+    def _init_join_strategy(self) -> None:
+        """Pick and configure the appropriate Join Strategy.
+
+        Rules:
+        - If no link keys and there is exactly one base table, use SingleTableJoinStrategy.
+        - Otherwise, use MultiTableJoinStrategy.
+        Side effects:
+        - Sets self._single_table_mode and self._single_table_base accordingly.
+        - Ensures link_table_keys contains the base index in single-table mode.
+        - Installs wrappers self._join_trajectory_keys and self._fetch_and_merge_columns
+          to delegate to the chosen strategy, preserving backward compatibility.
+        """
+        base_tables = [t for t in self.tables if t not in self.link_tables]
+        if not getattr(self, "link_table_keys", None):
+            self.link_table_keys = []
+
+        if len(self.link_table_keys) == 0 and len(base_tables) == 1:
+            base = base_tables[0]
+            # Ensure the base index is available as a join key
+            idx = f"_index_{base}"
+            if idx not in self.link_table_keys:
+                self.link_table_keys = [idx]
+
+            self._single_table_mode = True
+            self._single_table_base = base
+            self._join_strategy: JoinStrategy = SingleTableJoinStrategy(self, base)
+        else:
+            self._single_table_mode = False
+            self._single_table_base = None  # type: ignore[assignment]
+            self._join_strategy = MultiTableJoinStrategy(self)
+
+    # Delegating methods (stable names used by other mixins) — picklable
+    def _join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:  # type: ignore[override]
+        return self._join_strategy.join_trajectory_keys(trajectory)
+
+    def _fetch_and_merge_columns(
+        self,
+        columns_to_fetch: List[str],
+        keys_df: pd.DataFrame,
+        drop_duplicates: bool = False,
+    ) -> pd.DataFrame:  # type: ignore[override]
+        return self._join_strategy.fetch_and_merge_columns(
+            columns_to_fetch, keys_df, drop_duplicates
+        )
+
     def _create_and_update_link_table(
         self,
         column: str,
@@ -118,13 +232,14 @@ class Engine:
 
     def _join_trajectory_keys_single_table(self, trajectory: List[str]) -> Any:
         """Single-table key space: return the unique index column of the base table."""
-        base_tables = [t for t in self.tables if t not in self.link_tables]
-        if len(base_tables) == 1:
-            t = base_tables[0]
-            idx = f"_index_{t}"
-            # Return just the index column as the key space
-            return self.tables[t][[idx]].copy()
-        # If somehow not a single-table setup, return empty frame
+        base = getattr(self, "_single_table_base", None)
+        if base is None:
+            # Not in single-table mode
+            return pd.DataFrame()
+        idx = f"_index_{base}"
+        # Return just the index column as the key space if present
+        if idx in self.tables.get(base, pd.DataFrame()).columns:
+            return self.tables[base][[idx]].copy()
         return pd.DataFrame()
 
     def _join_trajectory_keys_multi_table(self, trajectory: List[str]) -> Any:
@@ -285,3 +400,17 @@ class Engine:
             return out
         # No safe join key available; return as-is
         return out
+
+    def relationship_matrix(self, context_state_name = 'Unfiltered') -> pd.DataFrame:
+        # The real relationship matrix is self.core, which hold the autonumbered keys 
+        # and the relationships between them. Here we reconstruct the original values.
+        
+        # our shared columns are in the link tables and composite tables
+        base_tables = self.link_tables.keys() | self.composite_tables.keys()
+        shared_columns = list()
+        for table in base_tables:
+            for col in self.tables[table].columns:
+                if not (col.startswith('_key_') or col.startswith('_composite_') or col.startswith('_index_')):
+                    shared_columns.append(col)
+        
+        return self.dimensions(columns_to_fetch=shared_columns, retrieve_keys=False, context_state_name = context_state_name)

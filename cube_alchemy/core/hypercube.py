@@ -1,9 +1,9 @@
 import logging
 import numpy as np
 import pandas as pd
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Type
 
-# hypercube building classes
+# hypercube mixins
 from .hypercube_mixins.engine import Engine
 from .hypercube_mixins.graph_visualizer import GraphVisualizer
 from .hypercube_mixins.model_catalog import ModelCatalog
@@ -13,7 +13,7 @@ from .hypercube_mixins.query import Query
 from .hypercube_mixins.plotting import Plotting
 from .hypercube_mixins.logger import Logger
 
-# hypercube supporting dependencies
+# supporting components
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 from .dependency_index import DependencyIndex
@@ -23,10 +23,13 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
         rename_original_shared_columns: bool = True,
-        apply_composite=True,
+        apply_composite: bool = True,
         validate: bool = True,
         to_be_stored: bool = False,
         logger: Optional[logging.Logger] = None,
+        # Simple DI hooks for testability/extensibility
+        validator_cls: Optional[Type[SchemaValidator]] = None,
+        bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
     ) -> None:
         # Initialize the Plotting class
         Plotting.__init__(self)
@@ -36,10 +39,10 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         # Logger (optional)
         self._log = logger or logging.getLogger(__name__)
 
-        # Bind supporting dependencies
-        self._dep_index = DependencyIndex() # Modular dependency index for queries/metrics/plots
-        self._validator = SchemaValidator
-        self._bridge_factory = CompositeBridgeGenerator
+        # Bind supporting components
+        self._dep_index = DependencyIndex()  # Modular dependency index for queries/metrics/plots
+        self._validator = validator_cls or SchemaValidator
+        self._bridge_factory = bridge_factory_cls or CompositeBridgeGenerator
 
         self.metrics = {}
         self.computed_metrics = {}
@@ -132,25 +135,8 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
             # Automatically add relationships based on shared column names
             self._add_auto_relationships()  # Add relationships for columns with the same name
 
-            # If there are no link keys and exactly one base table, declare the table index as the key space. This way it's easy to use and keep the hypercube functionality intact.
-            # (Some sort of Strategy Pattern is under the hood here)
-            base_tables = [t for t in self.tables if t not in self.link_tables]
-            if not self.link_table_keys and len(base_tables) == 1:
-                self.link_table_keys = [f"_index_{base_tables[0]}"]
-                # Enable light single-table mode 
-                self._single_table_mode = True
-                self._single_table_base = base_tables[0]
-                # Register single-table fetcher
-                self._fetch_and_merge_columns = self._fetch_and_merge_columns_single_table
-                # Register single-table trajectory joiner
-                self._join_trajectory_keys = self._join_trajectory_keys_single_table
-            else:
-                self._single_table_mode = False
-                self._single_table_base = None
-                # Register multi-table fetcher
-                self._fetch_and_merge_columns = self._fetch_and_merge_columns_multi_table
-                # Register multi-table trajectory joiner
-                self._join_trajectory_keys = self._join_trajectory_keys_multi_table
+            # Pick the appropriate join strategy (Single vs Multi) and expose wrappers
+            self._init_join_strategy()
 
             self.is_cyclic = self._has_cyclic_relationships()
             if self.is_cyclic[0]:
@@ -161,6 +147,8 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
             # Set the initial state to the unfiltered version of the joined trajectory keys across all the connections
             link_tables_trajectory = self._find_complete_trajectory(self.link_tables)
             self.context_states['Unfiltered'] = self._join_trajectory_keys(link_tables_trajectory)
+
+            self.core = self.context_states['Unfiltered']
 
             self.applied_filters = {}   # List of applied filters
             self.filter_pointer = {}    # Pointer to the current filter state
