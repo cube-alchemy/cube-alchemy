@@ -401,16 +401,114 @@ class Engine:
         # No safe join key available; return as-is
         return out
 
-    def relationship_matrix(self, context_state_name = 'Unfiltered') -> pd.DataFrame:
-        # The real relationship matrix is self.core, which hold the autonumbered keys 
-        # and the relationships between them. Here we reconstruct the original values.
-        
-        # our shared columns are in the link tables and composite tables
+    def relationship_matrix(self, context_state_name: str = 'Unfiltered') -> pd.DataFrame:
+        # The real relationship matrix is self.core, which hold the autonumbered keys
+        # and the relationships between them. Here we reconstruct the original shared columns values.
+
+        # Our shared columns are in the link tables and composite tables
         base_tables = self.link_tables.keys() | self.composite_tables.keys()
-        shared_columns = list()
+        shared_columns: List[str] = []
         for table in base_tables:
             for col in self.tables[table].columns:
                 if not (col.startswith('_key_') or col.startswith('_composite_') or col.startswith('_index_')):
                     shared_columns.append(col)
-        
-        return self.dimensions(columns_to_fetch=shared_columns, retrieve_keys=False, context_state_name = context_state_name)
+        return self.dimensions(columns_to_fetch=shared_columns, retrieve_keys=False, context_state_name=context_state_name)
+
+    def get_cardinalities(self, context_state_name = 'Unfiltered', include_inverse: bool = False) -> pd.DataFrame:
+        """
+        For every shared key, compute relationship cardinality between each pair of base tables,
+        based on per-key row multiplicities in the intersection of keys. Does not mutate tables.
+
+        Parameters
+        - include_inverse: when True, also emits the inverse orientation (t2, t1) rows
+          without recomputing; e.g., one-to-many <-> many-to-one. This is derived from
+          the computed result for (t1, t2).
+        """
+        base_tables = [t for t in self.tables if t not in self.link_tables]
+        shared_keys = list(self.core.columns)
+
+        results: List[Dict[str, Any]] = []
+        for key in shared_keys:
+            tables_sharing_key = [t for t in base_tables if key in self.tables[t].columns]
+            for i in range(len(tables_sharing_key)):
+                for j in range(i + 1, len(tables_sharing_key)):
+                    t1, t2 = tables_sharing_key[i], tables_sharing_key[j]
+
+                    if context_state_name == 'Unfiltered': #simmplest case, no need to filter by context state and use all values
+                        s1 = self.tables[t1][key].dropna()
+                        s2 = self.tables[t2][key].dropna()
+                    else:
+                        #If I want to use the context state, I need to get the relevant values first.. I can use the indexes of the tables
+                        idx1 = self.dimension(f'_index_{t1}', context_state_name=context_state_name)
+                        idx2 = self.dimension(f'_index_{t2}', context_state_name=context_state_name)
+
+                        #I need to first filter the tables by the context state indexes and then get the relevant key columns. idx1 and idx2 are pandas series with the relevant indexes
+
+                        s1 = self.tables[t1][self.tables[t1][f'_index_{t1}'].isin(idx1)][key].dropna()
+                        s2 = self.tables[t2][self.tables[t2][f'_index_{t2}'].isin(idx2)][key].dropna()
+
+                    if s1.empty or s2.empty:
+                        results.append({"table1": t1, "table2": t2, "shared_key": key, "cardinality": "no relationship"})
+                        continue
+
+                    c1 = s1.value_counts()
+                    c2 = s2.value_counts()
+                    inter = c1.index.intersection(c2.index)
+
+                    if len(inter) == 0:
+                        cardinality = "no relationship"
+                        max1 = max2 = 0
+                    else:
+                        max1 = int(c1.loc[inter].max())
+                        max2 = int(c2.loc[inter].max())
+                        if max1 == 1 and max2 == 1:
+                            cardinality = "one-to-one"
+                        elif max1 == 1 and max2 > 1:
+                            cardinality = "one-to-many"
+                        elif max1 > 1 and max2 == 1:
+                            cardinality = "many-to-one"
+                        else:
+                            cardinality = "many-to-many"
+
+                    # shared column is the key without the _key_ prefix
+                    shared_column = key[len("_key_"):]
+                    if t1.startswith('_composite_'):
+                        t1 = "Composite Table"
+                    if t2.startswith('_composite_'):
+                        t2 = "Composite Table"
+
+                    results.append({
+                        "table1": t1,
+                        "table2": t2,
+                        #"key": key,
+                        "shared_column": shared_column,
+                        "cardinality": cardinality,
+                        "keys_in_t1": int(c1.size),
+                        "keys_in_t2": int(c2.size),
+                        "keys_in_both": int(len(inter)),
+                        "max_rows_per_key_t1": int(max1),
+                        "max_rows_per_key_t2": int(max2),
+                    })
+
+        df = pd.DataFrame(results)
+
+        if not include_inverse or df.empty:
+            return df
+
+        # Build inverse orientation cheaply, without re-counting
+        inverse_map = {
+            "one-to-one": "one-to-one",
+            "one-to-many": "many-to-one",
+            "many-to-one": "one-to-many",
+            "many-to-many": "many-to-many",
+            "no relationship": "no relationship",
+        }
+
+        inv = df.copy()
+        inv["table1"], inv["table2"] = df["table2"], df["table1"]
+        inv["cardinality"] = df["cardinality"].map(inverse_map).fillna(df["cardinality"])  # safety
+        inv["max_rows_per_key_t1"], inv["max_rows_per_key_t2"] = df["max_rows_per_key_t2"], df["max_rows_per_key_t1"]
+        inv["keys_in_t1"], inv["keys_in_t2"] = df["keys_in_t2"], df["keys_in_t1"]
+
+        # Concatenate and return; original rows are unique per unordered pair and key
+        return pd.concat([df, inv], ignore_index=True)

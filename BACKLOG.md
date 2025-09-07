@@ -4,11 +4,11 @@ This document serves as a backlog for tracking upcoming features, enhancements, 
 
 ## Features
 
-- [ ] **Cardinallity check and enforcement**: Could be useful to check at initialization whether the different connected tables are 'one-to-many;,'many-to-one' or 'many-to-many' and allow to notify the user.
+- [x] **Cardinallity check and enforcement**: Could be useful to check at initialization whether the different connected tables are 'one-to-many;,'many-to-one' or 'many-to-many' and allow to notify the user.
 
-- [ ] **Dimensions Hierarquies**: To be able to easily drill down and roll up easily, if we define hierarchies (eg.: Region -> Country -> State -> City) then we can define the queries with this hierarchies instead of simple dimensions. Then depending on the context state, the dimension which has one possible value can be automatically selected.
+- [] **Dimensions Hierarquies**: To be able to easily drill down and roll up easily, if we define hierarchies (eg.: Region -> Country -> State -> City) then we can define the queries with this hierarchies instead of simple dimensions. Then depending on the context state, the dimension which has one possible value can be automatically selected.
 
-- [ ] **Query Visualization**: Same as metrics and queries definition, I imagine I also have the visualizations defined in a way that can be easily accessed. At least on it simply form (chart type, basic parameters) which can be used cross data visualization library.
+- [x] **Query Visualization**: Same as metrics and queries definition, I imagine I also have the visualizations defined in a way that can be easily accessed. At least on it simply form (chart type, basic parameters) which can be used cross data visualization libraries.
 
 ## Enhancements
 
