@@ -7,7 +7,7 @@ from cube_alchemy.catalogs import Catalog, Source, YAMLSource, ModelYAMLSource, 
 
 
 class ModelCatalog:
-    """Hypercube component to sync model analytics (metrics, computed metrics, queries) and plotting (plot configs) components with a Catalog.
+    """Hypercube component to sync model analytics (metrics, derived metrics, queries) and plotting (plot configs) components with a Catalog.
 
     Usage on a Hypercube instance:
     - cube.set_yaml_model_catalog(p*)    # set the YAML file path of model catalog source and then attach it to the hypercube
@@ -33,7 +33,7 @@ class ModelCatalog:
         if not p.exists() and create_if_missing:
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(
-                "metrics: \ncomputed_metrics: \nqueries:",
+                "metrics: \nderived_metrics: \nqueries:",
                 encoding="utf-8",
             )
         self._model_yaml_path = p.resolve()
@@ -58,7 +58,7 @@ class ModelCatalog:
     # ---------- high-level operations ----------
     def load_from_model_catalog(self, kinds: Optional[Iterable[str]] = None, clear_repo: bool = False, reload_sources: bool = True) -> None:
         """Load from the active source into the Catalog, then apply to this cube.
-        Order: metrics -> computed_metrics -> queries -> plots.
+        Order: metrics -> derived_metrics -> queries -> plots.
         clear_repo: If True, clear the existing repo before refreshing from source.
         reload_sources: If True, reload the sources before refreshing. This disables the cache and ensures that any changes in the source definitions are reflected in the Catalog.
         """
@@ -119,10 +119,10 @@ class ModelCatalog:
                 spec = catalog.get("metrics", name) or {}
                 self._apply_metric_to_hypercube(name, spec)
 
-        if _do("computed_metrics"):
-            for name in catalog.list("computed_metrics"):
-                spec = catalog.get("computed_metrics", name) or {}
-                self._apply_computed_metric_to_hypercube(name, spec)
+        if _do("derived_metrics"):
+            for name in catalog.list("derived_metrics"):
+                spec = catalog.get("derived_metrics", name) or {}
+                self._apply_derived_metric_to_hypercube(name, spec)
 
         if _do("queries"):
             for name in catalog.list("queries"):
@@ -153,8 +153,8 @@ class ModelCatalog:
             nested=spec.get("nested"),
         )
 
-    def _apply_computed_metric_to_hypercube(self, name: str, spec: Dict[str, Any]) -> None:
-        self.define_computed_metric(
+    def _apply_derived_metric_to_hypercube(self, name: str, spec: Dict[str, Any]) -> None:
+        self.define_derived_metric(
             name=name,
             expression=str(spec.get("expression", "")),
             fillna=spec.get("fillna"),
@@ -184,7 +184,7 @@ class ModelCatalog:
             name=name,
             dimensions=spec.get("dimensions", []) or [],
             metrics=spec.get("metrics", []) or [],
-            computed_metrics=spec.get("computed_metrics", []) or [],
+            derived_metrics=spec.get("derived_metrics", []) or [],
             having=spec.get("having"),
             sort=self._parse_sort_to_hypercube(spec.get("sort")),
             drop_null_dimensions=spec.get("drop_null_dimensions", False),
@@ -248,7 +248,7 @@ class ModelCatalog:
     def _extract_cube_to_specs_(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
         data: Dict[str, Dict[str, Dict[str, Any]]] = {
             "metrics": {},
-            "computed_metrics": {},
+            "derived_metrics": {},
             "queries": {},
             "plots": {},
             "enrichers": {},
@@ -263,14 +263,14 @@ class ModelCatalog:
                 details = {}
             data["metrics"][name] = details
 
-        # Computed metrics
-        computed_metrics = getattr(self, "computed_metrics", {})
-        for name, cm_obj in (computed_metrics or {}).items():
+        # Derived metrics
+        derived_metrics = getattr(self, "derived_metrics", {})
+        for name, cm_obj in (derived_metrics or {}).items():
             try:
-                details = cm_obj.get_computed_metric_details()  # Expected in ComputedMetric class
+                details = cm_obj.get_derived_metric_details()  # Expected in DerivedMetric class
             except Exception:
                 details = {}
-            data["computed_metrics"][name] = details
+            data["derived_metrics"][name] = details
 
         # Queries
         queries = getattr(self, "queries", {})

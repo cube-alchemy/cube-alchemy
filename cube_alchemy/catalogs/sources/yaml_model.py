@@ -162,7 +162,7 @@ class ModelYAMLSource(YAMLSource):
             desired = [
                 "dimensions",
                 "metrics",
-                "computed_metrics",
+                "derived_metrics",
                 "enrichers",
                 "having",
                 "sort",

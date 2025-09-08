@@ -16,7 +16,7 @@ This approach separates your analytical definitions from your processing code, c
 
 **Analytics Components**
 
-- Metrics and computed metrics
+- Metrics and derived metrics
 - Queries
 
 **Visualization**
@@ -76,7 +76,7 @@ metrics:
     expression: "[Unit Price] * [Quantity]"
     aggregation: sum
 
-computed_metrics:
+derived_metrics:
   margin_pct:
     expression: "margin / revenue"
 

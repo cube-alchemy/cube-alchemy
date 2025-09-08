@@ -1,6 +1,6 @@
 import logging
 from typing import List, Dict, Any, Optional, Union, Callable, Tuple
-from ..metric import Metric, ComputedMetric, extract_columns
+from ..metric import Metric, DerivedMetric, extract_columns
 import re
 import warnings
 
@@ -57,24 +57,24 @@ class AnalyticsSpecs:
         new_metric.query_relevant_columns = list(set(new_metric.nested_dimensions + new_metric.columns + new_metric.columns_indexes))
 
         # Register and refresh dependents (queries referencing this metric, even if previously missing)
-        self._refresh_queries_dependent_on(new_metric.name, is_computed_metric=False)
+        self._refresh_queries_dependent_on(new_metric.name, is_derived_metric=False)
         # Targeted refresh handled by dependency index
     
-    def define_computed_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:
-        """Persist a post-aggregation computed metric as a ComputedMetric instance.
+    def define_derived_metric(self, name: str, expression: str, fillna: Optional[Any] = None) -> None:
+        """Persist a post-aggregation derived metric as a DerivedMetric instance.
 
         These metrics are evaluated after base metrics aggregation in queries.
         Use [Column] syntax to reference aggregated columns or dimensions.
         """
         if not isinstance(name, str) or not name:
-            raise ValueError("Computed metric requires a non-empty string name.")
+            raise ValueError("Derived metric requires a non-empty string name.")
         if not isinstance(expression, str) or not expression:
-            raise ValueError("Computed metric requires a non-empty string expression.")
+            raise ValueError("Derived metric requires a non-empty string expression.")
 
-        self.computed_metrics[name] = ComputedMetric(name=name, expression=expression, fillna=fillna)
+        self.derived_metrics[name] = DerivedMetric(name=name, expression=expression, fillna=fillna)
 
-        # Register and refresh dependents (queries referencing this computed metric, even if previously missing)
-        self._refresh_queries_dependent_on(name, is_computed_metric=True)
+        # Register and refresh dependents (queries referencing this derived metric, even if previously missing)
+        self._refresh_queries_dependent_on(name, is_derived_metric=True)
         # Targeted refresh handled by dependency index
 
     def define_query(
@@ -82,7 +82,7 @@ class AnalyticsSpecs:
         name: str,
         dimensions: set[str] = {},
         metrics: List[str] = [],
-        computed_metrics: List[str] = [],
+        derived_metrics: List[str] = [],
         having: Optional[str] = None,
         sort: List[Tuple[str, str]] = [],        
         drop_null_dimensions: bool = False,
@@ -96,20 +96,20 @@ class AnalyticsSpecs:
             if metric_name not in self.metrics:
                 self.log().warning(f"Metric '{metric_name}' is not defined when defining query '{name}'. Define it with define_metric().")
 
-        for computed_metrics_name in computed_metrics:
-            if computed_metrics_name not in self.computed_metrics:
+        for derived_metrics_name in derived_metrics:
+            if derived_metrics_name not in self.derived_metrics:
                 self.log().warning(
-                    f"Computed metric '{computed_metrics_name}' is not defined when defining query '{name}'. Define it with define_computed_metric()."
+                    f"Derived metric '{derived_metrics_name}' is not defined when defining query '{name}'. Define it with define_derived_metric()."
                 )
         
         having_columns: List[str] = extract_columns(having) if having else []
 
         # --- Precompute hidden (internal) base metrics required ---
         hidden_metrics: List[str] = []
-        # From computed metrics' expressions
-        for cm_name in computed_metrics:
-            if cm_name in self.computed_metrics:
-                for col in self.computed_metrics[cm_name].columns:
+        # From derived metrics' expressions
+        for cm_name in derived_metrics:
+            if cm_name in self.derived_metrics:
+                for col in self.derived_metrics[cm_name].columns:
                     if col in self.metrics and col not in metrics and col not in hidden_metrics:
                         hidden_metrics.append(col)
         # From HAVING expression referenced columns
@@ -121,45 +121,45 @@ class AnalyticsSpecs:
             if sort_col in self.metrics and sort_col not in metrics and sort_col not in hidden_metrics:
                 hidden_metrics.append(sort_col)
 
-        # --- Precompute hidden computed metrics and dependency order ---
-        # Any computed metric referenced by requested computed metrics, HAVING, or SORT
-        hidden_computed_metrics: List[str] = []
+        # --- Precompute hidden derived metrics and dependency order ---
+        # Any derived metric referenced by requested derived metrics, HAVING, or SORT
+        hidden_derived_metrics: List[str] = []
         referenced_computed: set[str] = set()
-        for cm_name in computed_metrics:
-            if cm_name in self.computed_metrics:
-                for col in self.computed_metrics[cm_name].columns:
-                    if col in self.computed_metrics and col not in computed_metrics and col not in hidden_computed_metrics:
-                        hidden_computed_metrics.append(col)
+        for cm_name in derived_metrics:
+            if cm_name in self.derived_metrics:
+                for col in self.derived_metrics[cm_name].columns:
+                    if col in self.derived_metrics and col not in derived_metrics and col not in hidden_derived_metrics:
+                        hidden_derived_metrics.append(col)
                         referenced_computed.add(col)
         for col in having_columns:
-            if col in self.computed_metrics and col not in computed_metrics and col not in hidden_computed_metrics:
-                hidden_computed_metrics.append(col)
+            if col in self.derived_metrics and col not in derived_metrics and col not in hidden_derived_metrics:
+                hidden_derived_metrics.append(col)
                 referenced_computed.add(col)
         for sort_col, _dir in sort:
-            if sort_col in self.computed_metrics and sort_col not in computed_metrics and sort_col not in hidden_computed_metrics:
-                hidden_computed_metrics.append(sort_col)
+            if sort_col in self.derived_metrics and sort_col not in derived_metrics and sort_col not in hidden_derived_metrics:
+                hidden_derived_metrics.append(sort_col)
                 referenced_computed.add(sort_col)
 
-        # Build dependency graph for all computed metrics involved in this query (we need to execute them in order to work)
+        # Build dependency graph for all derived metrics involved in this query (we need to execute them in order to work)
         def build_cm_dependencies(names: List[str]) -> Dict[str, List[str]]:
             deps: Dict[str, List[str]] = {}
             for n in names:
-                if n not in self.computed_metrics:
+                if n not in self.derived_metrics:
                     continue
-                cm = self.computed_metrics[n]
-                # dependencies are other computed metric names referenced in expression
-                deps[n] = [c for c in cm.columns if c in self.computed_metrics]
+                cm = self.derived_metrics[n]
+                # dependencies are other derived metric names referenced in expression
+                deps[n] = [c for c in cm.columns if c in self.derived_metrics]
             return deps
 
-        # the set of computed metrics that might need evaluation
+        # the set of derived metrics that might need evaluation
         all_cm_names: List[str] = []
-        for n in computed_metrics + hidden_computed_metrics:
+        for n in derived_metrics + hidden_derived_metrics:
             if n not in all_cm_names:
                 all_cm_names.append(n)
         cm_deps = build_cm_dependencies(all_cm_names)
 
-        # Topologically sort computed metrics to a safe evaluation order
-        computed_metrics_ordered: List[str] = []
+        # Topologically sort derived metrics to a safe evaluation order
+        derived_metrics_ordered: List[str] = []
         temp_mark: set[str] = set()
         perm_mark: set[str] = set()
 
@@ -167,23 +167,23 @@ class AnalyticsSpecs:
             if node in perm_mark:
                 return
             if node in temp_mark:
-                raise ValueError(f"Cycle detected in computed metrics dependencies involving '{node}'.")
+                raise ValueError(f"Cycle detected in derived metrics dependencies involving '{node}'.")
             temp_mark.add(node)
             for d in cm_deps.get(node, []):
                 visit(d)
             temp_mark.remove(node)
             perm_mark.add(node)
-            if node not in computed_metrics_ordered:
-                computed_metrics_ordered.append(node)
+            if node not in derived_metrics_ordered:
+                derived_metrics_ordered.append(node)
 
         for node in all_cm_names:
             visit(node)
 
         # Build the set of referenced names to track missing items for fast auto-refresh.
-        all_used_columns = set(metrics) | set(computed_metrics)
-        # From computed metrics expressions (only those that exist at the moment)
-        for cm_name in computed_metrics:
-            cm_obj = self.computed_metrics.get(cm_name)
+        all_used_columns = set(metrics) | set(derived_metrics)
+        # From derived metrics expressions (only those that exist at the moment)
+        for cm_name in derived_metrics:
+            cm_obj = self.derived_metrics.get(cm_name)
             if cm_obj:
                 for col in cm_obj.columns:
                     all_used_columns.add(col)
@@ -193,8 +193,8 @@ class AnalyticsSpecs:
         for sc, _ in sort:
             all_used_columns.add(sc)
 
-        # Only consider tokens that are NOT dimensions and are plausible metric/computed metric names.
-        missing_column_names = sorted([n for n in all_used_columns if n not in self.metrics and n not in self.computed_metrics and n not in self.get_dimensions()])
+        # Only consider tokens that are NOT dimensions and are plausible metric/derived metric names.
+        missing_column_names = sorted([n for n in all_used_columns if n not in self.metrics and n not in self.derived_metrics and n not in self.get_dimensions()])
 
         # Register dependency edges for targeted refreshes
         try:
@@ -203,19 +203,19 @@ class AnalyticsSpecs:
                 self._dep_index.remove_query(name)
                 # Sources:
                 # - explicit + hidden base metrics
-                # - explicit + hidden computed metrics
-                dep_sources = set(metrics) | set(hidden_metrics) | set(computed_metrics) | set(hidden_computed_metrics)
+                # - explicit + hidden derived metrics
+                dep_sources = set(metrics) | set(hidden_metrics) | set(derived_metrics) | set(hidden_derived_metrics)
 
-                # Include HAVING/SORT tokens only if they resolve to existing metric/computed metric names.
+                # Include HAVING/SORT tokens only if they resolve to existing metric/derived metric names.
                 # Missing HAVING/SORT tokens will be captured via missing_column_names below.
                 for col in having_columns:
-                    if col in self.metrics or col in self.computed_metrics:
+                    if col in self.metrics or col in self.derived_metrics:
                         dep_sources.add(col)
                 for sort_col, _ in sort:
-                    if sort_col in self.metrics or sort_col in self.computed_metrics:
+                    if sort_col in self.metrics or sort_col in self.derived_metrics:
                         dep_sources.add(sort_col)
 
-                # Add unresolved tokens (not metrics, not computed metrics, not dimensions)
+                # Add unresolved tokens (not metrics, not derived metrics, not dimensions)
                 dep_sources |= set(missing_column_names)
                 for src in dep_sources:
                     self._dep_index.add(src, 'query', name)
@@ -226,17 +226,17 @@ class AnalyticsSpecs:
         self.queries[name] = {
             "dimensions": dimensions,
             "metrics": metrics,
-            "computed_metrics": computed_metrics,
+            "derived_metrics": derived_metrics,
             "having": having,
             "having_columns": having_columns,
             "sort": sort,
 
             # Precomputed internal helpers to avoid recomputation at runtime
             "hidden_metrics": hidden_metrics,
-            "hidden_computed_metrics": hidden_computed_metrics,
+            "hidden_derived_metrics": hidden_derived_metrics,
 
             # Full ordered list to evaluate (requested + hidden, in dependency order)
-            "computed_metrics_ordered": computed_metrics_ordered,
+            "derived_metrics_ordered": derived_metrics_ordered,
 
             "drop_null_dimensions": drop_null_dimensions,
             "drop_null_metric_results": drop_null_metric_results,
@@ -269,8 +269,8 @@ class AnalyticsSpecs:
                     **new_plot
                 )
 
-    def _refresh_queries_dependent_on(self, metric_name: str, is_computed_metric: bool) -> None:
-        """Refresh queries that depend on the given metric/computed metric using the dependency index."""
+    def _refresh_queries_dependent_on(self, metric_name: str, is_derived_metric: bool) -> None:
+        """Refresh queries that depend on the given metric/derived metric using the dependency index."""
         try:
             index = getattr(self, '_dep_index', None)
             if not index:
@@ -284,7 +284,7 @@ class AnalyticsSpecs:
                 q = self.queries.get(qname)
                 if not q:
                     continue
-                metric_type = 'computed' if is_computed_metric else 'base'
+                metric_type = 'computed' if is_derived_metric else 'base'
                 self.log().info(
                     "Query '%s' auto-refreshed due to newly defined %s metric '%s'.",
                     qname, metric_type, metric_name
@@ -293,7 +293,7 @@ class AnalyticsSpecs:
                     name=qname,
                     dimensions=q.get("dimensions", []),
                     metrics=q.get("metrics", []),
-                    computed_metrics=q.get("computed_metrics", []),
+                    derived_metrics=q.get("derived_metrics", []),
                     having=q.get("having"),
                     sort=q.get("sort", []),
                     drop_null_dimensions=q.get("drop_null_dimensions", False),
@@ -324,7 +324,7 @@ class AnalyticsSpecs:
             queries_formatted[name] = {
                 "dimensions": q.get('dimensions', []),
                 "metrics": q.get('metrics', []),
-                "computed_metrics": q.get('computed_metrics', []),
+                "derived_metrics": q.get('derived_metrics', []),
                 "having": q.get('having'),
                 "sort": q.get('sort'),                
                 "drop_null_dimensions": q.get('drop_null_dimensions', False),
@@ -338,17 +338,17 @@ class AnalyticsSpecs:
             metrics_formatted[metric_name] = metric.get_metric_details()
         return metrics_formatted 
 
-    def get_computed_metrics(self) -> Dict[str, Any]:
-        computed_metrics_formatted = {}
-        for metric_name, metric in self.computed_metrics.items():
-            computed_metrics_formatted[metric_name] = metric.get_computed_metric_details()
-        return computed_metrics_formatted
+    def get_derived_metrics(self) -> Dict[str, Any]:
+        derived_metrics_formatted = {}
+        for metric_name, metric in self.derived_metrics.items():
+            derived_metrics_formatted[metric_name] = metric.get_derived_metric_details()
+        return derived_metrics_formatted
     
     def get_metric(self, metric:str) -> Dict[str, Any]:
         return self.metrics[metric].get_metric_details()
     
-    def get_computed_metric(self, computed_metric:str) -> Dict[str, Any]:
-        return self.computed_metrics[computed_metric].get_computed_metric_details()
+    def get_derived_metric(self, derived_metric:str) -> Dict[str, Any]:
+        return self.derived_metrics[derived_metric].get_derived_metric_details()
 
     def get_query(self, query:str) -> Dict[str, Any]:
         query = self.queries[query]
@@ -357,7 +357,7 @@ class AnalyticsSpecs:
             "metrics": query.get('metrics', []),
             "drop_null_dimensions": query.get('drop_null_dimensions', False),
             "drop_null_metric_results": query.get('drop_null_metric_results', False),
-            "computed_metrics": query.get('computed_metrics', []),
+            "derived_metrics": query.get('derived_metrics', []),
             "having": query.get('having'),
             "sort": query.get('sort'),
         }
@@ -390,9 +390,9 @@ class AnalyticsSpecs:
         self.metrics.pop(name, None)
         # No reverse-refresh on deletion; edges remain from name->query for future redefinition
 
-    def delete_computed_metric(self, name: str) -> None:
-        """Remove a computed metric; dependent queries will still reference the name and be marked missing until redefined."""
-        self.computed_metrics.pop(name, None)
+    def delete_derived_metric(self, name: str) -> None:
+        """Remove a derived metric; dependent queries will still reference the name and be marked missing until redefined."""
+        self.derived_metrics.pop(name, None)
         # No reverse-refresh on deletion
 
     def debug_dependencies(self) -> Dict[str, Any]:
@@ -411,7 +411,7 @@ class AnalyticsSpecs:
 
         A source is considered unresolved if it is NOT one of:
         - a defined base metric name
-        - a defined computed metric name
+        - a defined derived metric name
         - a known dimension
         - a defined query name (queries act as sources for plot dependents)
         """
@@ -424,7 +424,7 @@ class AnalyticsSpecs:
                 for src, deps in snap.items():
                     if (
                         src not in self.metrics
-                        and src not in self.computed_metrics
+                        and src not in self.derived_metrics
                         and src not in dims
                         and src not in queries
                     ):

@@ -235,4 +235,4 @@ Check out the [examples folder](https://github.com/cube-alchemy/cube-alchemy-exa
 
 ## Persisting Plot Configurations
 
-Plot configurations can be saved/loaded with the Model Catalog (YAML-backed by default). See API: Model Catalog for how plots are serialized alongside metrics, queries, and computed metrics.
+Plot configurations can be saved/loaded with the Model Catalog (YAML-backed by default). See API: Model Catalog for how plots are serialized alongside metrics, queries, and derived metrics.

@@ -72,9 +72,9 @@ class Plotting:
             dims = qdef.get('dimensions', []) or []
         else:
             dims = dimensions
-        # include both metrics and computed metrics
+        # include both metrics and derived metrics
         if metrics is None or len(metrics) == 0:
-            mets = (qdef.get('metrics', []) or []) + (qdef.get('computed_metrics', []) or [])
+            mets = (qdef.get('metrics', []) or []) + (qdef.get('derived_metrics', []) or [])
         else:
             mets = metrics
 
@@ -330,7 +330,7 @@ class Plotting:
 
         q = self.queries[query_name]
         dims = q.get('dimensions', []) or []
-        mets = (q.get('metrics', []) or []) + (q.get('computed_metrics', []) or [])
+        mets = (q.get('metrics', []) or []) + (q.get('derived_metrics', []) or [])
         d = len(dims)
         m = len(mets)
 

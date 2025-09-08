@@ -48,7 +48,7 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         self._bridge_factory = bridge_factory_cls or CompositeBridgeGenerator
 
         self.metrics = {}
-        self.computed_metrics = {}
+        self.derived_metrics = {}
         self.queries = {}
         self.registered_functions = {'pd': pd, 'np': np}
         self.rename_original_shared_columns = rename_original_shared_columns
@@ -73,7 +73,7 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
     ) -> None:
         if reset_all:
             self.metrics = {}
-            self.computed_metrics = {}
+            self.derived_metrics = {}
             self.queries = {}
             self.registered_functions = {'pd': pd,'np': np}
             # Clear dependency graph when resetting model

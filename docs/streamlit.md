@@ -84,7 +84,7 @@ def load_cube():
     # Important: Set context state after loading
     cube.set_context_state('Default')
     
-    # Restore any functions needed for computed metrics
+    # Restore any functions needed for derived metrics
     cube.registered_functions = {
         'pd': pd,
         'np': np
@@ -191,7 +191,7 @@ with st.expander("Customize Plot"):
     with col2:
         # Allow selecting different metrics
         query_def = cube.get_query(selected_query)
-        available_metrics = query_def["metrics"] + query_def["computed_metrics"]
+        available_metrics = query_def["metrics"] + query_def["derived_metrics"]
         
         y_column = st.selectbox(
             "Y-Axis (Metric)",

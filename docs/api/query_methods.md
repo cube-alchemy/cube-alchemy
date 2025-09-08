@@ -7,7 +7,7 @@ define_query(
     name: str,
     dimensions: set[str] = {},
     metrics: List[str] = [],
-    computed_metrics: Optional[List[str]] = None,
+    derived_metrics: Optional[List[str]] = None,
     having: Optional[str] = None,
     drop_null_dimensions: bool = False,
     drop_null_metric_results: bool = False
@@ -21,7 +21,7 @@ Defines a named query with dimensions and metrics for later execution.
 - `name`: A unique name for the query
 - `dimensions`: Set of dimension column names to include in the query
 - `metrics`: List of metric names (as defined with define_metric)
-- `computed_metrics`: List of names referencing computed metrics defined via `define_computed_metric()`
+- `derived_metrics`: List of names referencing derived metrics defined via `define_derived_metric()`
 - `having`: SQL HAVING-like expression to filter rows based on aggregated results
 - `drop_null_dimensions`: Whether to exclude rows where dimension values are missing
 - `drop_null_metric_results`: Whether to exclude rows where metric calculations result in null
@@ -33,14 +33,14 @@ Defines a named query with dimensions and metrics for later execution.
 cube.define_metric(name='Revenue', expression='[qty] * [price]', aggregation='sum')
 cube.define_metric(name='Units', expression='[qty]', aggregation='sum')
 
-cube.define_computed_metric(name = 'Avg Revenue per Unit', expression = '[Revenue] / [Units]')
+cube.define_derived_metric(name = 'Avg Revenue per Unit', expression = '[Revenue] / [Units]')
 
 # Define a query using those metrics
 cube.define_query(
     query_name="sales analysis",
     dimensions={'region', 'category', 'promo_type'},
     metrics=['Revenue'],
-    computed_metrics=['Revenue per Unit'],
+    derived_metrics=['Revenue per Unit'],
     having='[Revenue per Unit] > 10'
 )
 ```
@@ -56,7 +56,7 @@ Executes a previously defined query by name.
 **Parameters:**
 
 - `query_name`: Name of a previously defined query
-- `return_internal_metrics`: The query might need metrics and/or computed metrics which are internally used for calculation of computed metrics, having and/or sorting. If this parameter is set to True they will also be retrieved. Can be useful for debugging or validation.
+- `return_internal_metrics`: The query might need metrics and/or derived metrics which are internally used for calculation of derived metrics, having and/or sorting. If this parameter is set to True they will also be retrieved. Can be useful for debugging or validation.
 
 **Returns:**
 

@@ -90,8 +90,8 @@ class MetricGroup: # group of metrics based on state and query filters
         self.context_state_name = context_state_name
 
 
-class ComputedMetric:
-    """Represents a post-aggregation computed metric.
+class DerivedMetric:
+    """Represents a post-aggregation derived metric.
 
     These are evaluated after base metrics are aggregated. They can reference
     any column present in the aggregated result using [Column] syntax.
@@ -107,7 +107,7 @@ class ComputedMetric:
         self.fillna = fillna
         self.columns = extract_columns(expression)
 
-    def get_computed_metric_details(self) -> Dict[str, Any]:
+    def get_derived_metric_details(self) -> Dict[str, Any]:
         return {
             "expression": self.expression,
             "fillna": self.fillna,

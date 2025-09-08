@@ -78,28 +78,28 @@ cube.define_query(
 global_results = cube.query("global_totals")
 ```
 
-## Computed Metrics and HAVING
+## Derived Metrics and HAVING
 
-Computed metrics are calculated after base metrics are aggregated. Define them once, then reference by name in queries.
+Derived metrics are calculated after base metrics are aggregated. Define them once, then reference by name in queries.
 
 ```python
 # Define base metrics
 cube.define_metric(name='Cost',   expression='[cost]',           aggregation='sum')
 cube.define_metric(name='Margin', expression='[qty] * [price] - [cost]', aggregation='sum')
 
-# Define a computed metric (post-aggregation)
-cube.define_computed_metric(
+# Define a derived metric (post-aggregation)
+cube.define_derived_metric(
     name='Margin %',
     expression='[Margin] / [Cost] * 100',
     fillna=0
 )
 
-# Use computed metric by name and add a HAVING filter
+# Use derived metric by name and add a HAVING filter
 cube.define_query(
     name='margin_by_product',
     dimensions={'product'},
     metrics=['Margin', 'Cost'],
-    computed_metrics=['Margin %'],
+    derived_metrics=['Margin %'],
     having='[Margin %] >= 20'
 )
 
@@ -110,7 +110,7 @@ Notes:
 
 - Use [Column] syntax in expressions; registered functions are available as @name.
 
-- Computed metrics reference columns present in the aggregated result (metrics and dimensions).
+- Derived metrics reference columns present in the aggregated result (metrics and dimensions).
 
 ### Effective dimensions
 

@@ -63,30 +63,30 @@ revenue = cube.get_metric('Revenue')
 print(revenue)
 ```
 
-## Get Computed Metrics
+## Get Derived Metrics
 
 ```python
-cube.get_computed_metrics() -> Dict[str, Any]
+cube.get_derived_metrics() -> Dict[str, Any]
 ```
 
-Retrieve all persisted computed metrics.
+Retrieve all persisted derived metrics.
 
 *Returns:*
 
-- Dictionary mapping computed metric names to specs: expression, optional fillna, and referenced columns
+- Dictionary mapping derived metric names to specs: expression, optional fillna, and referenced columns
 
-## Get a Single Computed Metric
+## Get a Single Derived Metric
 
 ```python
-cube.get_computed_metric(computed_metric: str) -> Dict[str, Any]
+cube.get_derived_metric(derived_metric: str) -> Dict[str, Any]
 ```
 
-Returns a single computed metric definition.
+Returns a single derived metric definition.
 
 **Example:**
 
 ```python
-margin_pct = cube.get_computed_metric('Margin %')
+margin_pct = cube.get_derived_metric('Margin %')
 print(margin_pct)
 ```
 
@@ -106,7 +106,7 @@ cube.get_queries() -> Dict[str, Any]
 cube.get_query(query: str) -> Dict[str, Any]
 ```
 
-Returns the definition for a single query (dimensions, metrics, computed_metrics, and options like having).
+Returns the definition for a single query (dimensions, metrics, derived_metrics, and options like having).
 
 **Example:**
 

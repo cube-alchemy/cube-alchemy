@@ -54,7 +54,7 @@ class DefaultPlotConfigResolver(PlotConfigResolver):
 
 		dims = cfg.get("dimensions") or (query_meta.get("dimensions", []) if query_meta else [])
 		mets = cfg.get("metrics") or (
-			((query_meta.get("metrics", []) or []) + (query_meta.get("computed_metrics", []) or []))
+			((query_meta.get("metrics", []) or []) + (query_meta.get("derived_metrics", []) or []))
 			if query_meta else []
 		)
 		d, m = len(dims), len(mets)

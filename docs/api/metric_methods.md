@@ -151,29 +151,29 @@ cube.define_metric(
    - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
 
 
-## Define Computed Metric
+## Define Derived Metric
 
 ```python
-define_computed_metric(
+define_derived_metric(
     name: str,
     expression: str,
     fillna: Optional[Any] = None
 ) -> None
 ```
 
-Defines a post-aggregation computed metric that operates on already aggregated metrics and dimensions.
+Defines a post-aggregation derived metric that operates on already aggregated metrics and dimensions.
 
 **Parameters:**
 
 - `name`: Unique label for the metric (used in query results)
 - `expression`: Calculation formula using [MetricName] references and dimension column references
-- `fillna`: Optional value to replace NaN computed metrics expression columns before calculation.
+- `fillna`: Optional value to replace NaN derived metrics expression columns before calculation.
 
 **Example:**
 
 ```python
-# Define a profit margin percentage computed metric
-cube.define_computed_metric(
+# Define a profit margin percentage derived metric
+cube.define_derived_metric(
     name='Margin %',
     expression='([Revenue] - [Cost]) / [Revenue] * 100',
     fillna=0
@@ -182,14 +182,14 @@ cube.define_computed_metric(
 
 **Using in queries:**
 
-You must define computed metrics first, then reference them by name in queries:
+You must define derived metrics first, then reference them by name in queries:
 
 ```python
 cube.define_query(
     query_name='sales_margin_named',
     dimensions={'product'},
     metrics=['Revenue', 'Cost'],
-    computed_metrics=['Margin %'],
+    derived_metrics=['Margin %'],
 )
 ```
 

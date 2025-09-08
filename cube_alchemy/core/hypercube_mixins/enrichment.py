@@ -11,7 +11,7 @@ class Enrichment:
     Query Enrichment mixin: single-step query augmentation.
 
     - Register enrichers (plugins) that take a dataframe and add analytical features (e.g., moving average, z-score, rank).
-    - Enrichments operate over available dimensions, metrics, and computed metrics in the query DataFrame.
+    - Enrichments operate over available dimensions, metrics, and derived metrics in the query DataFrame.
     - Each query can configure at most one enrichment per transformer.
     """
 

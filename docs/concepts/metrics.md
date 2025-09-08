@@ -60,9 +60,9 @@ result = cube.query("sales_performance")
 
     - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
 
-## Computed Metrics
+## Derived Metrics
 
-Computed metrics are calculated after aggregation has already occurred. While regular metrics aggregate over dimensions, computed metrics work with already aggregated results, letting you create ratios, percentages, and other derivative calculations.
+Derived metrics are calculated after aggregation has already occurred. While regular metrics aggregate over dimensions, derived metrics work with already aggregated results, letting you create ratios, percentages, and other derivative calculations.
 
 ```python
 # First define the metrics needed for the computation
@@ -78,17 +78,17 @@ cube.define_metric(
     aggregation='sum'
 )
 
-# Then define a computed metric that uses them
-cube.define_computed_metric(
+# Then define a derived metric that uses them
+cube.define_derived_metric(
     name='Profit Margin %',
     expression='([Revenue] - [Cost]) / [Revenue] * 100'
 )
 
-# Use both regular and computed metrics in queries
+# Use both regular and derived metrics in queries
 cube.define_query(
     name="profitability_analysis",
     dimensions={'product_category', 'region'},
-    computed_metrics=['Profit Margin %']
+    derived_metrics=['Profit Margin %']
 )
 
 # Execute the query
@@ -99,9 +99,9 @@ The workflow is:
 
 1. Define regular metrics that perform aggregation
 
-2. Define computed metrics that reference those aggregated metrics
+2. Define derived metrics that reference those aggregated metrics
 
-3. Include them in your queries (computed metrics are passed separately)
+3. Include them in your queries (derived metrics are passed separately)
 
 ## Advanced Features
 

@@ -120,7 +120,7 @@ cube.load_from_model_catalog(kinds=["metrics"])
 cube.save_to_model_catalog() -> None
 ```
 
-Saves the current cube metrics, computed metrics, queries and plot config definition contents to attached sources.
+Saves the current cube metrics, derived metrics, queries and plot config definition contents to attached sources.
 
 **Example:**
 ```python

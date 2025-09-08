@@ -77,7 +77,7 @@ class Query:
 
             dims = pick("dimensions", [])
             mets = pick("metrics", [])
-            cmets = pick("computed_metrics", [])
+            cmets = pick("derived_metrics", [])
             having = pick("having", None)
             sort = pick("sort", [])
             drop_null_dimensions = pick("drop_null_dimensions", False)
@@ -88,7 +88,7 @@ class Query:
                 name=new_query_name,
                 dimensions=dims,
                 metrics=mets,
-                computed_metrics=cmets,
+                derived_metrics=cmets,
                 having=having,
                 sort=sort,
                 drop_null_dimensions=drop_null_dimensions,
@@ -112,8 +112,8 @@ class Query:
             drop_null_dimensions = query["drop_null_dimensions"],
             drop_null_metric_results = query["drop_null_metric_results"]
         )
-        # Apply post-aggregation ops: evaluate computed metrics in stored order
-        query_result = self._apply_computed_metrics(query_result, query["computed_metrics_ordered"])
+        # Apply post-aggregation ops: evaluate derived metrics in stored order
+        query_result = self._apply_derived_metrics(query_result, query["derived_metrics_ordered"])
 
         # Auto-apply ALL enrichers configured for this query (transformer->params)
         columns_enrichment: list[str] = []
@@ -139,7 +139,7 @@ class Query:
                 ascending = [str(d).lower() == 'asc' for _, d in by_dirs]
                 query_result = query_result.sort_values(by=by, ascending=ascending)
 
-        final_result = query_result[query["dimensions"] + query["metrics"] + query["computed_metrics"] + columns_enrichment]
+        final_result = query_result[query["dimensions"] + query["metrics"] + query["derived_metrics"] + columns_enrichment]
 
         if _retrieve_query_name:
             return new_query_name or query_name, final_result
@@ -417,25 +417,25 @@ class Query:
 
         return inner_df
 
-    def _apply_computed_metrics(
+    def _apply_derived_metrics(
         self,
         df: pd.DataFrame,
-        computed_metrics: Optional[List[str]] = None
+        derived_metrics: Optional[List[str]] = None
     ) -> pd.DataFrame:
         """
         Post-aggregation stage with dependency resolution:
-        - computed_metrics: list of names referencing persisted computed metrics
+        - derived_metrics: list of names referencing persisted derived metrics
         - having: string expression to filter aggregated rows, also using [Column] syntax.
         """
         if df is None or df.empty:
             return df
 
-        if not computed_metrics:
-            computed_metrics = []
+        if not derived_metrics:
+            derived_metrics = []
         
         # Now evaluate metrics in the correct order
-        for name in computed_metrics:
-            cm = self.computed_metrics[name]
+        for name in derived_metrics:
+            cm = self.derived_metrics[name]
             expression = cm.expression
             fillna_value = cm.fillna
 
@@ -457,7 +457,7 @@ class Query:
                 df[name] = eval(expr, eval_globals, eval_locals)
 
             except Exception as e:
-                raise ValueError(f"Error evaluating computed metric '{name}': {e}") from e
+                raise ValueError(f"Error evaluating derived metric '{name}': {e}") from e
             
             # Restore original NaN values
             if fillna_value is not None:
