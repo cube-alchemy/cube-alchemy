@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from typing import Dict, Any, Optional, Type
+from typing import Dict, Any, Optional, Type, Union
 
 # hypercube mixins
 from .hypercube_mixins.engine import Engine
@@ -27,20 +27,19 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         apply_composite: bool = True,
         validate: bool = True,
         to_be_stored: bool = False,
-        logger: Optional[logging.Logger] = None,
+        logger: Optional[Union[logging.Logger, bool]] = None,
         # Simple DI hooks for testability/extensibility
         validator_cls: Optional[Type[SchemaValidator]] = None,
         bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
     ) -> None:
+        # Initialize Logger mixin first so self._log is available early
+        Logger.__init__(self, logger=logger)
         # Initialize the Plotting class
         Plotting.__init__(self)
         # Initialize the Transformation class
         Transformation.__init__(self)
         # Initialize the ModelCatalog component
         ModelCatalog.__init__(self)
-
-        # Logger (optional)
-        self._log = logger or logging.getLogger(__name__)
 
         # Bind supporting components
         self._dep_index = DependencyIndex()  # Modular dependency index for queries/metrics/plots

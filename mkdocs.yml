@@ -60,7 +60,6 @@ nav:
     - Filters: api/filter_methods.md
     - Plotting: api/plotting_system.md
     - Model Catalog: api/model_catalog.md
-    - Logger: api/logger.md
   - Examples: examples.md
   - Streamlit Integration: streamlit.md
   - Contributing: contributing.md

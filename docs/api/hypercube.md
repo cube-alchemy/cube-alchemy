@@ -11,9 +11,8 @@ The Hypercube can be initialized in two ways:
 Hypercube(
   tables: Dict[str, pd.DataFrame] = None,
   rename_original_shared_columns: bool = True,
-  apply_composite: bool = True,
-  validate: bool = True,
-  to_be_stored: bool = False
+  to_be_stored: bool = False,
+  logger: Optional[Union[bool, logging.Logger]] = None
 )
 
 # Option 2: Initialize empty and load data later
@@ -21,8 +20,6 @@ Hypercube()
 load_data(
   tables: Dict[str, pd.DataFrame],
   rename_original_shared_columns: bool = True,
-  apply_composite: bool = True,
-  validate: bool = True,
   to_be_stored: bool = False,
   reset_all: bool = False
 )
@@ -40,19 +37,23 @@ The `load_data()` method can also be used to reload or update data in an existin
 
   - False: drop them from source tables (values remain in link tables). Saves time and memory if per‑table analysis isn’t needed.  
 
-- `apply_composite`: Whether to automatically create composite keys for multi-column relationships
-
-- `validate`: Whether to validate schema and build trajectory cache during initialization
-
 - `to_be_stored`: Set to True if the hypercube will be serialized/stored (skips Default context state creation)
 
 - `reset_all` *(only load_data method)*: Whether to reset metrics and queries definitions, as well as registered functions when reloading data
+
+- `logger` *(only constructor)*: Controls instance logging.
+
+    - `True`: enable default Python logging (INFO) with format `%(levelname)s %(name)s: %(message)s`.
+    - `logging.Logger`: use the provided logger instance.
+    - `False`: silence this instance (no propagation; internal NullHandler).
+    - `None`/omitted: no global config; a module-named logger is used and inherits app-level settings.
 
 **Examples:**
 
 ```python
 import pandas as pd
 from cube_alchemy import Hypercube
+import logging
 
 # Option 1: Initialize with data (keep renamed shared columns)
 cube1 = Hypercube({
@@ -78,6 +79,18 @@ cube1.load_data({
 
 # Reset metrics and queries when loading new data schema
 cube2.load_data(new_data, reset_all=True)
+
+# Enable default logging quickly
+cube3 = Hypercube({'Sales': sales_df}, logger=True)
+
+# Inject a specific logger
+app_logger = logging.getLogger("app.cube")
+cube4 = Hypercube({'Sales': sales_df}, logger=app_logger)
+
+# Provide custom DI hooks (advanced)
+class MyValidator: ...
+class MyBridgeFactory: ...
+cube5 = Hypercube({'Sales': sales_df}, validator_cls=MyValidator, bridge_factory_cls=MyBridgeFactory)
 ```
 
 ## Core Methods
