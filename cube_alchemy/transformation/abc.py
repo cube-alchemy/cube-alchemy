@@ -1,5 +1,5 @@
 """
-Abstract base contracts for Query Enrichment.
+Abstract base contracts for Query Transformation.
 """
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 import pandas as pd
 
-class Enricher(ABC):
-    """An Enricher appends new columns to a DataFrame without mutating inputs.
+class Transformer(ABC):
+    """An Transformer appends new columns to a DataFrame without mutating inputs.
 
     Contract:
       - Input: pd.DataFrame (query result) and params via kwargs
@@ -17,6 +17,6 @@ class Enricher(ABC):
     """
 
     @abstractmethod
-    def enrich(self, df: pd.DataFrame, **params: Any) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame, **params: Any) -> pd.DataFrame:
         """Return a new DataFrame with appended columns; must not mutate input."""
         raise NotImplementedError

@@ -5,7 +5,9 @@ A metric is a calculated measure that aggregates data in some meaningful way. Th
 In Cube Alchemy, metrics are defined once and stored within the cube object for later use:
 
 1. You **define a metric** using `cube.define_metric()` providing at least a name, expression, and aggregation method
+
 2. The metric is **stored in the cube object**
+
 3. Later, you **reference metrics by name** when defining queries
 
 ## Building a Metric
@@ -13,7 +15,9 @@ In Cube Alchemy, metrics are defined once and stored within the cube object for 
 Every metric needs three essential components:
 
 1. **Name**: A clear, descriptive label for the metric (e.g., 'Revenue', 'Customer Count')
+
 2. **Expression**: The calculation formula, using dimension references inside square brackets (e.g., `[qty] * [price]`)
+
 3. **Aggregation**: How to combine values—standard methods like `sum`, `mean`, `count`, or custom functions
 
 
@@ -58,7 +62,11 @@ result = cube.query("sales_performance")
 
     - Pandas group by strings: `'sum'`, `'mean'`, `'count'`, `'min'`, `'max'`, etc.
 
-    - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
+    - You can extend the pandas group by strings by registering custom functions, which will aggregate over the resultin pandas series. See below.
+
+    - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series.
+
+NOTE: Avoid passing custom callabes if you plan to work with YAML (or other source) catalog to persist these definitions. After registering it you can use it.
 
 ## Derived Metrics
 
@@ -108,10 +116,15 @@ The workflow is:
 For more sophisticated analysis, metrics support several powerful options:
 
 - **Different context states**: Calculate metrics in different filtering environments
+
 - **Metric filters**: Apply specific filters only for a particular metric
+
 - **Row conditions**: Pre-filter rows before calculating the metric
+
 - **Ignore Dimensions**: Control dimensional aggregation behavior
+
 - **Ignore Context Filters (per metric)**: Let a metric ignore all or some of the active context filters
+
 - **Custom functions**: Use your own Python functions for complex logic
 
 Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.
@@ -198,6 +211,7 @@ result = cube.query("advanced_analysis")
 When a metric specifies `ignore_context_filters`:
 
 - If set to `True`, the metric is evaluated against the Unfiltered context (equivalent to using `context_state_name='Unfiltered'` for that metric). Any `metric_filters` on the metric still apply.
+
 - If set to a list of dimensions, the metric is evaluated against its context state with those specific filters removed; then the metric's own `metric_filters` (if any) are applied on top.
 
 ## Custom Functions
@@ -205,7 +219,9 @@ When a metric specifies `ignore_context_filters`:
 When your analysis requires logic that goes beyond basic arithmetic, you can register and use custom Python functions:
 
 1. **Define a Python function** that performs your specialized calculation
+
 2. **Register the function** with your cube using `cube.register_function()`
+
 3. **Reference the function** in your metric expressions using the `@function_name` syntax (Pandas and Numpy are already registered as *pd* and *np*).
 
 This powerful feature allows you to implement virtually any calculation logic while keeping your metric definitions clean and readable.
@@ -312,4 +328,4 @@ Metric aggregation allows you to pass custom functions directly while expression
 
 - **Aggregation functions** work outside on the grouped data
 
-So you can in fact pass even lambda functions to the aggregations. Please bear in mind that if not registered, these functions cannot be persisted into model_catalog Sources, for instance you define a metric using a lambda function then <lambda> is stored on your YAML model catalog and on the way back when trying to read it python will not know how to interpret that. So if working with external model catalog is a good practice to register all the functions that are going to be used in your hypercube.
+So you can in fact pass even lambda functions to the aggregations. Please bear in mind that if not registered, these functions cannot be persisted into model_catalog Sources, for instance you define a metric using a lambda function then < lambda > is stored on your YAML model catalog and on the way back when trying to read it python will not know how to interpret that. So if working with external model catalog is a good practice to register all the functions that are going to be used in your hypercube.

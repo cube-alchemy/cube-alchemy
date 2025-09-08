@@ -1,66 +1,31 @@
 # Filter Methods
 
-## Apply Filter
+## filter
 
 ```python
 filter(
   criteria: Dict[str, List[Any]], 
-  context_state_name: str = 'Default'
+  context_state_name: str = 'Default',
+  is_reset: bool = False,
+  save_state: bool = True,
 ) -> bool
 ```
 
-Apply filters to focus analysis on specific data slices.
+Apply filters to a context state. Returns True on success.
 
-**Parameters:**
-
-- `criteria`: Dictionary mapping dimension names to lists of values to keep
-- `context_state_name`: Which context state to filter
-
-**Returns:**
-
-- Boolean indicating success
-
-**Example:**
-
-```python
-# Filter to specific regions
-cube.filter({'region': ['North', 'South']})
-
-# Filter to specific products within those regions
-cube.filter({'product': ['Electronics', 'Home']})
-
-# Filter in a different context state
-cube.filter({'region': ['West']}, context_state_name='State1')
-```
-
-## Remove Filter
+## remove_filter
 
 ```python
 remove_filter(
   dimensions: List[str],
-  context_state_name: str = 'Default'
+  context_state_name: str = 'Default',
+  is_reset: bool = False,
 ) -> bool
 ```
 
-Remove filters from specified dimensions.
+Remove filters for the specified dimensions from a context state.
 
-**Parameters:**
-
-- `dimensions`: List of dimension names to remove filters from
-- `context_state_name`: Which context state to modify
-
-**Returns:**
-
-- Boolean indicating success
-
-**Example:**
-
-```python
-# Remove region filter
-cube.remove_filter(['region'])
-```
-
-## Reset Filters
+## reset_filters
 
 ```python
 reset_filters(
@@ -69,31 +34,9 @@ reset_filters(
 ) -> bool
 ```
 
-Reset filters using undo/redo functionality or clear all filters.
+Reset filters using undo/redo or clear all filters. Direction: 'backward', 'fordward', or 'all'.
 
-**Parameters:**
-
-- `direction`: 'backward' (undo), 'forward' (redo), or 'all' (clear all filters)
-- `context_state_name`: Which context state to modify
-
-**Returns:**
-
-- Boolean indicating success
-
-**Example:**
-
-```python
-# Undo last filter operation
-cube.reset_filters('backward')
-
-# Redo previously undone filter operation
-cube.reset_filters('forward')
-
-# Clear all filters
-cube.reset_filters('all')
-```
-
-## Get Filters
+## get_filters
 
 ```python
 get_filters(
@@ -102,21 +45,26 @@ get_filters(
 ) -> Dict[str, List[Any]]
 ```
 
-Get currently active filters.
+Return the aggregated active filters up to the current history pointer plus off_set.
 
-**Parameters:**
-
-- `off_set`: How many steps back in filter history to look
-- `context_state_name`: Which context state to check
-
-**Returns:**
-
-- Dictionary of active filters
-
-**Example:**
+## get_filtered_dimensions
 
 ```python
-# Get current filters
-current_filters = cube.get_filters()
-print(f"Current filters: {current_filters}")
+get_filtered_dimensions(
+  off_set: int = 0,
+  context_state_name: str = 'Default'
+) -> List[str]
 ```
+
+Return only the dimension names that are currently filtered (order preserved, no duplicates).
+
+## set_context_state
+
+```python
+set_context_state(
+  context_state_name: str,
+  base_context_state_name: str = 'Unfiltered'
+) -> bool
+```
+
+Create a new context state cloned from base_context_state_name.

@@ -5,7 +5,9 @@ Cube Alchemy includes a flexible plotting system that allows you to visualize yo
 The plotting system is a framework-agnostic approach to visualizing data from your hypercube. It separates:
 
 - **What data to show** (from your queries)
+
 - **How to configure the visualization** (plot configurations)
+
 - **How to render the visualization** (through renderer interfaces)
 
 ## Core Components
@@ -33,18 +35,18 @@ cube.define_plot(
     title="Revenue by Region" # if ommited, it will be the query name
 )
 
-cube.set_plot_renderer(MyRenderer()) # See Plot Renders below
+# cube.set_plot_renderer(MyRenderer()) # If you want to set up a customer renderer. See Plot Renders below
 
 # Use it with default plot configuration
-fig = cube.plot('sales analysis')
-plt.show()
+cube.plot('sales analysis')
+
 ```
 
 Each query can have multiple plot configurations with one designated as the default.
 
 ### Plot Renderers
 
-Renderers are responsible for actually creating the visualization based on the data and plot configuration. They implement a common interface:
+Renderers are responsible for creating the visualization based on the data and plot configuration. They implement a common interface:
 
 ```python
 from cube_alchemy.plot_renderer import PlotRenderer
@@ -56,9 +58,12 @@ class MyRenderer(PlotRenderer):
 
 This design allows Cube Alchemy to integrate with any visualization framework in python including:
 
-- Matplotlib for static plots
-- Streamlit for interactive apps
-- Plotly for interactive visualizations
+- Matplotlib (set as Default, thought it could be a brand new one designed)
+
+- Streamlit
+
+- Plotly
+
 - Etc
 
 ### Registering a Custom Plot
@@ -83,16 +88,18 @@ cube.plot('Your Query', renderer = my_renderer, plot_type="custom")
 ```
 
 Notes:
+
 - Registration is per Python run; call it during startup or from a module that’s imported early.
+
 - The same `plot_type` name will override an existing handler.
 
 ## Why a Separate Interface?
 
-The plotting system is implemented as a separate interface from the core Hypercube because:
+The plotting layer is separate from the core so you can:
 
-1. **Separation of Concerns**: Data is fundamentally different from visualization
-2. **Framework Flexibility**: Different applications may require different visualization approaches
-3. **Future-Proofing**: As visualization libraries evolve, Cube Alchemy can adapt without changing its core
-4. **Dependency**: Users who don't need visualization don't need to install visualization libraries
+- Keep data and visualization concerns independent
+- Swap visualization frameworks without touching core logic
+- Evolve as libraries change without core refactors
+- Skip extra dependencies when visualization isn't needed
 
-You can certainly visualize the DataFrames returned by your queries directly. However, using the plotting interface (renderers and plot configurations) keeps concerns separate, makes your code clearer and easier to maintain, and also lets you update your plots or switch visualization frameworks.
+You can always plot DataFrames directly. Using the plotting interface (renderers and plot configurations) keeps things organized, improves readability and maintainability, and makes updates or framework switches easier.

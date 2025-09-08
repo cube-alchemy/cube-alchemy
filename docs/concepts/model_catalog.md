@@ -17,11 +17,14 @@ This approach separates your analytical definitions from your processing code, c
 **Analytics Components**
 
 - Metrics and derived metrics
+
+- Transformations
+
 - Queries
 
 **Visualization**
 
-- Plot configurations (linked to queries)
+- Plot configurations
 
 ## How it works
 
@@ -68,7 +71,7 @@ In API methods, “model catalog” refers to the Catalog Source/s for simplicit
 
 ## YAML structure
 
-Simply mirrors the respective definition APIs. Plots can be nested under their parent query (as shown below) or defined at the top level with a query reference.
+Simply mirrors the respective definition APIs. Plots and Transformers can be nested under their parent query (as shown below) or defined at the top level with a query reference.
 
 ```yaml
 metrics:
@@ -81,15 +84,18 @@ derived_metrics:
     expression: "margin / revenue"
 
 queries:
-  sales_by_region:
-    dimensions: [region]
+  Sales by Month Year :
+    dimensions: [month_year]
     metrics: [revenue]
-  plots: # nested under the query for readability; stored separately in cube.plotting_components
-      default_bar:
-        plot_type: bar
-        orientation: vertical
+    transformers:
+      moving_average:
+        'on': revenue
+        window: 3
+        sort_by: revenue
+        new_column: revenue_ma_3
+    plots:
+        default_bar:
+          plot_type: line
+          metrics: [revenue_ma_3]
 ```
 
-## Design note
-
-- **Source flexibility**: The catalog source is extensible through a pluggable interface. While the default YAML is convenient for human readability and version control of your analytics and plot configuration, building your own Source would allow alternative backends (JSON, DB, API) to be integrated with the hypercube.

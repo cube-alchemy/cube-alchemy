@@ -5,28 +5,28 @@ The **hypercube** is a powerful abstraction for analyzing data from multiple per
 Each axis of the hypercube represents a key **dimension** of your data, such as:
 
 - **Time** (e.g., year, month, day)
-
 - **Geography** (e.g., region, country, city)
-
 - **Product** (e.g., category, brand, item)
-
 - **Customer** (e.g., segment, demographics)
 
 The hypercube enables you to calculate *metrics* (like sales, revenue, or user counts) across any combination of these dimensions, ensuring your calculations are always consistent and reusable. For example, you can analyze:
 
 - *Revenue* by **Month**
+
 - *Active users* by **Month** and **Product Category**
+
 - *Margin* by **Month**, **Product Category**, and **Region**
 
 ---
 
-*How Cube Alchemy Builds an Hypercube:* **Data Model as a Graph** 
+## Data Model as a Graph
 
-The underlying structure is a **Connected Undirected Acyclic Graph** where:
-    - **Nodes**: Your DataFrames.
-    - **Edges**: The shared columns that link them.
+This is how Cube Alchemy Builds an Hypercube. The underlying structure is a **Connected Undirected Acyclic Graph** where:
 
- *It might not look like a tree, but under the hood, the hypercube is basically a tree in disguise — no loops, just clean branches connecting your data. See: [Tree (graph theory)](https://en.wikipedia.org/wiki/Tree_(graph_theory))*
+- **Nodes**: Your DataFrames.
+- **Edges**: The shared columns that link them.
+
+> *It might not look like a tree, but under the hood, the hypercube is basically a tree in disguise — no loops, just clean branches connecting your data. See: [Tree (graph theory)](https://en.wikipedia.org/wiki/Tree_(graph_theory)).*
 
 - **Effortless Queries:** The hypercube handles the relationships for you. When you request a metric across certain dimensions, the hypercube automatically **traverses** these connections to gather the necessary data.
 

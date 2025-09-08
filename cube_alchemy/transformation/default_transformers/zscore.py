@@ -4,10 +4,10 @@ from typing import Any, List, Optional
 import numpy as np
 import pandas as pd
 
-from ..abc import Enricher
+from ..abc import Transformer
 
 
-class ZScoreEnricher(Enricher):
+class ZScoreTransformer(Transformer):
     """Compute z-score for a column, optionally by groups, as a new column.
 
     Params:
@@ -17,7 +17,7 @@ class ZScoreEnricher(Enricher):
       ddof: int degrees of freedom for std (default pandas std ddof)
     """
 
-    def enrich(self, df: pd.DataFrame, **p: Any) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame, **p: Any) -> pd.DataFrame:
         on: Optional[str] = p.get('on')
         if not on:
             raise ValueError("zscore: 'on' parameter is required")

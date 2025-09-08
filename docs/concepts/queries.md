@@ -35,9 +35,10 @@ flowchart LR
   A["Apply Context State Filters"] --> B["Fetch Dimensions"]
   B --> C["Calculate Metrics (Aggregations)"]
   C --> D["Compute Post-Aggregation Metrics"]
-  D --> E["Apply HAVING Filter"]
-  E --> F["Apply SORT"]
-  F --> G["Return Final Result"]
+  D --> E["Apply DataFrame Transformer"]
+  E --> F["Apply HAVING Filter"]
+  F --> G["Apply SORT"]
+  G --> H["Return Final Result"]
 ```
 
 ## Query Types
@@ -117,7 +118,9 @@ Notes:
 Effective dimensions are the dimensions that actually determine how a metric is aggregated. They are derived from the query’s dimensions after applying the metric’s `ignore_dimensions` setting:
 
 - `ignore_dimensions=False` (default): effective dimensions = query dimensions.
+
 - `ignore_dimensions` is a list: effective dimensions = query dimensions minus those listed.
+
 - `ignore_dimensions=True`: no effective dimensions (grand total).
 
 Nested metrics use the same effective dimensions in both inner and outer steps; `nested.dimensions` are added only for the inner step.
@@ -127,6 +130,7 @@ Nested metrics use the same effective dimensions in both inner and outer steps; 
 Use `nested` on a metric to aggregate in two steps: first by `nested.dimensions` (inner), then at the query dimensions (outer).
 
 - Inner: aggregate the metric by the effective dimensions plus `nested.dimensions`.
+
 - Outer: aggregate those inner results by the effective dimensions. If you display extra dimensions, results are broadcast to them.
 
 Note: `ignore_dimensions` sets the metric’s effective dimensions and applies to both steps so results stay unbiased and consistent.
@@ -148,7 +152,9 @@ cube.define_metric(
 Queries automatically respect all active filters on your hypercube, allowing you to:
 
 1. Define a query once
+
 2. Apply different filters
+
 3. Execute the same query to see different filtered views of your data
 
 ```python

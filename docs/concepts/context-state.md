@@ -50,12 +50,4 @@ cube.define_query(
 comparison_results = cube.query("revenue_comparison")
 ```
 
-*Bear in mind that when creating a new context state, a copy of the 'Unfiltered' state is made and stored on memory.*
-
-**Note**
-
-In a more realistic workflow, when suporting multiple users/sessions with the same data model, you might not want to initialize and build the relationships (deploy the keys) accross the entire DAG in every session.
-
-One way of dealing with this is by storing the already initialized hypercube (eg. using pickle) and then retrieving it later on when a user needs it. In this case it is better if you do not store the `Default` on disk and instead you set it once the hypercube is loaded. 
-
-Make sure if this is the case that you perform *cube.set_context_state('Default') *right after loading it, so the default state will be present and the hypercube will work properly.
+*Bear in mind that when creating a new context state, a copy of the 'Unfiltered' context state holding all the relationships will be made and stored on memory.*

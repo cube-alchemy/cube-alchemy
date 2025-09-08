@@ -115,18 +115,18 @@ class Query:
         # Apply post-aggregation ops: evaluate derived metrics in stored order
         query_result = self._apply_derived_metrics(query_result, query["derived_metrics_ordered"])
 
-        # Auto-apply ALL enrichers configured for this query (transformer->params)
-        columns_enrichment: list[str] = []
-        estate = self.enrichment_components.get(query_name)
+        # Auto-apply ALL transformers configured for this query (transformer->params)
+        columns_transformation: list[str] = []
+        estate = self.transformation_components.get(query_name)
         if estate:
-            columns_before_enrichment = set(query_result.columns)
+            columns_before_transformation = set(query_result.columns)
             for transformer, params in (estate or {}).items():
                 try:
-                    query_result = self.enrich(df=query_result, transformer=transformer, params=params)
+                    query_result = self.transform(df=query_result, transformer=transformer, params=params)
                 except Exception as e:
-                    self.log().warning(f'Enrichment {transformer} for query {query_name} failed: {e}. Skipping.')
-            columns_after_enrichment = set(query_result.columns)
-            columns_enrichment = list(columns_after_enrichment - columns_before_enrichment)
+                    self.log().warning(f'Transformation {transformer} for query {query_name} failed: {e}. Skipping.')
+            columns_after_transformation = set(query_result.columns)
+            columns_transformation = list(columns_after_transformation - columns_before_transformation)
 
         query_result = self._apply_having(query_result, query["having"])
 
@@ -139,7 +139,7 @@ class Query:
                 ascending = [str(d).lower() == 'asc' for _, d in by_dirs]
                 query_result = query_result.sort_values(by=by, ascending=ascending)
 
-        final_result = query_result[query["dimensions"] + query["metrics"] + query["derived_metrics"] + columns_enrichment]
+        final_result = query_result[query["dimensions"] + query["metrics"] + query["derived_metrics"] + columns_transformation]
 
         if _retrieve_query_name:
             return new_query_name or query_name, final_result

@@ -7,7 +7,9 @@ Filters in Cube Alchemy let you focus your analysis on specific slices of data w
 When you apply a filter to a context state, all queries and metrics operate only on the filtered data until you change or remove the filter:
 
 1. **Apply a filter** to select specific data values
+
 2. **Execute queries** to analyze just the filtered data
+
 3. **Modify or remove filters** when you want to change focus
 
 ```python

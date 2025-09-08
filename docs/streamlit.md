@@ -219,7 +219,11 @@ cube.plot(
 ## Best Practices
 
 1. **Cache your cube**: Use `@st.cache_resource` to prevent reloading the cube on every interaction.
+
 2. **Reset context state**: Always set a context state after loading a pickled cube.
+
 3. **Handle errors gracefully**: Check for missing plot configurations and provide fallbacks.
+
 4. **Provide data transparency**: Always give users access to the raw data behind visualizations.
+
 5. **Use multiple views**: Leverage the multiple plot configurations to offer different perspectives on the same data.

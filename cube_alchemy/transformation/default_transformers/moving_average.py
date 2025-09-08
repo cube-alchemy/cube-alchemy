@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any, List, Optional
 import pandas as pd
 
-from ..abc import Enricher
+from ..abc import Transformer
 
 
-class MovingAverageEnricher(Enricher):
+class MovingAverageTransformer(Transformer):
     """Compute a moving average and append as a new column.
 
     Params:
@@ -19,7 +19,7 @@ class MovingAverageEnricher(Enricher):
       sort_by: Optional[List[str]] ordering columns before rolling
     """
 
-    def enrich(self, df: pd.DataFrame, **p: Any) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame, **p: Any) -> pd.DataFrame:
         on: Optional[str] = p.get('on')
         if not on:
             raise ValueError("moving_average: 'on' parameter is required")

@@ -5,7 +5,9 @@ In Cube Alchemy, any column from any table in your hypercube can serve as a dime
 **How dimensions work:**
 
 - **Available everywhere**: Once your DataFrames are connected in the hypercube, dimensions from any table can be used in any query
+
 - **Auto-joining**: When you query dimensions from different tables, the hypercube automatically traverses the relationships to bring them together
+
 - **Multi-hop**: You can combine dimensions that are several "hops" apart in your data model—like querying by both customer region and product category even if they're in completely separate tables
 
 **Getting dimension values:**

@@ -1,11 +1,15 @@
 ```mermaid
 flowchart LR
-  A["Load DataFrames"] --> B["Build Hypercube"]
-  B --> C["Define Metrics"]
-  C --> D["Define Queries"]
-  D --> E["Execute Queries"]
-  E --> F["Update Context State (Apply or Remove Filters)"]
-  F --> E
+  A["Load Data"] --> B["Build Hypercube"]
+  subgraph MS["Model Specification"]
+    C["Define Metrics"] --> D["Define Queries"]
+  end
+  B --> C
+  D --> P["Define Plots"]
+  P --> E["Execute Queries"]
+  E --> F["Display"]
+  F --> G["Filter"]
+  G --> E
 ```
 
-Cube Alchemy's workflow is intuitive and powerful: load your data, build a unified hypercube structure, define your metrics, and create reusable queries. The stateful architecture allows you to execute queries and apply filters in an iterative process.
+Cube Alchemy's workflow: load your data, build a unified hypercube, specify your model (metrics and queries), define plots, then execute. The stateful architecture lets you iterate by applying filters and re-running queries and plots.

@@ -134,10 +134,10 @@ class ModelCatalog:
                 spec = catalog.get("plots", name) or {}
                 self._apply_plot_to_hypercube(name, spec)
 
-        if _do("enrichers"):
-            for name in catalog.list("enrichers"):
-                spec = catalog.get("enrichers", name) or {}
-                self._apply_enricher_to_hypercube(name, spec)
+        if _do("transformers"):
+            for name in catalog.list("transformers"):
+                spec = catalog.get("transformers", name) or {}
+                self._apply_transformer_to_hypercube(name, spec)
 
     def _apply_metric_to_hypercube(self, name: str, spec: Dict[str, Any]) -> None:
         self.define_metric(
@@ -223,17 +223,17 @@ class ModelCatalog:
             set_as_default=set_default,
         )
 
-    def _apply_enricher_to_hypercube(self, enricher_name: str, spec: Dict[str, Any]) -> None:
-        """Apply a saved enricher config to the cube for a given query (single-step model)."""
+    def _apply_transformer_to_hypercube(self, transformer_name: str, spec: Dict[str, Any]) -> None:
+        """Apply a saved transformer config to the cube for a given query (single-step model)."""
         query_name = spec.get("query")
         if not query_name:
-            raise ValueError(f"Enricher '{enricher_name}' missing 'query' reference")
+            raise ValueError(f"Transformer '{transformer_name}' missing 'query' reference")
 
-        transformer = spec.get("transformer") or enricher_name
+        transformer = spec.get("transformer") or transformer_name
         params = spec.get("params") or {}
         if not transformer:
-            raise ValueError(f"Enricher '{enricher_name}' missing 'transformer'")
-        self.define_enrichment(
+            raise ValueError(f"Transformer '{transformer_name}' missing 'transformer'")
+        self.define_transformation(
             query_name=query_name,
             transformer=transformer,
             params=params,
@@ -242,7 +242,7 @@ class ModelCatalog:
         allowed_keys = {"query", "transformer", "params", "kind", "name"}
         unexpected = set(spec.keys()) - allowed_keys
         if unexpected:
-            raise ValueError(f"Unsupported keys in enricher spec for '{enricher_name}': {sorted(unexpected)}")
+            raise ValueError(f"Unsupported keys in transformer spec for '{transformer_name}': {sorted(unexpected)}")
 
     # ---------- mapping: cube -> specs ----------
     def _extract_cube_to_specs_(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
@@ -251,7 +251,7 @@ class ModelCatalog:
             "derived_metrics": {},
             "queries": {},
             "plots": {},
-            "enrichers": {},
+            "transformers": {},
         }
 
         # Metrics
@@ -307,13 +307,13 @@ class ModelCatalog:
                     out.pop("_input_metrics", None)
                     data["plots"][plot_name] = out
 
-        # Enrichers: per-query mapping transformer->params; flatten
-        enrichment_state = getattr(self, "enrichment_components", {})
-        if isinstance(enrichment_state, dict):
-            for query_name, estate in enrichment_state.items():
+        # Transformers: per-query mapping transformer->params; flatten
+        transformation_state = getattr(self, "transformation_components", {})
+        if isinstance(transformation_state, dict):
+            for query_name, estate in transformation_state.items():
                 for transformer, params in (estate or {}).items():
                     out = {"transformer": transformer, "params": dict(params or {}), "query": query_name}
-                    data["enrichers"][transformer] = out
+                    data["transformers"][transformer] = out
 
         return data
 

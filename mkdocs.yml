@@ -46,6 +46,7 @@ nav:
     - Dimensions: concepts/dimensions.md
     - Metrics: concepts/metrics.md
     - Queries: concepts/queries.md
+    - Transformation: concepts/transformation.md
     - Filters: concepts/filters.md
     - Context State: concepts/context-state.md
     - Plotting: concepts/plotting.md
@@ -54,10 +55,12 @@ nav:
     - Hypercube: api/hypercube.md
     - Metrics: api/metric_methods.md
     - Queries: api/query_methods.md
+    - Transformation: api/transformation.md
     - Analytics Specs: api/analytics_specs.md
     - Filters: api/filter_methods.md
-    - Plotting System: api/plotting_system.md
+    - Plotting: api/plotting_system.md
     - Model Catalog: api/model_catalog.md
+    - Logger: api/logger.md
   - Examples: examples.md
   - Streamlit Integration: streamlit.md
   - Contributing: contributing.md

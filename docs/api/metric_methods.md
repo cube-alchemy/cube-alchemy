@@ -1,6 +1,6 @@
 # Metric Methods
 
-## Define Metric
+## define_metric
 
 ```python
 define_metric(
@@ -12,146 +12,40 @@ define_metric(
     context_state_name: str = 'Default',
     ignore_dimensions: Union[bool, List[str]] = False,
     ignore_context_filters: Union[bool, List[str]] = False,
-    fillna: Optional[any] = None,
+    fillna: Optional[Any] = None,
     nested: Optional[Dict[str, Any]] = None,
-)
+) -> None
 ```
 
-Defines a metric and stores it in the cube object for later use in queries.
+Persist a base metric for later use in queries.
 
-**Parameters:**
+Parameters:
+- name: Label of the resulting column.
 
-- `name`: Label for the metric (used in query results)
-- `expression`: Calculation formula using [column] references and @custom_functions
-- `aggregation`: How to combine values - pandas aggregation string ('sum', 'mean', 'count') or custom callable
-- `metric_filters`: Filters applied only when evaluating this specific metric
-- `row_condition_expression`: Filter expression applied to rows before calculating the metric
-- `context_state_name`: Which context state this metric operates in
-- `ignore_dimensions`: Control how dimensions affect aggregation - `True` to ignore all dimensions (grand total), a list of dimension names to ignore specific dimensions, or `False` (default) for normal dimensional aggregation
- - `ignore_context_filters`: Control how context filters affect this metric – `True` to ignore all context filters when evaluating the metric, a list of filter keys to ignore only those specific context filters, or `False` (default) to respect the context filters. When a list is provided, remaining context filters still apply, and any `metric_filters` are applied on top. Note: `ignore_context_filters=True` is effectively the same as evaluating the metric in the `Unfiltered` context (i.e., like setting `context_state_name='Unfiltered'` for this metric).
-- `fillna`: Value to use for replacing Null values on the metric expression and row_condition_expression columns before aggregation. Note: This parameter applies the same value to all columns. For column-specific NA handling, use `@pd.fillna()` or `@np.nan_to_num()` functions directly in the expression.
-- `nested`: Nested inner aggregation. Dict with:
-    - `dimensions`: str | list[str] (required). Inner grouping keys in addition to the query’s outer dimensions.
-    - `aggregation`: str | callable (optional, defaults to `'sum'`). How to aggregate the metric expression at the inner dimensions.
-    - `compose`: str template or callable(row)->str (optional). If present, formats each inner aggregated row into a string, e.g. `"{Product}: {value}"`, enabling outer string aggregations like `concat`.
+- expression: Formula using [column] references and optional @functions.
 
-**Example:**
+- aggregation: Pandas aggregation name or callable; aliases like avg, count_distinct supported.
 
-```python
-# Define a revenue metric
-cube.define_metric(
-    name='Revenue',
-    expression='[qty] * [price]',
-    aggregation='sum'
-)
+- metric_filters: Filters applied only when evaluating this metric.
 
-# Sum sales only from Australia
-# Note: This differs from using metric_filters={'region': ['Australia']} in how the filtering is applied:
-# - row_condition_expression: Fetches all the rows, then applies pandas .query() with backtick syntax
-# - metric_filters: Applied at the context state level before metric calculation
-# The row_condition_expression fetches all the rows for the column which can result in different aggregation values depending on your data relationships.
-cube.define_metric(
-    name='Australia Sales',
-    expression='[sales_amount]',
-    aggregation='sum',
-    row_condition_expression='[region] == "Australia"'
-)
+- row_condition_expression: Row filter (DataFrame.query style; use [col] references).
 
-# Define a metric that ignores all dimensions (calculates grand total)
-cube.define_metric(
-    name='Total Revenue',
-    expression='[qty] * [price]',
-    aggregation='sum',
-    ignore_dimensions=True  # Ignore all dimensions when aggregating
-)
+- context_state_name: Context state to read from.
 
-# Define a metric that ignores specific dimensions (partial total)
-cube.define_metric(
-    name='Revenue by Country', 
-    expression='[qty] * [price]',
-    aggregation='sum',
-    ignore_dimensions=['city', 'product_category']  # Ignore these dimensions, aggregate only by remaining dimensions
-)
+- ignore_dimensions: True for grand total, list[str] to ignore specific dims, or False.
 
-# Ignore context filters completely for a metric (compute as if unfiltered context)
-cube.define_metric(
-    name='Revenue (All Context)',
-    expression='[qty] * [price]',
-    aggregation='sum',
-    ignore_context_filters=True
-)
+- ignore_context_filters: True to ignore all context filters, list[str] to ignore specific ones, or False.
 
-# Ignore only certain context filters for a metric (others still apply)
-cube.define_metric(
-    name='Revenue (Ignoring Country Filter)',
-    expression='[qty] * [price]',
-    aggregation='sum',
-    ignore_context_filters=['country']  # the metric ignores the 'country' filter from the current context
-)
+- fillna: Single value to fill NA on referenced columns before evaluation.
 
-# Advanced NA handling - Using the simple fillna parameter (fills all columns with same value)
-cube.define_metric(
-    name='Revenue with NA Handling',
-    expression='[qty] * [price]',
-    aggregation='sum',
-    fillna=0  # Fills both qty and price with 0
-)
+- nested: Dict with keys: dimensions (str|list[str]); aggregation (str|callable, default 'sum'); compose (str template or callable(row)->str).
 
-# Advanced NA handling - Using @functions for column-specific handling
-cube.define_metric(
-    name='Revenue with Column-Specific NA Handling',
-    expression='@pd.Series([qty]).fillna(1) * @pd.Series([price]).fillna(0)',
-    aggregation='sum'  # Fills [qty] with 1 and [price] with 0
-)
+Notes:
+- Column references must use square brackets: [qty], [price], ...
 
-# Nested aggregation: sum per Product, then outer mean across the query dimensions
-cube.define_metric(
-    name='Avg Product Revenue',
-    expression='[qty] * [price]',
-    aggregation='mean',               # outer agg
-    nested={'dimensions': 'Product', 'aggregation': 'sum'}
-)
+- Aggregation accepts pandas names, callables, lists/tuples/dicts, and common aliases.
 
-# Concatenate inner groups into a single string: build "Product: sum" per product and join
-# A built-in 'concat' alias is available; you can also register a custom one via register_function.
-cube.define_metric(
-    name='Product Sums (concat)',
-    expression='[amount]',
-    aggregation='concat',
-    nested={'dimensions': 'Product', 'aggregation': 'sum', 'compose': '{Product}: {value}'}
-)
-```
-
-### Notes on `nested` + `ignore_dimensions`
-
-- `ignore_dimensions` establishes the effective dimensions for the metric. When present, the same effective dimensions are used for the inner (nested) aggregation too. This avoids bias from grouping at a finer level in the inner step.
-- If `ignore_dimensions=True`, the metric computes a grand total in both steps and then broadcasts it to the requested query dimensions.
-- If `ignore_dimensions` is a list, the outer effective dimensions are the query dimensions minus those entries. The inner step groups by those effective dimensions plus `nested.dimensions`.
-
-Minimal example:
-
-```python
-cube.define_metric(
-    name='Avg per Product (Country-level)',
-    expression='[revenue]',
-    aggregation='mean',  # outer
-    nested={'dimensions': 'Product', 'aggregation': 'sum'},  # inner
-    ignore_dimensions=['Store']
-)
-```
-
-**Syntax Rules**
-
-- **Column References**: Columns in metric expressions **must** be enclosed in square brackets: `[qty]`, `[price]`, `[cost]`, etc.
-
-- **Aggregation Methods**: The `aggregation` parameter accepts:
-
-   - Pandas group by strings: `'sum'`, `'mean'`, `'count'`, `'min'`, `'max'`, etc.
-
-   - Custom callable functions: `lambda x: x.quantile(0.95)` or any function that accepts a pandas Series
-
-
-## Define Derived Metric
+## define_derived_metric
 
 ```python
 define_derived_metric(
@@ -161,69 +55,11 @@ define_derived_metric(
 ) -> None
 ```
 
-Defines a post-aggregation derived metric that operates on already aggregated metrics and dimensions.
+Persist a post-aggregation derived metric computed from aggregated columns (metrics or dimensions).
 
-**Parameters:**
+Parameters:
+- name: Result column label.
 
-- `name`: Unique label for the metric (used in query results)
-- `expression`: Calculation formula using [MetricName] references and dimension column references
-- `fillna`: Optional value to replace NaN derived metrics expression columns before calculation.
+- expression: Formula using [MetricName] and/or [Dimension] references.
 
-**Example:**
-
-```python
-# Define a profit margin percentage derived metric
-cube.define_derived_metric(
-    name='Margin %',
-    expression='([Revenue] - [Cost]) / [Revenue] * 100',
-    fillna=0
-)
-```
-
-**Using in queries:**
-
-You must define derived metrics first, then reference them by name in queries:
-
-```python
-cube.define_query(
-    query_name='sales_margin_named',
-    dimensions={'product'},
-    metrics=['Revenue', 'Cost'],
-    derived_metrics=['Margin %'],
-)
-```
-
-
-## Register Function
-
-```python
-register_function(**kwargs)
-```
-
-Register custom functions to use in metric expressions with @function_name syntax.
-
-**Parameters:**
-
-- `**kwargs`: Keyword arguments where each key is the name to use in expressions and each value is the function
-
-**Example:**
-
-```python
-import numpy as np
-
-# Define a custom function
-def safe_division(numerator, denominator, default=0.0):
-    """Safely divide two arrays, handling division by zero"""
-    result = numerator / denominator
-    return result.replace([np.inf, -np.inf], np.nan).fillna(default)
-
-# Register the function with your hypercube
-cube.register_function(safe_division=safe_division)
-
-# Use in metric definition
-cube.define_metric(
-    name='Profit Margin %',
-    expression='@safe_division([revenue] - [cost], [revenue]) * 100',
-    aggregation='mean'
-)
-```
+- fillna: Optional value to temporarily fill NA on referenced columns during evaluation.
