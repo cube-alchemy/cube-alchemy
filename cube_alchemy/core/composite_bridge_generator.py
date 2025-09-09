@@ -93,10 +93,16 @@ class CompositeBridgeGenerator:
                 self.column_combinations.append(combo_list)
 
             # Build composite df as union of distinct rows of the combo columns
-            comp_df = pd.DataFrame(columns=combo_list)
+            # Collect non-empty participant frames to avoid pandas concat warnings and stabilize dtypes
+            frames = []
             for t in participants:
-                comp_df = pd.concat([comp_df, self.tables[t][combo_list]], ignore_index=True)
-            comp_df = comp_df.drop_duplicates()
+                part = self.tables[t][combo_list]
+                if not part.empty:
+                    frames.append(part)
+            if not frames:
+                # Nothing to link for this combo
+                continue
+            comp_df = pd.concat(frames, ignore_index=True, copy=False).drop_duplicates()
 
             # Name includes participants and combo to avoid collisions when same participants share multiple combos
             composite_table_name = "_composite_" + "_".join(sorted(participants)) + "__by__" + "_".join(combo_list)

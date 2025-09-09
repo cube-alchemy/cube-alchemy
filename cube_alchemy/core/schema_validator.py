@@ -24,7 +24,7 @@ class SchemaValidator:
         return reduced_tables_1,reduced_tables_2
     
     @staticmethod
-    def validate(tables: Dict[str, pd.DataFrame]) -> bool:
+    def validate(tables: Dict[str, pd.DataFrame], show_graph: bool = True) -> bool:
         from .hypercube import Hypercube
         # Create sample tables for validation
         reduced_tables_1, reduced_tables_2 = SchemaValidator._create_sample_tables(tables)
@@ -51,8 +51,9 @@ class SchemaValidator:
 
             # Create hypercube directly with original tables for visualization
             diagnostic_cube = Hypercube(reduced_tables_2, validate = False, apply_composite=False)
-            logger.info("Visualizing the original tables graph...")
-            diagnostic_cube.visualize_graph(full_column_names=False)
+            if show_graph:
+                logger.info("Visualizing the original tables graph...")
+                diagnostic_cube.visualize_graph(full_column_names=False)
 
             logger.info("Relationships after initialization with composite tables:")
             cyclic_tables = [table for table in diagnostic_cube.is_cyclic[1] if not table.startswith('_link_table_')]
