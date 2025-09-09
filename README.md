@@ -38,18 +38,29 @@ Transform your collection of pandas DataFrames into a cohesive analytical model 
 
 - Connect your data - Add your pandas DataFrames to a Hypercube (relationships will be created automatically).
 
-- Define your metrics and queries.
+- Define your metrics, queries and plots.
 
 - Query with ease - Extract insights.
 
 ```mermaid
 flowchart LR
-  A["Load DataFrames"] --> B["Build Hypercube"]
-  B --> C["Define Metrics"]
-  C --> D["Define Queries"]
-  D --> E["Execute Queries"]
-  E --> F["Update Context State (Apply or Remove Filters)"]
-  F --> E
+
+  subgraph S1["Connect Data"]
+    A1["Load Data"] --> A2["Build Hypercube"]
+  end
+
+  subgraph S2["Specifications"]
+    B1["Define Metrics"] --> B2["Define Queries"] --> B3["Define Plots"]
+  end
+
+  subgraph S3["Visualize and Interact"]
+    C1["Execute Queries"] --> C2["Display"]
+    C2 --> C3["Filter"]
+    C3 --> C1
+  end
+
+  A2 --> B1
+  B3 --> C1
 ```
 
 Cube Alchemy connects your data by identifying common column names between DataFrames. These shared columns form the relationships; automatically building bridges between tables. The result is a unified schema you can slice and dice and query in a declarative, simple and intuetive way.
@@ -173,15 +184,8 @@ cube.query("sales analysis")
 1  North         Home   Discount    100.0      4    40.0                1
 ```
 
-**Some Notes**
 
-- *Multi-hop* works out of the box through implicit relationships (shared column names connect DataFrames).
-
-- If input tables are connected by more than one column, **composite keys and tables** will be created *automatically*.
-
-- **Cardinallity** is **not** assumed **nor** cheched *(any-to-any)*. Links are treated as many-to-many, which can duplicate rows and skew aggregations if not modeled carefully.
-
-- Addional *features* such as **Filters** and **New Context States**, and more *parameters* are available but omitted here for brevity and simplicity. See the docs for details.
+Addional *features* such as **Filters** and **New Context States** and more are available but omitted here for brevity and simplicity. See the docs for details.
 
 ## Full documentation
 For concepts, API specs, advanced features, full examples and Streamlit integration see:

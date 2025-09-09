@@ -34,6 +34,8 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
     ) -> None:
         # Initialize Logger mixin first so self._log is available early
         Logger.__init__(self, logger=logger)
+        # Initialize Query registries (metrics, derived_metrics, queries)
+        Query.__init__(self)
         # Initialize the Plotting class
         Plotting.__init__(self)
         # Initialize the Transformation class
@@ -46,9 +48,6 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         self._validator = validator_cls or SchemaValidator
         self._bridge_factory = bridge_factory_cls or CompositeBridgeGenerator
 
-        self.metrics = {}
-        self.derived_metrics = {}
-        self.queries = {}
         self.registered_functions = {'pd': pd, 'np': np}
         self.rename_original_shared_columns = rename_original_shared_columns
         if tables is not None:
@@ -71,9 +70,9 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         reset_all: bool = False
     ) -> None:
         if reset_all:
-            self.metrics = {}
-            self.derived_metrics = {}
-            self.queries = {}
+            self.metrics.clear()
+            self.derived_metrics.clear()
+            self.queries.clear()
             self.registered_functions = {'pd': pd,'np': np}
             # Clear dependency graph when resetting model
             if hasattr(self, '_dep_index'):

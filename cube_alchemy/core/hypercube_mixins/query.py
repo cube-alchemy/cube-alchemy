@@ -1,11 +1,9 @@
-import logging
 import re
 import pandas as pd
-from ..metric import Metric, MetricGroup
+from ..metric import Metric, MetricGroup, DerivedMetric
 from typing import Dict, List, Any, Optional, Tuple
 import copy
 import uuid
-import warnings
 
 def add_quotes_to_brackets(expression: str) -> str:
                     return re.sub(r'\[(.*?)\]', r"['\1']", expression)
@@ -18,6 +16,12 @@ def brackets_to_backticks(expression: str) -> str:
     return re.sub(r'\[(.*?)\]', lambda m: f"`{m.group(1)}`", expression)
 
 class Query:
+    def __init__(self):
+        # Central registries for analytics components
+        self.metrics: Dict[str, Metric] = {}
+        self.derived_metrics: Dict[str, DerivedMetric] = {}
+        self.queries: Dict[str, Dict[str, Any]] = {}
+
     def dimension(self, dimension:str,
         context_state_name: str = 'Default',
         query_filters: Optional[Dict[str, Any]] = None) -> List[str]:

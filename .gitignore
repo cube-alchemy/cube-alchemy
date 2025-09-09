@@ -187,6 +187,14 @@ build_and_upload_to_pip.txt
 *.pyo
 *.pyd
 __pycache__/
+
+#
 /cube-alchemy-examples
+
 READMEPIP.md
 backlog.txt
+
+
+/artifacts
+.vscode/
+tools/

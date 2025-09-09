@@ -24,7 +24,7 @@ class JoinStrategy(Protocol):
         ...
 
 
-class SingleTableJoinStrategy:
+class SingleTableJoinStrategy(JoinStrategy):
     """Join strategy for single-table models.
 
     Uses the base table index as the key space and performs lightweight fetches.
@@ -50,7 +50,7 @@ class SingleTableJoinStrategy:
         )
 
 
-class MultiTableJoinStrategy:
+class MultiTableJoinStrategy(JoinStrategy):
     """Join strategy for multi-table models.
 
     Walks the relationship graph and joins via link table keys.
@@ -101,8 +101,8 @@ class Engine:
             self._join_strategy: JoinStrategy = SingleTableJoinStrategy(self, base)
         else:
             self._single_table_mode = False
-            self._single_table_base = None  # type: ignore[assignment]
-            self._join_strategy = MultiTableJoinStrategy(self)
+            self._single_table_base = None
+            self._join_strategy: JoinStrategy = MultiTableJoinStrategy(self)
 
     # Delegating methods (stable names used by other mixins) — picklable
     def _join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:  # type: ignore[override]
