@@ -3,6 +3,9 @@ import pandas as pd
 from typing import List, Dict, Any, Optional, Tuple, Protocol
 from collections import deque
 
+from .graph_visualizer import GraphVisualizer
+from .filter import Filter
+from .query import Query
 
 class JoinStrategy(Protocol):
     """Strategy interface for joining keys and fetching columns.
@@ -72,7 +75,11 @@ class MultiTableJoinStrategy(JoinStrategy):
             columns_to_fetch, keys_df, drop_duplicates
         )
 
-class Engine:
+class Engine(GraphVisualizer, Filter, Query):
+    def __init__(self) -> None:
+        # Initialize Query registries (metrics, derived_metrics, queries)
+        Query.__init__(self)
+
     def _init_join_strategy(self) -> None:
         """Pick and configure the appropriate Join Strategy.
 

@@ -5,21 +5,16 @@ from typing import Dict, Any, Optional, Type, Union
 
 # hypercube mixins
 from .hypercube_mixins.engine import Engine
-from .hypercube_mixins.graph_visualizer import GraphVisualizer
-from .hypercube_mixins.model_catalog import ModelCatalog
-from .hypercube_mixins.analytics_specs import AnalyticsSpecs
-from .hypercube_mixins.filter import Filter
-from .hypercube_mixins.query import Query
-from .hypercube_mixins.plotting import Plotting
-from .hypercube_mixins.transformation import Transformation
 from .hypercube_mixins.logger import Logger
+from .hypercube_mixins.analytics_specs import AnalyticsSpecs
+from .hypercube_mixins.model_catalog import ModelCatalog
 
 # supporting components
 from .schema_validator import SchemaValidator
 from .composite_bridge_generator import CompositeBridgeGenerator
 from .dependency_index import DependencyIndex
 
-class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, Filter, Query, Plotting, Transformation):
+class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
     def __init__(
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
@@ -32,16 +27,10 @@ class Hypercube(Logger, Engine, GraphVisualizer, ModelCatalog, AnalyticsSpecs, F
         validator_cls: Optional[Type[SchemaValidator]] = None,
         bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
     ) -> None:
-        # Initialize Logger mixin first so self._log is available early
+        # Initialize Logger mixins
         Logger.__init__(self, logger=logger)
-        # Initialize Query registries (metrics, derived_metrics, queries)
-        Query.__init__(self)
-        # Initialize the Plotting class
-        Plotting.__init__(self)
-        # Initialize the Transformation class
-        Transformation.__init__(self)
-        # Initialize the ModelCatalog component
-        ModelCatalog.__init__(self)
+        Engine.__init__(self)
+        ModelCatalog.__init__(self)  
 
         # Bind supporting components
         self._dep_index = DependencyIndex()  # Modular dependency index for queries/metrics/plots

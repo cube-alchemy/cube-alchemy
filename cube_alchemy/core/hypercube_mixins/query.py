@@ -1,9 +1,14 @@
 import re
 import pandas as pd
 from ..metric import Metric, MetricGroup, DerivedMetric
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 import copy
 import uuid
+
+from .plotting import Plotting
+from .transformation import Transformation
+
+
 
 def add_quotes_to_brackets(expression: str) -> str:
                     return re.sub(r'\[(.*?)\]', r"['\1']", expression)
@@ -15,12 +20,17 @@ def brackets_to_backticks(expression: str) -> str:
     """
     return re.sub(r'\[(.*?)\]', lambda m: f"`{m.group(1)}`", expression)
 
-class Query:
+class Query(Transformation, Plotting):
     def __init__(self):
         # Central registries for analytics components
         self.metrics: Dict[str, Metric] = {}
         self.derived_metrics: Dict[str, DerivedMetric] = {}
         self.queries: Dict[str, Dict[str, Any]] = {}
+
+        # Initialize the Transformation class
+        Transformation.__init__(self)
+        # Initialize the Plotting class
+        Plotting.__init__(self)
 
     def dimension(self, dimension:str,
         context_state_name: str = 'Default',
