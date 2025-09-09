@@ -2,12 +2,12 @@ import pandas as pd
 from typing import List, Optional
 
 
-def render_scatter(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str], orientation: Optional[str] = None, stacked: bool = False) -> None:
+def render_scatter(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str], orientation: Optional[str] = None, stacked: bool = False) -> None:
     # Prefer two metrics; else dimension+metric
-    if len(mets) >= 2 and mets[0] in df.columns and mets[1] in df.columns:
-        x_col, y_col = mets[0], mets[1]
-    elif len(mets) >= 1 and len(dims) >= 1 and mets[0] in df.columns and dims[0] in df.columns:
-        x_col, y_col = dims[0], mets[0]
+    if len(metrics) >= 2 and metrics[0] in df.columns and metrics[1] in df.columns:
+        x_col, y_col = metrics[0], metrics[1]
+    elif len(metrics) >= 1 and len(dimensions) >= 1 and metrics[0] in df.columns and dimensions[0] in df.columns:
+        x_col, y_col = dimensions[0], metrics[0]
     else:
         ax.text(0.5, 0.5, 'Scatter requires two numeric columns', ha='center')
         return

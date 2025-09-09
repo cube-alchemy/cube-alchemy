@@ -2,19 +2,19 @@ import pandas as pd
 from typing import List, Optional
 
 
-def render_combo(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str] = None, orientation: str = 'vertical', stacked: bool = False) -> None:
+def render_combo(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str] = None, orientation: str = 'vertical', stacked: bool = False) -> None:
     """
     Combo chart: first metric as bars (primary y-axis), second metric as line (secondary y-axis).
     Requires exactly 1 dimension and at least 2 metrics present in df.
     """
     import numpy as np
 
-    if len(dims) < 1 or len(mets) < 2:
+    if len(dimensions) < 1 or len(metrics) < 2:
         ax.text(0.5, 0.5, 'Combo requires 1 dimension and 2 metrics', ha='center')
         return
 
-    dim = dims[0]
-    m1, m2 = mets[0], mets[1]
+    dim = dimensions[0]
+    m1, m2 = metrics[0], metrics[1]
     if dim not in df.columns or m1 not in df.columns or m2 not in df.columns:
         ax.text(0.5, 0.5, 'Missing required columns for combo chart', ha='center')
         return

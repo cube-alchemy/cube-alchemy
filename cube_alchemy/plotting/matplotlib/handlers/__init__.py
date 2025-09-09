@@ -6,7 +6,7 @@ from .heatmap import render_heatmap
 from typing import Callable, Any, Dict
 
 # Registry mapping plot types to handler callables with a common signature
-# handler(ax, df, dims, mets, color_by, orientation)
+# handler(ax, df, dimensions, metrics, color_by, orientation)
 PLOT_HANDLERS = {
     'bar': render_bar,
     'line': render_line,
@@ -22,10 +22,10 @@ def register_plot(plot_type: str, handler: Callable[..., Any]) -> None:
 
     Handler signature is flexible:
       - Minimal:          handler(df)
-      - With context:     handler(df, dims, mets, color_by, orientation, stacked=False)
+      - With context:     handler(df, dimensions, metrics, color_by, orientation, stacked=False)
       - Axes-based:       handler(ax, df, ...)
       Declare only the parameters you need; the renderer passes them by name.
-      'mets' can also be declared as 'metrics' (alias).
+      'metrics' can also be declared as 'metrics' (alias).
     """
     if not isinstance(plot_type, str) or not plot_type.strip():
         raise ValueError("plot_type must be a non-empty string")

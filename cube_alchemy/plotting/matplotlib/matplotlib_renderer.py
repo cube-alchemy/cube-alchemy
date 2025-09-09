@@ -21,8 +21,8 @@ class MatplotlibRenderer(PlotRenderer):
         show: bool = kwargs.pop('show', False)
 
         plot_type = (plot_config.get('plot_type') or 'table').lower()
-        dims = plot_config.get('dimensions') or []
-        mets = plot_config.get('metrics') or []
+        dimensions = plot_config.get('dimensions') or []
+        metrics = plot_config.get('metrics') or []
         color_by = plot_config.get('color_by')
         title = plot_config.get('title') or ''
         figsize = plot_config.get('figsize', (10, 6))
@@ -34,8 +34,8 @@ class MatplotlibRenderer(PlotRenderer):
         df = data
 
         # Sort if requested (single-metric convenience only)
-        if sort_values and isinstance(mets, list) and len(mets) == 1 and mets[0] in df.columns:
-            df = df.sort_values(by=mets[0], ascending=sort_ascending)
+        if sort_values and isinstance(metrics, list) and len(metrics) == 1 and metrics[0] in df.columns:
+            df = df.sort_values(by=metrics[0], ascending=sort_ascending)
 
         # Limit rows if requested
         if limit is not None:
@@ -72,12 +72,12 @@ class MatplotlibRenderer(PlotRenderer):
             # Build kwargs selectively
             if "df" in params:
                 call_kwargs["df"] = df
-            if "dims" in params:
-                call_kwargs["dims"] = dims
-            if "mets" in params or "metrics" in params:
+            if "dimensions" in params:
+                call_kwargs["dimensions"] = dimensions
+            if "metrics" in params or "metrics" in params:
                 # Support either name
-                key = "mets" if "mets" in params else "metrics"
-                call_kwargs[key] = mets
+                key = "metrics" if "metrics" in params else "metrics"
+                call_kwargs[key] = metrics
             if "color_by" in params:
                 call_kwargs["color_by"] = color_by
             if "orientation" in params:

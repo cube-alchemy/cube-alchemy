@@ -2,20 +2,20 @@ import pandas as pd
 from typing import List, Optional
 
 
-def _category_labels(df: pd.DataFrame, dims: List[str]) -> pd.Series:
-    if dims:
-        return df[dims].astype(str).agg(' | '.join, axis=1)
+def _category_labels(df: pd.DataFrame, dimensions: List[str]) -> pd.Series:
+    if dimensions:
+        return df[dimensions].astype(str).agg(' | '.join, axis=1)
     return pd.Series(['All'] * len(df), index=df.index)
 
 
-def render_series(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str], plot_type: str, orientation: str = 'vertical', stacked: bool = False) -> None:
+def render_series(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str], plot_type: str, orientation: str = 'vertical', stacked: bool = False) -> None:
     import numpy as np
 
-    labels = _category_labels(df, dims)
+    labels = _category_labels(df, dimensions)
 
     # Single metric fast-path
-    if isinstance(mets, list) and len(mets) == 1 and mets[0] in df.columns and not color_by:
-        metric = mets[0]
+    if isinstance(metrics, list) and len(metrics) == 1 and metrics[0] in df.columns and not color_by:
+        metric = metrics[0]
         values = df[metric].values
         idx = np.arange(len(labels))
         if plot_type == 'bar':
@@ -45,12 +45,12 @@ def render_series(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_
     # Build series dictionary: name -> values
     series = {}
     idx = np.arange(len(labels))
-    if color_by and color_by in df.columns and isinstance(mets, list) and len(mets) == 1:
-        metric = mets[0]
+    if color_by and color_by in df.columns and isinstance(metrics, list) and len(metrics) == 1:
+        metric = metrics[0]
         for name, group in df.groupby(color_by):
             series[str(name)] = group[metric].values
     else:
-        for m in mets:
+        for m in metrics:
             if m in df.columns:
                 series[m] = df[m].values
 
@@ -93,12 +93,12 @@ def render_series(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_
         ax.set_xticklabels(labels, rotation=45, ha='right')
 
 
-def render_bar(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str], orientation: str = 'vertical', stacked: bool = False) -> None:
+def render_bar(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str], orientation: str = 'vertical', stacked: bool = False) -> None:
     import numpy as np
     # Special handling: (2,1) -> split by second dimension into colors (stacked or grouped)
-    if isinstance(dims, list) and len(dims) >= 2 and isinstance(mets, list) and len(mets) >= 1:
-        dim_cat, dim_group = dims[0], dims[1]
-        metric = mets[0]
+    if isinstance(dimensions, list) and len(dimensions) >= 2 and isinstance(metrics, list) and len(metrics) >= 1:
+        dim_cat, dim_group = dimensions[0], dimensions[1]
+        metric = metrics[0]
         if dim_cat in df.columns and dim_group in df.columns and metric in df.columns:
             # Pivot: rows=dim_cat, cols=dim_group, values=metric
             pivot_df = df.pivot_table(index=dim_cat, columns=dim_group, values=metric, aggfunc='sum').fillna(0)
@@ -136,15 +136,15 @@ def render_bar(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by:
                 ax.set_xticklabels(cats, rotation=45, ha='right')
             return
     # Default behavior covers (1,n) and other cases
-    return render_series(ax, df, dims, mets, color_by, 'bar', orientation, stacked)
+    return render_series(ax, df, dimensions, metrics, color_by, 'bar', orientation, stacked)
 
 
-def render_line(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str], orientation: str = 'vertical', stacked: bool = False) -> None:
+def render_line(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str], orientation: str = 'vertical', stacked: bool = False) -> None:
     import numpy as np
     # Special handling: (2,1) -> split by second dimension into colored lines
-    if isinstance(dims, list) and len(dims) >= 2 and isinstance(mets, list) and len(mets) >= 1:
-        dim_cat, dim_group = dims[0], dims[1]
-        metric = mets[0]
+    if isinstance(dimensions, list) and len(dimensions) >= 2 and isinstance(metrics, list) and len(metrics) >= 1:
+        dim_cat, dim_group = dimensions[0], dimensions[1]
+        metric = metrics[0]
         if dim_cat in df.columns and dim_group in df.columns and metric in df.columns:
             pivot_df = df.pivot_table(index=dim_cat, columns=dim_group, values=metric, aggfunc='sum').fillna(0)
             cats = pivot_df.index.astype(str).tolist()
@@ -157,8 +157,8 @@ def render_line(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by
             ax.set_xticklabels(cats, rotation=45, ha='right')
             return
     # Default behavior covers (1,n)
-    return render_series(ax, df, dims, mets, color_by, 'line', orientation, stacked)
+    return render_series(ax, df, dimensions, metrics, color_by, 'line', orientation, stacked)
 
 
-def render_area(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str], orientation: str = 'vertical', stacked: bool = False) -> None:
-    return render_series(ax, df, dims, mets, color_by, 'area', orientation, stacked)
+def render_area(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str], orientation: str = 'vertical', stacked: bool = False) -> None:
+    return render_series(ax, df, dimensions, metrics, color_by, 'area', orientation, stacked)

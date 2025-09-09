@@ -288,7 +288,7 @@ class Plotting:
                 plot_name=auto_plot_name,
                 plot_type=chosen_plot_type
             )
-            self.log().info("Auto-generated %s plot config: %s", chosen_plot_type, auto_plot_name)
+            self.log().info("Auto-generated %s plot config: %s for query %s", chosen_plot_type, auto_plot_name, query_name)
             # Now get the newly defined plot config
             config = self.get_plot_config(query_name, plot_name=auto_plot_name)
             config = copy.deepcopy(config) 

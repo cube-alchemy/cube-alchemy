@@ -2,9 +2,9 @@ import pandas as pd
 from typing import List, Optional
 
 
-def render_heatmap(ax, df: pd.DataFrame, dims: List[str], mets: List[str], color_by: Optional[str] = None, orientation: Optional[str] = None, stacked: bool = False) -> None:
-    if len(dims) >= 2 and len(mets) >= 1 and dims[0] in df.columns and dims[1] in df.columns and mets[0] in df.columns:
-        pivot_df = df.pivot_table(index=dims[0], columns=dims[1], values=mets[0], aggfunc='first').fillna(0)
+def render_heatmap(ax, df: pd.DataFrame, dimensions: List[str], metrics: List[str], color_by: Optional[str] = None, orientation: Optional[str] = None, stacked: bool = False) -> None:
+    if len(dimensions) >= 2 and len(metrics) >= 1 and dimensions[0] in df.columns and dimensions[1] in df.columns and metrics[0] in df.columns:
+        pivot_df = df.pivot_table(index=dimensions[0], columns=dimensions[1], values=metrics[0], aggfunc='first').fillna(0)
         im = ax.imshow(pivot_df)
         ax.set_xticks(range(len(pivot_df.columns)))
         ax.set_yticks(range(len(pivot_df.index)))
