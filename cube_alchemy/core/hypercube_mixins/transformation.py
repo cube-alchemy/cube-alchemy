@@ -89,6 +89,7 @@ class Transformation:
         if not qstate or transformer not in qstate:
             return
         del qstate[transformer]
+    
     def transform(
         self,
         df: pd.DataFrame,

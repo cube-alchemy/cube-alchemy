@@ -6,11 +6,79 @@ from .yaml_single_file import YAMLSource
 
 
 class ModelYAMLSource(YAMLSource):
-    """YAML source with model-specific conveniences (queries<->plots nesting).
+    """YAML source with model-aware mapping for queries, plots, and transformers.
 
-    - On load: lifts nested queries.<name>.plots into top-level 'plots' with a 'query' field.
-    - On save: if both 'queries' and 'plots' exist, nests plots back under their query unless
-      the plot references an unknown query (then it stays top-level under 'plots').
+        What this does (high level):
+        - Load (YAML -> in-memory):
+            - Lifts any nested sections under queries.<name>.{plots|transformers} to top-level buckets
+                and adds a 'query' field so each item knows where it belongs.
+            - Normalizes transformer specs to a canonical in-memory shape:
+                {'transformer': <name>, 'params': {...}, 'query': <q>} (plus 'kind' and 'name' from the base normalizer).
+            - Removes the nested sections from the queries (so there's a single source of truth in memory).
+        - Save (in-memory -> YAML):
+            - If prefer_nested_{plots|transformers} is True and an item references a known query,
+                re-nests it back under queries.<name>.{plots|transformers}.
+            - When nested, transformers are saved as params-only under queries.<name>.transformers[<name>].
+            - Items with unknown/missing query remain top-level; top-level sections are removed when empty.
+
+        Why this class matters:
+        - It is the bridge between concise authoring in YAML and the strict shapes the cube expects.
+            The cube's application layer (ModelCatalog) consumes transformers as
+            {'transformer': name, 'params': {...}, 'query': q}. This class guarantees that normalized
+            shape on load, while keeping the saved YAML compact and readable.
+
+        Note: 
+        Transformers and plots reference a query but are stored separately from queries in the hypercube. It was designed this way so we can re-define a query without needing to re-define its associated plots or transformations.
+
+        Minimal example
+        ---------------
+                YAML (authoring-time, block-style):
+                        queries:
+                            q1:
+                                dimensions:
+                                    - Country
+                                metrics:
+                                    - Revenue
+                                transformers:
+                                    zscore:
+                                        'on': Revenue
+                                plots:
+                                    bar_chart:
+                                        plot_type: bar
+                                        metrics:
+                                            - Revenue
+
+        After load (in-memory normalized view):
+            transformers:
+                zscore:
+                    kind: transformers
+                    name: zscore
+                    transformer: zscore
+                        params:
+                            'on': Revenue
+                    query: q1
+            plots:
+                bar_chart:
+                    kind: plots
+                    name: bar_chart
+                    plot_type: bar
+                    metrics:
+                        - Revenue
+                    query: q1
+            queries:
+                q1:
+                    kind: queries
+                    name: q1
+                    dimensions:
+                       - Country
+                    metrics:
+                       - Revenue
+                    # no nested 'transformers' or 'plots' here (they were lifted)
+
+        Round-trip (YAML -> memory -> YAML):
+        - Starting from nested YAML and saving without edits emits the same structure
+            (items with known queries remain nested; no inline maps are introduced).
+
     """
 
     def __init__(self, path: str | Path, prefer_nested_plots: bool = True, prefer_nested_transformers: bool = True) -> None:
@@ -18,144 +86,116 @@ class ModelYAMLSource(YAMLSource):
         self.prefer_nested_plots = prefer_nested_plots
         self.prefer_nested_transformers = prefer_nested_transformers
 
-    # postprocess after base normalization (kinds -> name -> spec with kind/name filled)
-    def _postprocess_loaded(self, normalized: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    # Helper: lift nested section (plots/transformers) from queries to top-level with query metadata
+    def _lift_nested_section(self, normalized: Dict[str, Dict[str, Any]], section: str) -> None:
         if "queries" not in normalized:
-            return normalized
-        # Lift nested plots
-        plots_bucket: Dict[str, Any] = dict(normalized.get("plots", {}))
-        # Lift nested transformers
-        transformers_bucket: Dict[str, Any] = dict(normalized.get("transformers", {}))
-
-        for qname, qspec in list(normalized["queries"].items()):
+            return
+        bucket: Dict[str, Any] = dict(normalized.get(section, {}))
+        for qname, qspec in list(normalized.get("queries", {}).items()):
             if not isinstance(qspec, dict):
                 continue
-            # Nested plots -> top level
-            q_plots = qspec.pop("plots", None)
-            if isinstance(q_plots, dict):
-                for pname, pspec in q_plots.items():
-                    if not isinstance(pspec, dict):
-                        continue
-                    out = dict(pspec)
-                    out.setdefault("kind", "plots")
-                    out.setdefault("name", str(pname))
-                    out.setdefault("query", qname)
-                    plots_bucket[str(pname)] = out
-            # Nested transformers -> top level
-            q_transformers = qspec.pop("transformers", None)
-            if isinstance(q_transformers, dict):
-                for ename, espec in q_transformers.items():
-                    if not isinstance(espec, dict):
-                        continue
-                    # Flatten: use the key (transformer) and keep only params; drop redundant 'transformer'/'params'
-                    params = (
-                        espec.get("params")
-                        if isinstance(espec.get("params"), dict)
-                        else {k: v for k, v in espec.items() if k not in ("kind", "name", "transformer")}
-                    )
-                    out = {**params, "kind": "transformers", "name": str(ename), "query": qname}
-                    transformers_bucket[str(ename)] = out
-
-        if plots_bucket:
-            normalized["plots"] = plots_bucket
-        if transformers_bucket:
-            # Also flatten any pre-existing top-level transformer specs that still use 'transformer'/'params'
-            flat_bucket: Dict[str, Any] = {}
-            for ename, espec in transformers_bucket.items():
-                if not isinstance(espec, dict):
-                    flat_bucket[ename] = espec
+            q_items = qspec.pop(section, None)
+            if not isinstance(q_items, dict):
+                continue
+            for iname, ispec in q_items.items():
+                if not isinstance(ispec, dict):
                     continue
-                params = (
-                    espec.get("params")
-                    if isinstance(espec.get("params"), dict)
-                    else {k: v for k, v in espec.items() if k not in ("kind", "name", "transformer")}
-                )
-                # preserve query if provided
-                qref = espec.get("query")
-                out = {**params}
-                if qref is not None:
-                    out["query"] = qref
-                out.setdefault("kind", "transformers")
-                out.setdefault("name", str(ename))
-                flat_bucket[ename] = out
-            normalized["transformers"] = flat_bucket
+                # For transformers, create canonical spec with transformer/name & params
+                if section == "transformers":
+                    params = (
+                        ispec.get("params") if isinstance(ispec.get("params"), dict)
+                        else {k: v for k, v in ispec.items() if k not in ("kind", "name", "transformer")}
+                    )
+                    out = {"transformer": str(iname), "params": params, "kind": section, "name": str(iname), "query": qname}
+                else:
+                    out = dict(ispec)
+                    out.setdefault("kind", section)
+                    out.setdefault("name", str(iname))
+                    out.setdefault("query", qname)
+                bucket[str(iname)] = out
+        if bucket:
+            # Ensure kind/name defaults also for pre-existing top-level entries
+            flat: Dict[str, Any] = {}
+            for iname, ispec in bucket.items():
+                if not isinstance(ispec, dict):
+                    flat[iname] = ispec
+                    continue
+                normalized_spec = dict(ispec)
+                # Ensure canonical form for transformers: {'transformer': name, 'params': {...}, 'query'?: q}
+                if section == "transformers":
+                    params = (
+                        normalized_spec.get("params") if isinstance(normalized_spec.get("params"), dict)
+                        else {k: v for k, v in normalized_spec.items() if k not in ("kind", "name", "transformer", "query")}
+                    )
+                    # keep query annotation if present during normalized view
+                    qref = normalized_spec.get("query")
+                    normalized_spec = {"transformer": str(iname), "params": params}
+                    if qref is not None:
+                        normalized_spec["query"] = qref
+                
+                normalized_spec.setdefault("kind", section)
+                normalized_spec.setdefault("name", str(iname))
+                flat[iname] = normalized_spec
+            normalized[section] = flat
+
+    # postprocess after base normalization (kinds -> name -> spec with kind/name filled)
+    def _postprocess_loaded(self, normalized: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        # DRY: lift both sections the same way
+        self._lift_nested_section(normalized, "plots")
+        self._lift_nested_section(normalized, "transformers")
         return normalized
 
     # preprocess before saving (drop meta and optionally re-nest plots)
     def _preprocess_to_save(self, data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        # first do the generic cleanup (remove kind/name, drop None)
-        clean = super()._preprocess_to_save(data)
+        # Work on a shallow copy first, then run the generic cleanup (avoids losing hints like 'query')
+        work: Dict[str, Dict[str, Any]] = {
+            kind: {name: (dict(spec) if isinstance(spec, dict) else spec) for name, spec in (items or {}).items()}
+            for kind, items in (data or {}).items()
+        }
 
-        # Optionally re-nest plots
-        plots = (data or {}).get("plots", {}) or {}
-        if plots and self.prefer_nested_plots and "queries" in clean:
-            remaining_top_level_plots: Dict[str, Any] = {}
-            for pname, pspec in plots.items():
-                if not isinstance(pspec, dict):
+        # Helper: DRY re-nesting logic for plots and transformers on the working copy
+        def _renest_section(section: str, prefer_flag: bool) -> None:
+            bucket = (work or {}).get(section, {}) or {}
+            if not (prefer_flag and bucket and "queries" in work):
+                return
+            remaining: Dict[str, Any] = {}
+            for iname, ispec in bucket.items():
+                if not isinstance(ispec, dict):
                     continue
-                qname = pspec.get("query")
-                target = clean["queries"].get(qname) if qname else None
-                if not target:
-                    # unknown query or missing reference: keep top-level
-                    remaining_top_level_plots[pname] = {k: v for k, v in pspec.items() if k not in ("kind", "name")}
-                    continue
-                q_plots = target.setdefault("plots", {})
-                q_plots[pname] = {k: v for k, v in pspec.items() if k not in ("kind", "name", "query")}
-            if remaining_top_level_plots:
-                clean.setdefault("plots", {}).update(remaining_top_level_plots)
-
-        # Optionally re-nest transformers
-        transformers = (data or {}).get("transformers", {}) or {}
-        if getattr(self, 'prefer_nested_transformers', True) and "queries" in clean:
-            # First, canonicalize any already nested transformers to {transformer: params}
-            for qname, qspec in list(clean.get("queries", {}).items()):
-                if not isinstance(qspec, dict):
-                    continue
-                q_enr = qspec.get("transformers")
-                if not isinstance(q_enr, dict):
-                    continue
-                norm: Dict[str, Any] = {}
-                for ename, espec in q_enr.items():
-                    if not isinstance(espec, dict):
-                        norm[str(ename)] = espec
-                        continue
-                    tkey = espec.get("transformer", str(ename))
-                    params = (
-                        espec.get("params")
-                        if isinstance(espec.get("params"), dict)
-                        else {k: v for k, v in espec.items() if k not in ("transformer",)}
-                    )
-                    norm[str(tkey)] = params
-                qspec["transformers"] = norm
-
-            # Then, re-nest any top-level transformers into their queries using the same canonical form
-            remaining_top_level_transformers: Dict[str, Any] = {}
-            for ename, espec in (transformers or {}).items():
-                if not isinstance(espec, dict):
-                    continue
-                qname = espec.get("query")
-                target = clean["queries"].get(qname) if qname else None
-                tkey = espec.get("transformer", str(ename))
-                params = (
-                    espec.get("params")
-                    if isinstance(espec.get("params"), dict)
-                    else {k: v for k, v in espec.items() if k not in ("kind", "name", "query", "transformer")}
-                )
+                qname = ispec.get("query")
+                target = work["queries"].get(qname) if qname else None
                 if target:
-                    q_enr = target.setdefault("transformers", {})
-                    q_enr[str(tkey)] = params
+                    q_items = target.setdefault(section, {})
+                    if section == "transformers":
+                        # canonical params-only
+                        params = (
+                            ispec.get("params") if isinstance(ispec.get("params"), dict)
+                            else {k: v for k, v in ispec.items() if k not in ("kind", "name", "query", "transformer")}
+                        )
+                        q_items[str(iname)] = params
+                    else:
+                        q_items[str(iname)] = {k: v for k, v in ispec.items() if k not in ("kind", "name", "query")}
                 else:
-                    # keep as top-level but drop redundant keys; retain query to keep reference
-                    flat = dict(params)
-                    if qname is not None:
-                        flat["query"] = qname
-                    remaining_top_level_transformers[str(tkey)] = flat
-
-            # Replace/clear top-level transformers depending on if any remain
-            if remaining_top_level_transformers:
-                clean["transformers"] = remaining_top_level_transformers
+                    # keep top-level; drop only kind/name; for transformers keep params-only at save-time
+                    if section == "transformers":
+                        params = (
+                            ispec.get("params") if isinstance(ispec.get("params"), dict)
+                            else {k: v for k, v in ispec.items() if k not in ("kind", "name", "transformer", "query")}
+                        )
+                        remaining[str(iname)] = params
+                    else:
+                        remaining[str(iname)] = {k: v for k, v in ispec.items() if k not in ("kind", "name")}
+            if remaining:
+                work[section] = remaining
             else:
-                clean.pop("transformers", None)
+                work.pop(section, None)
+
+        # Optionally re-nest plots and transformers using the same logic
+        _renest_section("plots", getattr(self, "prefer_nested_plots", True))
+        _renest_section("transformers", getattr(self, "prefer_nested_transformers", True))
+
+        # now do the generic cleanup (remove kind/name, drop None)
+        clean = super()._preprocess_to_save(work)
 
         # Reorder keys within each query spec to a preferred order
         if "queries" in clean and isinstance(clean["queries"], dict):
