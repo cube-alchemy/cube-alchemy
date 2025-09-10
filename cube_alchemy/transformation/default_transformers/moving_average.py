@@ -41,4 +41,6 @@ class MovingAverageTransformer(Transformer):
             )
         else:
             out[new_col] = out[on].rolling(window=window, min_periods=min_periods, center=center).mean()
+        if p.get('_log'):
+            p['_log'].info(f"moving_average: added column '{new_col}' (on='{on}', window={window})")
         return out

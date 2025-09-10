@@ -108,6 +108,7 @@ class Transformation:
         eff_params: Dict[str, Any] = dict(params or {})
         if overrides:
             eff_params.update(overrides)
+        eff_params['_log'] = getattr(self, '_log', None)
 
         # Optionally copy input
         out = df.copy() if copy_input else df

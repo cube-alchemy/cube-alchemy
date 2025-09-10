@@ -6,7 +6,7 @@ import pytest
 from cube_alchemy import Hypercube
 from cube_alchemy.core.schema_validator import SchemaValidator
 
-
+# Unnecessary loading such a bit table for this test, to be optimized later
 @pytest.mark.integration
 def test_pnl_dataset_cycle_detection(pnl_tables: Dict[str, pd.DataFrame]):
     """The PnL dataset is known to create circular references initially.
