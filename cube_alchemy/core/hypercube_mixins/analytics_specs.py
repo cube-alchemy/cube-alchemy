@@ -1,4 +1,3 @@
-import logging
 from typing import List, Dict, Any, Optional, Union, Callable, Tuple
 from ..metric import Metric, DerivedMetric, extract_columns
 import re

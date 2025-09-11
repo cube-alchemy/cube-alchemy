@@ -3,6 +3,7 @@ from .combo import render_combo
 from .scatter import render_scatter
 from .pie import render_pie
 from .heatmap import render_heatmap
+from .simple_kpi import render_simple_kpi
 from typing import Callable, Any, Dict
 
 # Registry mapping plot types to handler callables with a common signature
@@ -15,6 +16,7 @@ PLOT_HANDLERS = {
     'pie': render_pie,
     'heatmap': render_heatmap,
     'combo': render_combo,
+    'kpi': render_simple_kpi,
 }
 
 def register_plot(plot_type: str, handler: Callable[..., Any]) -> None:

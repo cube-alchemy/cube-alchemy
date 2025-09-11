@@ -1,8 +1,9 @@
-import logging
 from typing import Dict, List, Optional, Any, Union, Tuple
 import pandas as pd
 from cube_alchemy.plotting import PlotRenderer, MatplotlibRenderer, PlotConfigResolver, DefaultPlotConfigResolver
 import copy
+
+import time
 
 class Plotting:
     """Component for managing plot configurations for queries."""
@@ -352,7 +353,11 @@ class Plotting:
             **kwargs: Additional arguments to override plot configuration or pass to the renderer.
                      Recognized: show (bool, default True) to display the figure in notebooks.
         """
+        self.log().info(f"Starting plot rendering for query: {query_name}")
+        t1 = time.time()
         plot_df, config_or_configs = self._prepare_plot_data(query_name, query_options, plot_name, plot_type, **kwargs)
+        t2 = time.time()
+        #self.log().info(f"Plot data prepared in seconds {t2 - t1}")
         rend = renderer or self.plot_renderer
         if rend is None:
             raise ValueError("Plot Rendered failed. set a default renderer with 'set_plot_renderer'.")
@@ -365,7 +370,13 @@ class Plotting:
             return outputs
 
         # Single plot render
-        return rend.render(plot_df, config_or_configs, **kwargs)
+        rendered = rend.render(plot_df, config_or_configs, **kwargs)
+        t3 = time.time()
+        #self.log().info(f"Plot rendered in seconds {t3 - t2}")
+        t_total = t3 - t1
+        self.log().info(f"Plot rendering completed in seconds {t_total}")
+        self.log().info(f"Proportion of time in data prep: {100 * (t2 - t1) / (t3 - t1) if (t3 - t1) > 0 else 0}")
+        return rendered
 
     def set_plot_renderer(self, renderer: PlotRenderer):
         # Delegate to the property setter for validation
