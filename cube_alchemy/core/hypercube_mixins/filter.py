@@ -16,20 +16,19 @@ class Filter:
         """
         if context_state_name == 'Unfiltered':
             raise ValueError("Cannot use 'Unfiltered' state name to change filter state. Please use a different state name.")
-        
         dimensions = list(criteria.keys())
-        df = self.dimensions(dimensions, retrieve_keys = True, context_state_name = context_state_name)
-        df = self._apply_filters_to_dataframe(df, criteria)
-
-        self.context_states[context_state_name] = df.drop(columns=dimensions, errors='ignore')
+        
+        self.context_states[context_state_name] = self._apply_filters_to_dataframe(self.context_states[context_state_name], criteria)
+        
 
         if not is_reset:
-            self._truncate_filter_history(context_state_name = context_state_name)
+            self._truncate_filter_history(context_state_name=context_state_name)
             self.filter_pointer[context_state_name] += 1
 
         if save_state:
             self.applied_filters[context_state_name].append({"op": 'add', "criteria": criteria})
 
+        
         return True
     
     def remove_filter(
@@ -197,15 +196,15 @@ class Filter:
             if len(columns_to_fetch) > 0:
                 # Fetch only columns that are not already in the DataFrame
                 df = self._fetch_and_merge_columns(columns_to_fetch, df)
-            # Apply filters based on the criteria
+            # Apply filters based on the criteria (force string comparison for consistency)
             for column, values in criteria.items():
                 if column in df.columns:
                     df = df[df[column].isin(values)]
                 else:
                     self.log().warning("Warning: Column %s not found in DataFrame.", column)
-            return df[columns_init]  # Return DataFrame with original columns
-        else:
-            return df
+            df = df[columns_init]
+            
+        return df
     
     def _truncate_filter_history(
         self,

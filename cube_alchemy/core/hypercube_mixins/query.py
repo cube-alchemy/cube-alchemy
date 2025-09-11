@@ -183,7 +183,6 @@ class Query(Transformation, Plotting):
             return df
         else:
             results = []
-            count = 0
             for metric in metrics:
                 df = self.context_states[context_state_name].copy()  # copy state DataFrame to avoid modifying original
                 df = self._apply_filters_to_dataframe(df, query_filters)
@@ -203,9 +202,10 @@ class Query(Transformation, Plotting):
                 else:
                     raise ValueError(f"Invalid value for ignore_dimensions: {metric.ignore_dimensions}")
 
-                # Fetch only what this metric needs: effective dims + metric-relevant columns
+                # Fetch only what this metric needs: effective dims + metric-relevant columns (metric columns + indexes + nested dimensions)
                 all_relevant_columns = list(set(metric_effective_dims + metric.query_relevant_columns))
-                metric_result = self._fetch_and_merge_columns(all_relevant_columns, df)[all_relevant_columns].drop_duplicates(subset=all_relevant_columns, ignore_index=True)
+                columns_to_fetch = [col for col in all_relevant_columns if not col.startswith('_index_')]
+                metric_result = self._fetch_and_merge_columns(columns_to_fetch, df)[all_relevant_columns].drop_duplicates()
 
                 if no_dimension:  # fake dimension to group by, will be deleted later
                     metric_result[fake_dim_to_group_by] = True

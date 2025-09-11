@@ -135,8 +135,8 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
             self.context_states = {}
 
             # Set the initial state to the unfiltered version of the joined trajectory keys across all the connections
-            link_tables_trajectory = self._find_complete_trajectory(self.link_tables)
-            self.context_states['Unfiltered'] = self._join_trajectory_keys(link_tables_trajectory)
+            tables_trajectory = self._find_complete_trajectory(self.tables)
+            self.context_states['Unfiltered'] = self._join_trajectory_keys(tables_trajectory)
 
             self.core = self.context_states['Unfiltered']
 

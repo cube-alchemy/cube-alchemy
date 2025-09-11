@@ -21,7 +21,7 @@ class JoinStrategy(Protocol):
     def fetch_and_merge_columns(
         self,
         columns_to_fetch: List[str],
-        keys_df: pd.DataFrame,
+        keys_and_indexes_df: pd.DataFrame,
         drop_duplicates: bool = False,
     ) -> pd.DataFrame:
         ...
@@ -44,12 +44,12 @@ class SingleTableJoinStrategy(JoinStrategy):
     def fetch_and_merge_columns(
         self,
         columns_to_fetch: List[str],
-        keys_df: pd.DataFrame,
+        keys_and_indexes_df: pd.DataFrame,
         drop_duplicates: bool = False,
     ) -> pd.DataFrame:
         # Delegate to existing helper
         return self.engine._fetch_and_merge_columns_single_table(
-            columns_to_fetch, keys_df, drop_duplicates
+            columns_to_fetch, keys_and_indexes_df, drop_duplicates
         )
 
 
@@ -68,11 +68,11 @@ class MultiTableJoinStrategy(JoinStrategy):
     def fetch_and_merge_columns(
         self,
         columns_to_fetch: List[str],
-        keys_df: pd.DataFrame,
+        keys_and_indexes_df: pd.DataFrame,
         drop_duplicates: bool = False,
     ) -> pd.DataFrame:
         return self.engine._fetch_and_merge_columns_multi_table(
-            columns_to_fetch, keys_df, drop_duplicates
+            columns_to_fetch, keys_and_indexes_df, drop_duplicates
         )
 
 class Engine(GraphVisualizer, Filter, Query):
@@ -118,11 +118,11 @@ class Engine(GraphVisualizer, Filter, Query):
     def _fetch_and_merge_columns(
         self,
         columns_to_fetch: List[str],
-        keys_df: pd.DataFrame,
+        keys_and_indexes_df: pd.DataFrame,
         drop_duplicates: bool = False,
     ) -> pd.DataFrame:  # type: ignore[override]
         return self._join_strategy.fetch_and_merge_columns(
-            columns_to_fetch, keys_df, drop_duplicates
+            columns_to_fetch, keys_and_indexes_df, drop_duplicates
         )
 
     def _create_and_update_link_table(
@@ -267,16 +267,19 @@ class Engine(GraphVisualizer, Filter, Query):
             if key1 is None or key2 is None:
                 raise ValueError(f"No relationship found between {table1} and {table2}")
             next_table_data = self.tables[table2]
-            key_columns_current = [col for col in current_data.columns if col in self.link_table_keys]
-            key_columns_next = [col for col in next_table_data.columns if col in self.link_table_keys]
+            columns_current = [col for col in current_data.columns if col in self.link_table_keys or col.startswith('_index_')]
+            columns_next = [col for col in next_table_data.columns if col in self.link_table_keys or col.startswith('_index_')]
             current_data = pd.merge(
-                current_data[key_columns_current],
-                next_table_data[key_columns_next],
+                current_data[columns_current],
+                next_table_data[columns_next],
                 left_on=key1,
                 right_on=key2,
                 how="outer"
             )
-        return current_data
+        # get only index columns
+        #index_columns = [col for col in current_data.columns if col.startswith('_index_')]
+        #current_data = current_data[index_columns].drop_duplicates()
+        return current_data.drop_duplicates()
 
     def _has_cyclic_relationships(self) -> Tuple[bool, List[Any]]:
         def dfs(node: str, visited: set, path: List[str], parent: Optional[str]) -> List[str]:
@@ -338,7 +341,7 @@ class Engine(GraphVisualizer, Filter, Query):
     def _fetch_and_merge_columns_multi_table(
         self,
         columns_to_fetch: List[str],
-        keys_df: pd.DataFrame,
+        keys_and_indexes_df: pd.DataFrame,
         drop_duplicates: bool = False
     ) -> pd.DataFrame:
         """Fast multi-table path: group by table and join on link keys."""
@@ -355,42 +358,42 @@ class Engine(GraphVisualizer, Filter, Query):
             if table_name not in table_columns:
                 table_columns[table_name] = []
             table_columns[table_name].append(column)
-        # Process each table's columns using link table keys
+        # Process each table's columns using link table keys and table index
         for table_name, columns in table_columns.items():
-            keys_for_table: List[str] = []
-            for key in self.link_table_keys:
-                if key in self.tables[table_name].columns:
-                    keys_for_table.append(key)
-            if not keys_for_table:
-                self.log().warning("Warning: No keys found for table %s.", table_name)
+            keys_and_index_for_table: List[str] = []
+            for column in self.tables[table_name].columns:
+                if column.startswith('_index_') or column.startswith('_key_'):
+                    keys_and_index_for_table.append(column)
+            if not keys_and_index_for_table:
+                self.log().warning("Warning: No keys or index found for table %s.", table_name)
                 continue
-            columns_to_join = keys_for_table + columns
-            keys_df = pd.merge(
-                keys_df,
+            columns_to_join = keys_and_index_for_table + columns
+            keys_and_indexes_df = pd.merge(
+                keys_and_indexes_df,
                 self.tables[table_name][columns_to_join],
-                on=keys_for_table,
+                on=keys_and_index_for_table,
                 how='left'
             )
             if drop_duplicates:
-                keys_df = keys_df.drop_duplicates()
-        return keys_df
+                keys_and_indexes_df = keys_and_indexes_df.drop_duplicates()
+        return keys_and_indexes_df
 
     def _fetch_and_merge_columns_single_table(
         self,
         columns_to_fetch: List[str],
-        keys_df: pd.DataFrame,
+        keys_and_indexes_df: pd.DataFrame,
         drop_duplicates: bool = False
     ) -> pd.DataFrame:
         """Lightweight single-table fetch: join using the base table index only."""
         base_table = getattr(self, "_single_table_base", None)
         if base_table is None:
-            return keys_df
+            return keys_and_indexes_df
         idx = f"_index_{base_table}"
         # Limit to columns from the single base table
         bring = [c for c in columns_to_fetch if self.column_to_table.get(c) == base_table and c in self.tables[base_table].columns]
         if not bring:
-            return keys_df
-        out = keys_df
+            return keys_and_indexes_df
+        out = keys_and_indexes_df
         if out.empty:
             # Seed with index + requested columns
             cols = [idx] + bring if idx in self.tables[base_table].columns else bring
