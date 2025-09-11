@@ -1,129 +1,119 @@
 import logging
 import pandas as pd
-from typing import List, Dict, Any, Optional, Tuple, Protocol
+from typing import List, Dict, Any, Optional, Tuple
 from collections import deque
 
 from .graph_visualizer import GraphVisualizer
 from .filter import Filter
 from .query import Query
 
-class JoinStrategy(Protocol):
-    """Strategy interface for joining keys and fetching columns.
-
-    Implementations operate on the Engine context (self) and can leverage
-    its tables, relationships, and metadata. Each strategy should assume
-    the Engine instance has been fully initialized (link tables, mapping, etc.).
-    """
-
-    def join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
-        ...
-
-    def fetch_and_merge_columns(
-        self,
-        columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame,
-        drop_duplicates: bool = False,
-    ) -> pd.DataFrame:
-        ...
-
-
-class SingleTableJoinStrategy(JoinStrategy):
-    """Join strategy for single-table models.
-
-    Uses the base table index as the key space and performs lightweight fetches.
-    """
-
-    def __init__(self, engine: "Engine", base_table: str) -> None:
-        self.engine = engine
-        self.base_table = base_table
-
-    def join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
-        # Delegate to existing, battle-tested helper
-        return self.engine._join_trajectory_keys_single_table(trajectory)
-
-    def fetch_and_merge_columns(
-        self,
-        columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame,
-        drop_duplicates: bool = False,
-    ) -> pd.DataFrame:
-        # Delegate to existing helper
-        return self.engine._fetch_and_merge_columns_single_table(
-            columns_to_fetch, keys_and_indexes_df, drop_duplicates
-        )
-
-
-class MultiTableJoinStrategy(JoinStrategy):
-    """Join strategy for multi-table models.
-
-    Walks the relationship graph and joins via link table keys.
-    """
-
-    def __init__(self, engine: "Engine") -> None:
-        self.engine = engine
-
-    def join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
-        return self.engine._join_trajectory_keys_multi_table(trajectory)
-
-    def fetch_and_merge_columns(
-        self,
-        columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame,
-        drop_duplicates: bool = False,
-    ) -> pd.DataFrame:
-        return self.engine._fetch_and_merge_columns_multi_table(
-            columns_to_fetch, keys_and_indexes_df, drop_duplicates
-        )
-
 class Engine(GraphVisualizer, Filter, Query):
     def __init__(self) -> None:
         # Initialize Query registries (metrics, derived_metrics, queries)
         Query.__init__(self)
 
-    def _init_join_strategy(self) -> None:
-        """Pick and configure the appropriate Join Strategy.
+    # Unified methods (stable names used by other mixins)
+    def _join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
+        """Build the key space from a trajectory using per-table indexes and link keys.
 
-        Rules:
-        - If no link keys and there is exactly one base table, use SingleTableJoinStrategy.
-        - Otherwise, use MultiTableJoinStrategy.
-        Side effects:
-        - Sets self._single_table_mode and self._single_table_base accordingly.
-        - Ensures link_table_keys contains the base index in single-table mode.
-        - Installs wrappers self._join_trajectory_keys and self._fetch_and_merge_columns
-          to delegate to the chosen strategy, preserving backward compatibility.
+        - If trajectory is empty but there's a single table, return that table's key/index columns.
+        - Otherwise, walk the trajectory and outer-join on relationship keys, keeping only
+          columns that are indexes or link keys to define the key space.
         """
-        base_tables = [t for t in self.tables if t not in self.link_tables]
-        if not getattr(self, "link_table_keys", None):
-            self.link_table_keys = []
+        def key_cols(df: pd.DataFrame) -> List[str]:
+            return [c for c in df.columns if c.startswith('_index_') or c.startswith('_key_')]
 
-        if len(self.link_table_keys) == 0 and len(base_tables) == 1:
-            base = base_tables[0]
-            # Ensure the base index is available as a join key
-            idx = f"_index_{base}"
-            if idx not in self.link_table_keys:
-                self.link_table_keys = [idx]
+        if not trajectory:
+            # No path: treat single-table as a degenerate case, otherwise empty
+            base_tables = list(self.tables.keys())
+            if len(base_tables) == 1:
+                t = base_tables[0]
+                cols = key_cols(self.tables[t])
+                return self.tables[t][cols].drop_duplicates() if cols else pd.DataFrame()
+            return pd.DataFrame()
 
-            self._single_table_mode = True
-            self._single_table_base = base
-            self._join_strategy: JoinStrategy = SingleTableJoinStrategy(self, base)
-        else:
-            self._single_table_mode = False
-            self._single_table_base = None
-            self._join_strategy: JoinStrategy = MultiTableJoinStrategy(self)
+        current_table = trajectory[0]
+        current_data = self.tables[current_table][key_cols(self.tables[current_table])].drop_duplicates()
+        visited = {current_table}
+        for i in range(len(trajectory) - 1):
+            t1 = trajectory[i]
+            t2 = trajectory[i + 1]
+            if t2 in visited:
+                continue
+            visited.add(t2)
+            key1, key2 = self.relationships.get((t1, t2), (None, None))
+            if key1 is None or key2 is None:
+                raise ValueError(f"No relationship found between {t1} and {t2}")
+            next_data = self.tables[t2][key_cols(self.tables[t2])].drop_duplicates()
 
-    # Delegating methods (stable names used by other mixins) — picklable
-    def _join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:  # type: ignore[override]
-        return self._join_strategy.join_trajectory_keys(trajectory)
+            if key1 in current_data.columns and key2 in next_data.columns:
+                current_data = pd.merge(current_data, next_data, left_on=key1, right_on=key2, how='outer')
+            else:
+                shared = [c for c in current_data.columns if c in next_data.columns]
+                if shared:
+                    current_data = pd.merge(current_data, next_data, on=shared, how='outer')
+                else:
+                    # Expand key-space safely without data columns
+                    current_data['_tmp_1'] = 1
+                    next_data['_tmp_1'] = 1
+                    current_data = pd.merge(current_data, next_data, on=['_tmp_1'], how='outer').drop(columns=['_tmp_1'])
 
+            current_data = current_data.drop_duplicates()
+
+        return current_data
+
+    def _create_table_join_column_mapping(self) -> Dict[str, str]:
+        """
+        Create a mapping of each table to its primary join column (index or key).
+        It's a bit more efficient to precompute this once and reuse it.
+        """
+        table_join_map: Dict[str, str] = {}
+        for table_name, table in self.tables.items():
+            idx_cols = [c for c in table.columns if c.startswith('_index_')]
+            key_cols = [c for c in table.columns if c.startswith('_key_')]
+            if idx_cols:
+                table_join_map[table_name] = idx_cols[0]
+            elif key_cols:
+                table_join_map[table_name] = key_cols[0]
+            else:
+                logging.warning(f"No index or key column found for table {table_name}.")
+        
+        # Store for further use
+        self._table_join_column_map = table_join_map
+    
     def _fetch_and_merge_columns(
         self,
         columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame,
-        drop_duplicates: bool = False,
-    ) -> pd.DataFrame:  # type: ignore[override]
-        return self._join_strategy.fetch_and_merge_columns(
-            columns_to_fetch, keys_and_indexes_df, drop_duplicates
-        )
+        keys_and_indexes_df: pd.DataFrame
+    ) -> pd.DataFrame:  
+        """Bring requested columns into the current index-key space.
+        - Groups requested columns by their source table.
+        - Joins on that table's index if present, otherwise on its link key(s).
+        """
+        # Group columns by table (we can join once per table)
+        by_table: Dict[str, List[str]] = {}
+        for col in columns_to_fetch:
+            t = self.column_to_table.get(col)
+            if not t:
+                self.log().warning("Warning: Column %s not found in any table.", col)
+                continue
+            by_table.setdefault(t, []).append(col)
+
+        out = keys_and_indexes_df
+        for table_name, cols in by_table.items():
+            table_df = self.tables[table_name]
+            join_column = self._table_join_column_map.get(table_name)
+            if not join_column:
+                self.log().warning("Warning: No index or key found for table %s.", table_name)
+                continue
+
+            # Select join columns plus requested columns (requested columns don't include join cols)
+            select_cols = [join_column] + cols
+            right = table_df[select_cols]
+
+            out = pd.merge(out, right, on=join_column, how='left')
+
+        return out
 
     def _create_and_update_link_table(
         self,
@@ -136,7 +126,10 @@ class Engine(GraphVisualizer, Filter, Query):
         for table_name in table_names:
             unique_values = self.tables[table_name][[column]].drop_duplicates()
             link_table = pd.concat([link_table, unique_values], ignore_index=True).drop_duplicates()
-        link_table[f'_key_{column}'] = range(1, len(link_table) + 1)
+        # Assign link keys as nullable integers to safely handle joins that introduce NAs
+        link_table[f'_key_{column}'] = pd.Series(
+            range(1, len(link_table) + 1), dtype='Int64'
+        )
         self.link_table_keys.append(f'_key_{column}')
         self.tables[link_table_name] = link_table
         self.link_tables[link_table_name] = link_table
@@ -237,50 +230,6 @@ class Engine(GraphVisualizer, Filter, Query):
                 final_trajectory.append(trajectory[i])
         return final_trajectory
 
-    def _join_trajectory_keys_single_table(self, trajectory: List[str]) -> Any:
-        """Single-table key space: return the unique index column of the base table."""
-        base = getattr(self, "_single_table_base", None)
-        if base is None:
-            # Not in single-table mode
-            return pd.DataFrame()
-        idx = f"_index_{base}"
-        # Return just the index column as the key space if present
-        if idx in self.tables.get(base, pd.DataFrame()).columns:
-            return self.tables[base][[idx]].copy()
-        return pd.DataFrame()
-
-    def _join_trajectory_keys_multi_table(self, trajectory: List[str]) -> Any:
-        """Multi-table key space: walk the trajectory via relationships and link keys."""
-        if not trajectory:
-            # No trajectory for multi-table implies no link connectivity
-            return pd.DataFrame()
-        current_table = trajectory[0]
-        current_data = self.tables[current_table]
-        visited_tables = [current_table]
-        for i in range(len(trajectory) - 1):
-            table1 = trajectory[i]
-            table2 = trajectory[i + 1]
-            if table2 in visited_tables:
-                continue
-            visited_tables.append(table2)
-            key1, key2 = self.relationships.get((table1, table2), (None, None))
-            if key1 is None or key2 is None:
-                raise ValueError(f"No relationship found between {table1} and {table2}")
-            next_table_data = self.tables[table2]
-            columns_current = [col for col in current_data.columns if col in self.link_table_keys or col.startswith('_index_')]
-            columns_next = [col for col in next_table_data.columns if col in self.link_table_keys or col.startswith('_index_')]
-            current_data = pd.merge(
-                current_data[columns_current],
-                next_table_data[columns_next],
-                left_on=key1,
-                right_on=key2,
-                how="outer"
-            )
-        # get only index columns
-        #index_columns = [col for col in current_data.columns if col.startswith('_index_')]
-        #current_data = current_data[index_columns].drop_duplicates()
-        return current_data.drop_duplicates()
-
     def _has_cyclic_relationships(self) -> Tuple[bool, List[Any]]:
         def dfs(node: str, visited: set, path: List[str], parent: Optional[str]) -> List[str]:
             visited.add(node)
@@ -338,83 +287,11 @@ class Engine(GraphVisualizer, Filter, Query):
                     queue.append((neighbor_table[1], path + [(neighbor_table[0], neighbor_table[1], key1, key2)]))
         return None
 
-    def _fetch_and_merge_columns_multi_table(
-        self,
-        columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame,
-        drop_duplicates: bool = False
-    ) -> pd.DataFrame:
-        """Fast multi-table path: group by table and join on link keys."""
-        table_columns_tuples: List[tuple] = []
-        table_columns: Dict[str, List[str]] = {}
-        for column in columns_to_fetch:
-            table_name = self.column_to_table.get(column)
-            if not table_name:
-                self.log().warning("Warning: Column %s not found in any table.", column)
-                continue
-            table_columns_tuples.append((table_name, column))
-        # Group columns by table
-        for table_name, column in table_columns_tuples:
-            if table_name not in table_columns:
-                table_columns[table_name] = []
-            table_columns[table_name].append(column)
-        # Process each table's columns using link table keys and table index
-        for table_name, columns in table_columns.items():
-            keys_and_index_for_table: List[str] = []
-            for column in self.tables[table_name].columns:
-                if column.startswith('_index_') or column.startswith('_key_'):
-                    keys_and_index_for_table.append(column)
-            if not keys_and_index_for_table:
-                self.log().warning("Warning: No keys or index found for table %s.", table_name)
-                continue
-            columns_to_join = keys_and_index_for_table + columns
-            keys_and_indexes_df = pd.merge(
-                keys_and_indexes_df,
-                self.tables[table_name][columns_to_join],
-                on=keys_and_index_for_table,
-                how='left'
-            )
-            if drop_duplicates:
-                keys_and_indexes_df = keys_and_indexes_df.drop_duplicates()
-        return keys_and_indexes_df
-
-    def _fetch_and_merge_columns_single_table(
-        self,
-        columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame,
-        drop_duplicates: bool = False
-    ) -> pd.DataFrame:
-        """Lightweight single-table fetch: join using the base table index only."""
-        base_table = getattr(self, "_single_table_base", None)
-        if base_table is None:
-            return keys_and_indexes_df
-        idx = f"_index_{base_table}"
-        # Limit to columns from the single base table
-        bring = [c for c in columns_to_fetch if self.column_to_table.get(c) == base_table and c in self.tables[base_table].columns]
-        if not bring:
-            return keys_and_indexes_df
-        out = keys_and_indexes_df
-        if out.empty:
-            # Seed with index + requested columns
-            cols = [idx] + bring if idx in self.tables[base_table].columns else bring
-            out = self.tables[base_table][cols].copy()
-            if drop_duplicates:
-                out = out.drop_duplicates()
-            return out
-        # If index exists, merge directly
-        if idx in out.columns and idx in self.tables[base_table].columns:
-            right = self.tables[base_table][[idx] + bring].drop_duplicates()
-            out = pd.merge(out, right, on=[idx], how='left')
-            if drop_duplicates:
-                out = out.drop_duplicates()
-            return out
-        # No safe join key available; return as-is
-        return out
-
-    def relationship_matrix(self, context_state_name: str = 'Unfiltered') -> pd.DataFrame:
-        # The real relationship matrix is self.core, which hold the autonumbered keys
-        # and the relationships between them. Here we reconstruct the original shared columns values.
-
+    def relationship_matrix(self, context_state_name: str = 'Unfiltered', core = False) -> pd.DataFrame:
+        if core:
+            return self.context_states[context_state_name]
+        
+        # Here we reconstruct the original shared columns values.
         # Our shared columns are in the link tables and composite tables
         base_tables = self.link_tables.keys() | self.composite_tables.keys()
         shared_columns: List[str] = []
@@ -522,3 +399,11 @@ class Engine(GraphVisualizer, Filter, Query):
 
         # Concatenate and return; original rows are unique per unordered pair and key
         return pd.concat([df, inv], ignore_index=True)
+    
+    def _convert_indexes_and_keys_into_nullable_int64(self) -> None:
+        # For more efficient joins and storage
+        for table in self.tables:
+            for c in self.tables[table].columns:
+                if c.startswith('_index_') or c.startswith('_key_'):
+                    self.tables[table][c] = pd.to_numeric(self.tables[table][c], errors='coerce').astype('Int64')
+

@@ -114,7 +114,7 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
                 if index_col not in self.tables[table].columns:
                     # Make a fresh, guaranteed-unique surrogate key
                     self.tables[table].reset_index(drop=True, inplace=True)
-                    self.tables[table][index_col] = self.tables[table].index.astype('int64')
+                    self.tables[table][index_col] = self.tables[table].index
             
             # Create link tables for shared columns and update the original tables
             self._create_link_tables()  # Link tables are used to join tables on shared columns
@@ -125,14 +125,14 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
             # Automatically add relationships based on shared column names
             self._add_auto_relationships()  # Add relationships for columns with the same name
 
-            # Pick the appropriate join strategy (Single vs Multi) and expose wrappers
-            self._init_join_strategy()
-
             self.is_cyclic = self._has_cyclic_relationships()
             if self.is_cyclic[0]:
                 return None #no need to continue, there are cycle relationships
 
             self.context_states = {}
+
+            self._convert_indexes_and_keys_into_nullable_int64()
+            self._create_table_join_column_mapping()
 
             # Set the initial state to the unfiltered version of the joined trajectory keys across all the connections
             tables_trajectory = self._find_complete_trajectory(self.tables)

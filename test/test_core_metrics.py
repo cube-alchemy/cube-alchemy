@@ -5,7 +5,7 @@ from cube_alchemy.core.metric import Metric, DerivedMetric
 from cube_alchemy import Hypercube
 from .utils import assert_df_equal_loose
 
-
+import copy
 @pytest.mark.unit
 def test_metric_and_derived_metric_basic():
     # Basic construction sanity checks
@@ -38,6 +38,7 @@ def test_readme_example_end_to_end_query_and_filter(minimal_tables):
     - Apply a customer filter and assert the filtered result matches the README output.
     """
     # Use the README dataset provided by the shared fixture
+    minimal_tables = copy.deepcopy(minimal_tables)
     cube = Hypercube(minimal_tables, validate=False, logger=False)
 
     # Define metrics exactly as in the README

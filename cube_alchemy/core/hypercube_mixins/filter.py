@@ -16,7 +16,6 @@ class Filter:
         """
         if context_state_name == 'Unfiltered':
             raise ValueError("Cannot use 'Unfiltered' state name to change filter state. Please use a different state name.")
-        dimensions = list(criteria.keys())
         
         self.context_states[context_state_name] = self._apply_filters_to_dataframe(self.context_states[context_state_name], criteria)
         
