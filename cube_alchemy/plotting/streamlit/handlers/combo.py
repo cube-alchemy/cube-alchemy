@@ -12,6 +12,7 @@ def render_combo(
     color_by: Optional[str] = None,
     orientation: str = 'vertical',
     height: int | None = None,
+    width: int | None = None,
     use_container_width: bool = True,
     title: Optional[str] = None,
     show_title: bool = False,
@@ -52,10 +53,12 @@ def render_combo(
         x='shared' if orientation == 'vertical' else 'independent',
     )
 
-    if title and show_title:
+    if title:
         chart = chart.properties(title=title)
     if height:
         chart = chart.properties(height=height)
+    if width:
+        chart = chart.properties(width=width)
     if use_container_width:
         return st.altair_chart(chart, use_container_width=True)
     return st.altair_chart(chart)

@@ -13,23 +13,36 @@ def render_kpi(
     show_title: bool = False,
     columns: int = 4,
     height: int | None = None,
+    width: int | None = None,
+    use_container_width: bool = True,
 ):
-    """Render all KPI values from a single-row DataFrame.
+    """Render KPI values; aggregates when multiple rows are present (e.g., after selections).
 
-    - If `height` is provided, renders a compact Altair text chart sized to exactly `height` for alignment.
-    - Otherwise, renders KPI cards using st.metric in a responsive grid.
-    - If metrics are provided, only those columns are shown; else show numeric columns or all.
+    Behavior:
+    - If multiple rows: aggregate numeric columns with sum (default), non-numeric are ignored unless explicitly requested in `metrics`.
+    - If `height` is provided, render a compact Altair text chart sized to exactly `height` for alignment.
+    - Else render KPI cards with st.metric.
+    - If `metrics` provided, restrict to those columns (aggregated if needed).
     """
     if df is None or df.empty:
         return st.write('No data for KPI.')
 
-    row = df.iloc[0]
+    work = df.copy()
+    # Aggregate if more than one row to make KPI stable under selections
+    if len(work) > 1:
+        num_cols = work.select_dtypes(include=['number']).columns
+        agg_row = work[num_cols].sum(numeric_only=True)
+        row = agg_row
+    else:
+        row = work.iloc[0]
 
     # Determine which columns to show
     if metrics:
-        cols = [c for c in metrics if c in df.columns]
+        # Use requested metrics; if aggregated, ensure presence
+        available = set(row.index)
+        cols = [c for c in metrics if c in available]
     else:
-        nums = df.select_dtypes(include=['number']).columns.tolist()
+        nums = row.index.tolist() if isinstance(row, pd.Series) else work.select_dtypes(include=['number']).columns.tolist()
         cols = nums if nums else df.columns.tolist()
 
     if not cols:
@@ -58,32 +71,30 @@ def render_kpi(
         })
         # Compute per-row step to fill the requested height (clamped)
         n = max(len(kpi_df), 1)
-        step = int(max(min(height / n, 80), 26))
-        font_size = int(max(min(step * 0.55, 22), 11))
+        step = int(max(min(height / n, 90), 34))
+        label_fs = int(max(min(step * 0.40, 20), 10))
+        value_fs = int(max(min(step * 0.60, 28), 12))
 
-        y_enc = alt.Y('metric:N', sort=None,
-                       axis=alt.Axis(title=None, labels=False, ticks=False))
+        # Use centered x position and offset with dy to put value below label
+        kpi_df['pos'] = 0.5
         x_enc = alt.X('pos:Q', scale=alt.Scale(domain=[0, 1]), axis=None)
+        y_enc = alt.Y('metric:N', sort=None, axis=alt.Axis(title=None, labels=False, ticks=False))
 
-        labels_df = kpi_df.copy()
-        labels_df['pos'] = 0
-        values_df = kpi_df.copy()
-        values_df['pos'] = 1
-
-        labels = alt.Chart(labels_df).mark_text(align='left', baseline='middle', dx=6,
-                                                color='#666', fontSize=font_size).encode(
+        labels = alt.Chart(kpi_df).mark_text(align='center', baseline='bottom', dy=-4,
+                                             color='#666', fontSize=label_fs).encode(
             x=x_enc, y=y_enc, text='metric:N'
         )
-        values = alt.Chart(values_df).mark_text(align='right', baseline='middle', dx=-6,
-                                                fontSize=font_size).encode(
+        values = alt.Chart(kpi_df).mark_text(align='center', baseline='top', dy=8,
+                                             fontSize=value_fs).encode(
             x=x_enc, y=y_enc, text='value_str:N'
         )
-        chart = (labels + values).properties(height=step * n).configure_view(
-            strokeWidth=0
-        )
+        chart = (labels + values).properties(height=step * n)
+        if width:
+            chart = chart.properties(width=width)
+        chart = chart.configure_view(strokeWidth=0)
         if show_title and title:
             chart = chart.properties(title=title)
-        return st.altair_chart(chart, use_container_width=True)
+        return st.altair_chart(chart, use_container_width=use_container_width)
 
     # Fallback to KPI cards
     if show_title and title:
