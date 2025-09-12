@@ -4,6 +4,7 @@ from ..metric import Metric, MetricGroup, DerivedMetric
 from typing import Dict, List, Any, Optional
 import copy
 import uuid
+from ..function_registry import FunctionRegistry
 
 from .plotting import Plotting
 from .transformation import Transformation
@@ -27,10 +28,45 @@ class Query(Transformation, Plotting):
         self.derived_metrics: Dict[str, DerivedMetric] = {}
         self.queries: Dict[str, Dict[str, Any]] = {}
 
+        # Registry of functions/modules available to expressions and aggregations
+        self.function_registry = FunctionRegistry.from_defaults()
+
         # Initialize the Transformation class
         Transformation.__init__(self)
         # Initialize the Plotting class
         Plotting.__init__(self)
+    
+    def reset_specs(self) -> None:
+        """Clear all defined metrics, derived metrics, queries, and function registry."""
+        self.metrics.clear()
+        self.derived_metrics.clear()
+        self.queries.clear()
+        self.plotting_components.clear()
+        self.transformation_components.clear()
+        self.function_registry = FunctionRegistry.from_defaults()
+        # Clear dependency graph when resetting specs
+        if hasattr(self, '_dep_index'):
+            self._dep_index.clear()
+
+    # Centralize function registry behavior in Query
+    @property
+    def function_registry(self) -> Any:
+        return getattr(self, "_function_registry", FunctionRegistry.from_defaults())
+
+    @function_registry.setter
+    def function_registry(self, value: Any) -> None:
+        if isinstance(value, FunctionRegistry):
+            self._function_registry = value
+        elif isinstance(value, dict):
+            self._function_registry = FunctionRegistry(value)
+        elif value is None:
+            self._function_registry = FunctionRegistry.from_defaults()
+        else:
+            try:
+                self._function_registry = FunctionRegistry(dict(value))  # type: ignore[arg-type]
+            except Exception:
+                raise TypeError("function_registry must be a dict or FunctionRegistry")
+
 
     def dimension(self, dimension:str,
         context_state_name: str = 'Default',
@@ -57,9 +93,10 @@ class Query(Transformation, Plotting):
         else:
             return df[columns_to_fetch].drop_duplicates()
     
-    def register_function(self, **kwargs):
-        """Register variables/functions available to DataFrame.query via @name."""
-        self.registered_functions.update(kwargs)
+    def add_functions(self, **kwargs):
+        """Add variables/functions to the registry for expressions and DataFrame.query via @name."""
+        self.function_registry.update(kwargs)
+
 
     def query(
         self, 
@@ -221,13 +258,13 @@ class Query(Transformation, Plotting):
                     # Row-condition filter
                     if metric.row_condition_expression:
                         row_condition_expr = brackets_to_backticks(metric.row_condition_expression)
-                        metric_result = metric_result.query(row_condition_expr, engine='python', local_dict=self.registered_functions)
+                        metric_result = metric_result.query(row_condition_expr, engine='python', local_dict=self.function_registry)
 
                     # Evaluate the metric expression
                     expr = add_quotes_to_brackets(metric.expression.replace('[', 'metric_result['))
                     expr = re.sub(r'@([A-Za-z_]\w*)', r'\1', expr)
                     eval_locals = {'metric_result': metric_result}
-                    eval_globals = self.registered_functions
+                    eval_globals = self.function_registry
                     metric_result[metric.name] = eval(expr, eval_globals, eval_locals)
 
                 except Exception as e:
@@ -467,7 +504,7 @@ class Query(Transformation, Plotting):
                 expr = re.sub(r'@([A-Za-z_]\w*)', r'\1', expr)
 
                 eval_locals = {"df": df}
-                eval_globals = self.registered_functions
+                eval_globals = self.function_registry
                 df[name] = eval(expr, eval_globals, eval_locals)
 
             except Exception as e:
@@ -490,7 +527,7 @@ class Query(Transformation, Plotting):
             try:
                 # Convert [col] -> `col` for DataFrame.query backtick syntax
                 having_expr = brackets_to_backticks(having)
-                df = df.query(having_expr, engine='python', local_dict=self.registered_functions)
+                df = df.query(having_expr, engine='python', local_dict=self.function_registry)
             except Exception as e:
                 raise ValueError(f"Error applying HAVING expression '{having}': {e}") from e
         return df
@@ -529,7 +566,7 @@ class Query(Transformation, Plotting):
         Supports:
         - pandas-native strings (sum, mean, nunique, ...)
         - friendly aliases (count_distinct -> nunique, avg -> mean)
-        - names or dotted paths resolvable via self.registered_functions (e.g., 'np.nanmean')
+        - names or dotted paths resolvable via self.function_registry (e.g., 'np.nanmean')
         - callables (returned as-is)
         - list/tuple/dict containers resolved recursively
         """
@@ -570,7 +607,7 @@ class Query(Transformation, Plotting):
             if key in aliases:
                 return aliases[key]
             # Try registry lookup
-            registry = getattr(self, "registered_functions", {}) or {}
+            registry = getattr(self, "function_registry", {}) or {}
             # exact match first
             cand = registry.get(agg) or registry.get(key)
             if callable(cand):

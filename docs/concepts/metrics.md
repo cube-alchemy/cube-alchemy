@@ -220,7 +220,7 @@ When your analysis requires logic that goes beyond basic arithmetic, you can reg
 
 1. **Define a Python function** that performs your specialized calculation
 
-2. **Register the function** with your cube using `cube.register_function()`
+2. **Register the function** with your cube using `cube.add_functions()`
 
 3. **Reference the function** in your metric expressions using the `@function_name` syntax (Pandas and Numpy are already registered as *pd* and *np*).
 
@@ -236,7 +236,7 @@ def safe_division(numerator, denominator, default=0.0):
     return result.replace([np.inf, -np.inf], np.nan).fillna(default)
 
 # Register the function with your hypercube
-cube.register_function(safe_division=safe_division)
+cube.add_functions(safe_division=safe_division)
 
 # Use it in a metric definition
 cube.define_metric(
@@ -256,7 +256,7 @@ def categorize_revenue(revenue_values):
     choices = ['Low', 'Medium', 'High']
     return np.select(conditions, choices, default='Unknown')
 
-cube.register_function(categorize_revenue=categorize_revenue)
+cube.add_functions(categorize_revenue=categorize_revenue)
 
 # Use for conditional logic - count how many sales fall into each tier
 cube.define_metric(
@@ -316,7 +316,7 @@ cube.define_metric(
 )
 
 # You can inspect available registered functions:
-cube.registered_functions
+cube.function_registry
 ```
 
 

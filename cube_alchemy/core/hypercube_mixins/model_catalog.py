@@ -56,7 +56,7 @@ class ModelCatalog:
         self.model_catalog = catalog
 
     # ---------- high-level operations ----------
-    def load_from_model_catalog(self, kinds: Optional[Iterable[str]] = None, clear_repo: bool = False, reload_sources: bool = True) -> None:
+    def load_from_model_catalog(self, kinds: Optional[Iterable[str]] = None, reset_specs: bool = False, clear_repo: bool = False, reload_sources: bool = True) -> None:
         """Load from the active source into the Catalog, then apply to this cube.
         Order: metrics -> derived_metrics -> queries -> plots.
         clear_repo: If True, clear the existing repo before refreshing from source.
@@ -64,6 +64,8 @@ class ModelCatalog:
         """
         catalog = self._require_model_catalog_()
         catalog.refresh(kinds=kinds, reload_sources=reload_sources, clear_repo=clear_repo)
+        if reset_specs:
+            self.reset_specs()
         self._apply_catalog_to_hypercube(catalog, kinds=kinds)
 
     def _model_catalog_pull_from_cube(self) -> None:

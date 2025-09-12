@@ -21,7 +21,7 @@ load_data(
   tables: Dict[str, pd.DataFrame],
   rename_original_shared_columns: bool = True,
   to_be_stored: bool = False,
-  reset_all: bool = False
+  reset_specs: bool = False
 )
 ```
 
@@ -39,7 +39,7 @@ The `load_data()` method can also be used to reload or update data in an existin
 
 - `to_be_stored`: Set to True if the hypercube will be serialized/stored (skips Default context state creation)
 
-- `reset_all` *(only load_data method)*: Whether to reset metrics and queries definitions, as well as registered functions when reloading data
+- `reset_specs` *(only load_data method)*: Whether to clear all existing analytics and plotting definitions (metrics, derived metrics, queries, plots, transformations) and the function registry before loading new ones from the Catalog Source.
 
 - `logger` *(only constructor)*: Controls instance logging.
 
@@ -77,20 +77,34 @@ cube1.load_data({
     'Sales': updated_sales_df
 })
 
-# Reset metrics and queries when loading new data schema
-cube2.load_data(new_data, reset_all=True)
+# Reset definitions when loading a new data schema
+cube2.load_data(new_data, reset_specs=True)
 
 # Enable default logging quickly
 cube3 = Hypercube({'Sales': sales_df}, logger=True)
 
-# Inject a specific logger
-app_logger = logging.getLogger("app.cube")
-cube4 = Hypercube({'Sales': sales_df}, logger=app_logger)
+```
 
-# Provide custom DI hooks (advanced)
-class MyValidator: ...
-class MyBridgeFactory: ...
-cube5 = Hypercube({'Sales': sales_df}, validator_cls=MyValidator, bridge_factory_cls=MyBridgeFactory)
+### reset_specs
+
+```python
+reset_specs() -> None
+```
+
+Clear all analytics and plotting definitions and the function registry:
+
+- Metrics and derived metrics
+- Queries
+- Plots and transformations
+- Function registry entries (custom functions)
+
+Use this to start from a clean slate before reloading definitions or importing from a model catalog.
+
+Example:
+
+```python
+cube.reset_specs()
+cube.load_from_model_catalog(reset_specs=True) # Reset the specs and then load from source model catalog (eg. YAML)
 ```
 
 ## Core Methods

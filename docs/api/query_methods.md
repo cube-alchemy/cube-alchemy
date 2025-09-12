@@ -47,13 +47,19 @@ Execute a stored query by name, or pass options to run an ad‑hoc query (withou
 
 When options is provided, accepted keys mirror define_query parameters: dimensions, metrics, derived_metrics, having, sort, drop_null_dimensions, drop_null_metric_results.
 
-## register_function
+## add_functions
 
 ```python
-register_function(**kwargs) -> None
+add_functions(**kwargs) -> None
 ```
 
-Register variables/functions available to expressions and DataFrame.query via @name.
+Add variables/functions available to expressions and `DataFrame.query` via `@name`.
+
+Notes:
+- Use `cube.add_functions(my_udf=my_udf, normalize=normalize)` to register.
+- Access/replace the whole registry via `cube.function_registry` (a dict-like object).
+ - Only importable, top-level functions/classes/modules are persisted across `cube.save_as_pickle()`/`Hypercube.load_pickle()`; lambdas and locally defined callables are skipped.
+ - If a query references a function that wasn’t restored after load, execution raises; re-register the function first.
 
 ## dimensions
 

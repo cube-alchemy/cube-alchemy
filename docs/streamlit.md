@@ -11,8 +11,7 @@ Start by importing the necessary libraries and setting up your Streamlit app:
 ```python
 import streamlit as st
 import pandas as pd
-import pickle
-from cube_alchemy import Hypercube
+from cube_alchemy.core.hypercube import Hypercube
 from cube_alchemy.plot_renderer import PlotRenderer
 
 # Set page config
@@ -78,18 +77,12 @@ Load your hypercube, typically from a pickle file for a Streamlit app:
 ```python
 @st.cache_resource  # Cache the cube to improve performance
 def load_cube():
-    with open("path_to_your_cube.pkl", "rb") as f:
-        cube = pickle.load(f)
-    
+    cube = Hypercube.load_pickle("path_to_your_cube.pkl")
     # Important: Set context state after loading
     cube.set_context_state('Default')
-    
-    # Restore any functions needed for derived metrics
-    cube.registered_functions = {
-        'pd': pd,
-        'np': np
-    }
-    
+    # If your app defines custom functions, re-register them here, e.g.:
+    # from my_udfs import normalize
+    # cube.add_functions(normalize=normalize)
     return cube
 
 # Load the cube

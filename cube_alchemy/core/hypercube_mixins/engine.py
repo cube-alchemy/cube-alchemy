@@ -289,8 +289,9 @@ class Engine(GraphVisualizer, Filter, Query):
 
     def relationship_matrix(self, context_state_name: str = 'Unfiltered', core = False) -> pd.DataFrame:
         if core:
-            return self.context_states[context_state_name]
-        
+            stateful_core = self.context_states[context_state_name]
+            return stateful_core[sorted(stateful_core.columns)]
+
         # Here we reconstruct the original shared columns values.
         # Our shared columns are in the link tables and composite tables
         base_tables = self.link_tables.keys() | self.composite_tables.keys()
@@ -400,10 +401,4 @@ class Engine(GraphVisualizer, Filter, Query):
         # Concatenate and return; original rows are unique per unordered pair and key
         return pd.concat([df, inv], ignore_index=True)
     
-    def _convert_indexes_and_keys_into_nullable_int64(self) -> None:
-        # For more efficient joins and storage
-        for table in self.tables:
-            for c in self.tables[table].columns:
-                if c.startswith('_index_') or c.startswith('_key_'):
-                    self.tables[table][c] = pd.to_numeric(self.tables[table][c], errors='coerce').astype('Int64')
 

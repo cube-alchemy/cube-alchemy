@@ -1,7 +1,8 @@
 import logging
-import numpy as np
 import pandas as pd
 from typing import Dict, Any, Optional, Type, Union
+from pathlib import Path
+import pickle
 
 # hypercube mixins
 from .hypercube_mixins.engine import Engine
@@ -26,19 +27,25 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         # Simple DI hooks for testability/extensibility
         validator_cls: Optional[Type[SchemaValidator]] = None,
         bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
+        function_registry: Optional[Dict[str, Any]] = None,
     ) -> None:
         # Initialize Logger mixins
         Logger.__init__(self, logger=logger)
         Engine.__init__(self)
-        ModelCatalog.__init__(self)  
+        ModelCatalog.__init__(self)
 
         # Bind supporting components
         self._dep_index = DependencyIndex()  # Modular dependency index for queries/metrics/plots
         self._validator = validator_cls or SchemaValidator
         self._bridge_factory = bridge_factory_cls or CompositeBridgeGenerator
 
-        self.registered_functions = {'pd': pd, 'np': np}
+        # Initialize function registry (owned by Query mixin); allow extra defaults
+        if function_registry:
+            # Query.__init__ sets defaults; merge any provided extras
+            self.function_registry.update(function_registry)
+
         self.rename_original_shared_columns = rename_original_shared_columns
+
         if tables is not None:
             self.load_data(
                 tables,
@@ -46,7 +53,7 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
                 apply_composite=apply_composite,
                 validate=validate,
                 to_be_stored=to_be_stored,
-                reset_all=True,
+                reset_specs=True,
             )
 
     def load_data(        
@@ -56,16 +63,10 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         apply_composite: bool = True,
         validate: bool = True,
         to_be_stored: bool = False,
-        reset_all: bool = False
+        reset_specs: bool = False
     ) -> None:
-        if reset_all:
-            self.metrics.clear()
-            self.derived_metrics.clear()
-            self.queries.clear()
-            self.registered_functions = {'pd': pd,'np': np}
-            # Clear dependency graph when resetting model
-            if hasattr(self, '_dep_index'):
-                self._dep_index.clear()
+        if reset_specs:
+            self.reset_specs()
         try:
             # clean data if existing
             self.tables: Dict[str, pd.DataFrame] = {}
@@ -114,7 +115,7 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
                 if index_col not in self.tables[table].columns:
                     # Make a fresh, guaranteed-unique surrogate key
                     self.tables[table].reset_index(drop=True, inplace=True)
-                    self.tables[table][index_col] = self.tables[table].index
+                    self.tables[table][index_col] = self.tables[table].index.astype('Int64')  # nullable int
             
             # Create link tables for shared columns and update the original tables
             self._create_link_tables()  # Link tables are used to join tables on shared columns
@@ -131,7 +132,6 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
 
             self.context_states = {}
 
-            self._convert_indexes_and_keys_into_nullable_int64()
             self._create_table_join_column_mapping()
 
             # Set the initial state to the unfiltered version of the joined trajectory keys across all the connections
@@ -163,3 +163,65 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
             # Catch other exceptions, log them, and re-raise with a clear message
             self._log.exception("An error occurred during DataModel initialization: %s", str(e))
             raise ValueError(f"DataModel initialization failed: {str(e)}")
+    
+    def save_as_pickle(
+        self,
+        path: Optional[Union[str, "Path"]] = None,
+        *,
+        relative_path: bool = True,
+        pickle_name: str = "cube.pkl",
+    ) -> "Path":
+        """Persist the hypercube to a pickle file.
+
+        - Uses the current working directory by default (cube.pkl).
+        - Temporarily removes the logger to ensure safe pickling.
+        - Function registry is pickled via import specs and rehydrated on load.
+        """
+        # Determine target path. If a full file path is provided, honor it.
+        # Otherwise, treat `path` as a directory (relative to CWD if relative_path=True)
+        # and write to `<dir>/<pickle_name>`.
+        if path is None:
+            base_dir = Path.cwd()
+            target = base_dir / pickle_name
+        else:
+            p = Path(path)
+            if p.suffix:  # looks like a file path
+                target = p
+            else:
+                base_dir = (Path.cwd() / p) if relative_path else p
+                target = base_dir / pickle_name
+        old_log = getattr(self, "_log", None)
+        try:
+            if old_log is not None:
+                self._log = None
+            with open(target, "wb") as f:
+                pickle.dump(self, f)
+        finally:
+            if old_log is not None:
+                self._log = old_log
+        return target
+
+    @staticmethod
+    def load_pickle(
+        path: Optional[Union[str, "Path"]] = None,
+        *,
+        relative_path: bool = True,
+        pickle_name: str = "cube.pkl",
+    ) -> "Hypercube":
+        """Load a previously saved hypercube from a pickle file.
+
+        If `path` is a file path (has a suffix), it is used directly. Otherwise,
+        it is treated as a directory (relative to CWD if `relative_path` is True),
+        and `pickle_name` is appended.
+        """
+        if path is None:
+            target = Path.cwd() / pickle_name
+        else:
+            p = Path(path)
+            if p.suffix:
+                target = p
+            else:
+                base_dir = (Path.cwd() / p) if relative_path else p
+                target = base_dir / pickle_name
+        with open(target, "rb") as f:
+            return pickle.load(f)

@@ -43,7 +43,8 @@ This architecture potentially allows you combine multiple sources while maintain
 cube.set_yaml_model_catalog() # will set "model_catalog.yaml" on the working directory
 
 # 2. Load existing definitions from YAML into your cube
-cube.load_from_model_catalog()
+# If you want to start clean before applying the catalog, pass reset_specs=True
+cube.load_from_model_catalog(reset_specs=True)
 
 # 3. Create or modify definitions using the hypercube API. This is useful when creating on-the-fly definitions...
 cube.define_metric("revenue", expression="[sales] * [price]", aggregation="sum")

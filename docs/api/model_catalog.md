@@ -34,12 +34,15 @@ Attach multiple sources (merged by Catalog) with an optional repository (default
 ```python
 load_from_model_catalog(
     kinds: Optional[Iterable[str]] = None,
+    reset_specs: bool = False,
     clear_repo: bool = False,
     reload_sources: bool = True,
 ) -> None
 ```
 
 Load from sources into the Catalog, then apply to the cube. Order: metrics -> derived_metrics -> queries -> plots -> transformers.
+
+- `reset_specs`: If True, clear all current metrics, derived metrics, queries, plots, transformers, and the function registry on the cube before applying catalog definitions.
 
 ## save_to_model_catalog
 
