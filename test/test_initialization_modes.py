@@ -36,20 +36,15 @@ def test_multi_table_initialization_keyspace():
         'segment': ['A', 'B', 'C'],
     })
 
-    cube = Hypercube({'Orders': orders, 'Customers': customers})
+    cube = Hypercube(copy.deepcopy({'Orders': orders, 'Customers': customers}))
 
     # After link-table creation, both base tables share _key_customer_id
-    key_col = '_key_customer_id'
     idx_orders = '_index_Orders'
     idx_customers = '_index_Customers'
 
-    # The tables should have the link key
-    assert key_col in cube.tables['Orders'].columns
-    assert key_col in cube.tables['Customers'].columns
-
     # The Unfiltered key-space should include per-table indexes and the link key
     unfiltered = cube.context_states['Unfiltered']
-    for col in (idx_orders, idx_customers, key_col):
+    for col in (idx_orders, idx_customers):
         assert col in unfiltered.columns
 
     # No duplicate column labels
@@ -57,8 +52,8 @@ def test_multi_table_initialization_keyspace():
 
     # Rows should cover the outer-joined key-space across the relationship
     # At minimum, there must be at least as many unique Orders indices as in the Orders table
-    assert unfiltered[idx_orders].nunique() <= len(cube.tables['Orders'])
-    assert unfiltered[idx_customers].nunique() <= len(cube.tables['Customers'])
+    assert unfiltered[idx_orders].nunique() <= len(orders)
+    assert unfiltered[idx_customers].nunique() <= len(customers)
 
 
 def test_single_table_basic_metric_and_query(minimal_tables):

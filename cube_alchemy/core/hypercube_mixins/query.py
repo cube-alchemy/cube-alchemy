@@ -71,32 +71,12 @@ class Query(Transformation, Plotting):
     def dimension(self, dimension:str,
         context_state_name: str = 'Default',
         query_filters: Optional[Dict[str, Any]] = None) -> List[str]:
-        df = self.dimensions([dimension], context_state_name=context_state_name, query_filters=query_filters)
+        df = self._single_state_and_filter_query(dimensions=[dimension], context_state_name=context_state_name, query_filters=query_filters)
         return df[dimension]
-
-    def dimensions(
-        self,
-        columns_to_fetch: List[str],
-        retrieve_keys: bool = False,
-        context_state_name: str = 'Default',
-        query_filters: Optional[Dict[str, Any]] = None
-    ) -> pd.DataFrame:
-        if query_filters is None:
-            query_filters = {}
-        df = self.context_states[context_state_name]
-        df = self._fetch_and_merge_columns(columns_to_fetch, df)
-
-        df = self._apply_filters_to_dataframe(df, query_filters)
-        
-        if retrieve_keys:
-            return df.drop_duplicates()
-        else:
-            return df[columns_to_fetch].drop_duplicates()
     
     def add_functions(self, **kwargs):
         """Add variables/functions to the registry for expressions and DataFrame.query via @name."""
         self.function_registry.update(kwargs)
-
 
     def query(
         self, 
@@ -217,8 +197,9 @@ class Query(Transformation, Plotting):
             dimensions = original_dimensions
 
         if metrics_list_len == 0:
-            df = self.dimensions(original_dimensions, False, context_state_name, query_filters)
-            return df
+            df = self.context_states[context_state_name]
+            df = self._apply_filters_to_dataframe(df, query_filters)
+            return df[dimensions].drop_duplicates()
         else:
             results = []
             for metric in metrics:
@@ -242,8 +223,7 @@ class Query(Transformation, Plotting):
 
                 # Fetch only what this metric needs: effective dims + metric-relevant columns (metric columns + indexes + nested dimensions)
                 all_relevant_columns = list(set(metric_effective_dims + metric.query_relevant_columns))
-                columns_to_fetch = [col for col in all_relevant_columns if not col.startswith('_index_')]
-                metric_result = self._fetch_and_merge_columns(columns_to_fetch, df)[all_relevant_columns].drop_duplicates()
+                metric_result = df[all_relevant_columns].drop_duplicates()
                 if no_dimension:  # fake dimension to group by, will be deleted later
                     metric_result[fake_dim_to_group_by] = True
 
@@ -302,7 +282,7 @@ class Query(Transformation, Plotting):
                         if no_dimension:
                             outer_combos = pd.DataFrame({fake_dim_to_group_by: [True]})
                         else:
-                            outer_combos = self.dimensions(original_dimensions, False, context_state_name, query_filters)
+                            outer_combos = self._single_state_and_filter_query(dimensions=original_dimensions, context_state_name=context_state_name, query_filters=query_filters)
                         metric_result = pd.merge(outer_combos, agg_result, on=metric_effective_dims, how='left')
                     else:
                         metric_result = agg_result
@@ -312,7 +292,7 @@ class Query(Transformation, Plotting):
                     if no_dimension:
                         outer_combos = pd.DataFrame({fake_dim_to_group_by: [True]})
                     else:
-                        outer_combos = self.dimensions(original_dimensions, False, context_state_name, query_filters)
+                        outer_combos = self._single_state_and_filter_query(dimensions=original_dimensions, context_state_name=context_state_name, query_filters=query_filters)
                     metric_result = outer_combos
                     metric_result[metric.name] = total_agg_val
 

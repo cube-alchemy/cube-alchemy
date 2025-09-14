@@ -1,4 +1,3 @@
-import logging
 import pandas as pd
 from typing import List, Dict, Any, Optional, Tuple
 from collections import deque
@@ -20,20 +19,18 @@ class Engine(GraphVisualizer, Filter, Query):
         - Otherwise, walk the trajectory and outer-join on relationship keys, keeping only
           columns that are indexes or link keys to define the key space.
         """
-        def key_cols(df: pd.DataFrame) -> List[str]:
-            return [c for c in df.columns if c.startswith('_index_') or c.startswith('_key_')]
 
         if not trajectory:
-            # No path: treat single-table as a degenerate case, otherwise empty
+            # No path: 
             base_tables = list(self.tables.keys())
             if len(base_tables) == 1:
                 t = base_tables[0]
-                cols = key_cols(self.tables[t])
+                cols = [c for c in self.tables[t].columns if c.startswith('_index_') or c.startswith('_key_')]
                 return self.tables[t][cols].drop_duplicates() if cols else pd.DataFrame()
             return pd.DataFrame()
 
         current_table = trajectory[0]
-        current_data = self.tables[current_table][key_cols(self.tables[current_table])].drop_duplicates()
+        current_data = self.tables[current_table]
         visited = {current_table}
         for i in range(len(trajectory) - 1):
             t1 = trajectory[i]
@@ -44,23 +41,13 @@ class Engine(GraphVisualizer, Filter, Query):
             key1, key2 = self.relationships.get((t1, t2), (None, None))
             if key1 is None or key2 is None:
                 raise ValueError(f"No relationship found between {t1} and {t2}")
-            next_data = self.tables[t2][key_cols(self.tables[t2])].drop_duplicates()
+            next_data = self.tables[t2]
 
-            if key1 in current_data.columns and key2 in next_data.columns:
-                current_data = pd.merge(current_data, next_data, left_on=key1, right_on=key2, how='outer')
-            else:
-                shared = [c for c in current_data.columns if c in next_data.columns]
-                if shared:
-                    current_data = pd.merge(current_data, next_data, on=shared, how='outer')
-                else:
-                    # Expand key-space safely without data columns
-                    current_data['_tmp_1'] = 1
-                    next_data['_tmp_1'] = 1
-                    current_data = pd.merge(current_data, next_data, on=['_tmp_1'], how='outer').drop(columns=['_tmp_1'])
+            current_data = pd.merge(current_data, next_data, left_on=key1, right_on=key2, how='outer')            
 
-            current_data = current_data.drop_duplicates()
+        no_key_cols = [c for c in current_data.columns if not c.startswith('_key_')]
 
-        return current_data
+        return current_data[no_key_cols]
 
     def _create_table_join_column_mapping(self) -> Dict[str, str]:
         """
@@ -76,45 +63,11 @@ class Engine(GraphVisualizer, Filter, Query):
             elif key_cols:
                 table_join_map[table_name] = key_cols[0]
             else:
-                logging.warning(f"No index or key column found for table {table_name}.")
+                self.log().warning(f"No index or key column found for table {table_name}.")
         
         # Store for further use
         self._table_join_column_map = table_join_map
     
-    def _fetch_and_merge_columns(
-        self,
-        columns_to_fetch: List[str],
-        keys_and_indexes_df: pd.DataFrame
-    ) -> pd.DataFrame:  
-        """Bring requested columns into the current index-key space.
-        - Groups requested columns by their source table.
-        - Joins on that table's index if present, otherwise on its link key(s).
-        """
-        # Group columns by table (we can join once per table)
-        by_table: Dict[str, List[str]] = {}
-        for col in columns_to_fetch:
-            t = self.column_to_table.get(col)
-            if not t:
-                self.log().warning("Warning: Column %s not found in any table.", col)
-                continue
-            by_table.setdefault(t, []).append(col)
-
-        out = keys_and_indexes_df
-        for table_name, cols in by_table.items():
-            table_df = self.tables[table_name]
-            join_column = self._table_join_column_map.get(table_name)
-            if not join_column:
-                self.log().warning("Warning: No index or key found for table %s.", table_name)
-                continue
-
-            # Select join columns plus requested columns (requested columns don't include join cols)
-            select_cols = [join_column] + cols
-            right = table_df[select_cols]
-
-            out = pd.merge(out, right, on=join_column, how='left')
-
-        return out
-
     def _create_and_update_link_table(
         self,
         column: str,
@@ -300,7 +253,7 @@ class Engine(GraphVisualizer, Filter, Query):
             for col in self.tables[table].columns:
                 if not (col.startswith('_key_') or col.startswith('_composite_') or col.startswith('_index_')):
                     shared_columns.append(col)
-        return self.dimensions(columns_to_fetch=shared_columns, retrieve_keys=False, context_state_name=context_state_name)
+        return self._single_state_and_filter_query(dimensions=shared_columns, context_state_name=context_state_name)
 
     def get_cardinalities(self, context_state_name = 'Unfiltered', include_inverse: bool = False) -> pd.DataFrame:
         """
@@ -313,7 +266,11 @@ class Engine(GraphVisualizer, Filter, Query):
           the computed result for (t1, t2).
         """
         base_tables = [t for t in self.tables if t not in self.link_tables]
-        shared_keys = list(self.core.columns)
+        shared_keys = []
+        for link_table in self.link_tables:
+            for col in self.link_tables[link_table].columns:
+                if col.startswith('_key_'):
+                    shared_keys.append(col)
 
         results: List[Dict[str, Any]] = []
         for key in shared_keys:
@@ -321,23 +278,14 @@ class Engine(GraphVisualizer, Filter, Query):
             for i in range(len(tables_sharing_key)):
                 for j in range(i + 1, len(tables_sharing_key)):
                     t1, t2 = tables_sharing_key[i], tables_sharing_key[j]
+                    shared_column = key[len("_key_"):]  # The original shared column name
+                    self.log().info(f"Computing cardinality between {t1} and {t2} on shared column {shared_column}")
 
-                    if context_state_name == 'Unfiltered': #simmplest case, no need to filter by context state and use all values
-                        s1 = self.tables[t1][key].dropna()
-                        s2 = self.tables[t2][key].dropna()
-                    else:
-                        #If I want to use the context state, I need to get the relevant values first.. I can use the indexes of the tables
-                        idx1 = self.dimension(f'_index_{t1}', context_state_name=context_state_name)
-                        idx2 = self.dimension(f'_index_{t2}', context_state_name=context_state_name)
+                    #If I want to use the context state, I need to get the relevant values first.. I can use the indexes of the tables
+                    s1 = self._single_state_and_filter_query(dimensions=[f'_index_{t1}', shared_column], context_state_name=context_state_name).dropna()[shared_column]
+                    s2 = self._single_state_and_filter_query(dimensions=[f'_index_{t2}', shared_column], context_state_name=context_state_name).dropna()[shared_column]
+                    #I need to first filter the tables by the context state indexes and then get the relevant key columns. idx1 and idx2 are pandas series with the relevant indexes
 
-                        #I need to first filter the tables by the context state indexes and then get the relevant key columns. idx1 and idx2 are pandas series with the relevant indexes
-
-                        s1 = self.tables[t1][self.tables[t1][f'_index_{t1}'].isin(idx1)][key].dropna()
-                        s2 = self.tables[t2][self.tables[t2][f'_index_{t2}'].isin(idx2)][key].dropna()
-
-                    if s1.empty or s2.empty:
-                        results.append({"table1": t1, "table2": t2, "shared_key": key, "cardinality": "no relationship"})
-                        continue
 
                     c1 = s1.value_counts()
                     c2 = s2.value_counts()
@@ -349,7 +297,9 @@ class Engine(GraphVisualizer, Filter, Query):
                     else:
                         max1 = int(c1.loc[inter].max())
                         max2 = int(c2.loc[inter].max())
-                        if max1 == 1 and max2 == 1:
+                        if s1.empty or s2.empty:
+                            cardinality = "no relationship"
+                        elif max1 == 1 and max2 == 1:
                             cardinality = "one-to-one"
                         elif max1 == 1 and max2 > 1:
                             cardinality = "one-to-many"
@@ -359,7 +309,7 @@ class Engine(GraphVisualizer, Filter, Query):
                             cardinality = "many-to-many"
 
                     # shared column is the key without the _key_ prefix
-                    shared_column = key[len("_key_"):]
+                    
                     if t1.startswith('_composite_'):
                         t1 = "Composite Table"
                     if t2.startswith('_composite_'):

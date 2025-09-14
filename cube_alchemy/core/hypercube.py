@@ -140,6 +140,10 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
 
             self.core = self.context_states['Unfiltered']
 
+            # from now on, all the data will be contained in the core
+            for table in self.tables:
+                self.tables[table] = pd.DataFrame(columns=self.tables[table].columns)
+
             self.applied_filters = {}   # List of applied filters
             self.filter_pointer = {}    # Pointer to the current filter state
 
