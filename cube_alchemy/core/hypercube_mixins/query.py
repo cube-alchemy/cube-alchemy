@@ -83,7 +83,7 @@ class Query(Transformation, Plotting):
     ) -> pd.DataFrame:
         if query_filters is None:
             query_filters = {}
-        df = self.context_states[context_state_name].copy()
+        df = self.context_states[context_state_name]
         df = self._fetch_and_merge_columns(columns_to_fetch, df)
 
         df = self._apply_filters_to_dataframe(df, query_filters)
@@ -208,12 +208,13 @@ class Query(Transformation, Plotting):
         drop_null_metric_results: bool = False
     ) -> pd.DataFrame:
         metrics_list_len = len(metrics)
-
-        # Preserve original dimensions and establish merge/group keys
-        original_dimensions = list(dimensions)
+        original_dimensions = dimensions
         no_dimension = len(original_dimensions) == 0
-        fake_dim_to_group_by = '<all>'
-        dimensions = [fake_dim_to_group_by] if no_dimension else original_dimensions
+        if no_dimension:
+            fake_dim_to_group_by = '<all>'
+            dimensions = [fake_dim_to_group_by]
+        else:
+            dimensions = original_dimensions
 
         if metrics_list_len == 0:
             df = self.dimensions(original_dimensions, False, context_state_name, query_filters)
@@ -221,7 +222,7 @@ class Query(Transformation, Plotting):
         else:
             results = []
             for metric in metrics:
-                df = self.context_states[context_state_name].copy()  # copy state DataFrame to avoid modifying original
+                df = self.context_states[context_state_name]
                 df = self._apply_filters_to_dataframe(df, query_filters)
 
                 # Compute per-metric effective dimensions once (used for nested and outer aggregation)
@@ -243,7 +244,6 @@ class Query(Transformation, Plotting):
                 all_relevant_columns = list(set(metric_effective_dims + metric.query_relevant_columns))
                 columns_to_fetch = [col for col in all_relevant_columns if not col.startswith('_index_')]
                 metric_result = self._fetch_and_merge_columns(columns_to_fetch, df)[all_relevant_columns].drop_duplicates()
-
                 if no_dimension:  # fake dimension to group by, will be deleted later
                     metric_result[fake_dim_to_group_by] = True
 

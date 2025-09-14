@@ -195,7 +195,7 @@ class Filter:
             if len(columns_to_fetch) > 0:
                 # Fetch only columns that are not already in the DataFrame
                 df = self._fetch_and_merge_columns(columns_to_fetch, df)
-            # Apply filters based on the criteria (force string comparison for consistency)
+            # Apply filters based on the criteria
             for column, values in criteria.items():
                 if column in df.columns:
                     df = df[df[column].isin(values)]
