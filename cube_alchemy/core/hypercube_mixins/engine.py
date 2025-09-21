@@ -11,26 +11,35 @@ class Engine(GraphVisualizer, Filter, Query):
         # Initialize Query registries (metrics, derived_metrics, queries)
         Query.__init__(self)
 
-    # Unified methods (stable names used by other mixins)
-    def _join_trajectory_keys(self, trajectory: List[str]) -> pd.DataFrame:
-        """Build the key space from a trajectory using per-table indexes and link keys.
-
+        # Main fetch and filter function, set based on core deployment mode
+        if self.core_is_fully_deployed:
+            self._fetch_and_filter = self._fetch_and_filter_fully_deployed_core_strategy
+        else:
+            self._fetch_and_filter = self._fetch_and_filter_not_fully_deployed_core_strategy
+    
+    def _build_relationship_matrix(self, trajectory: List[str]) -> pd.DataFrame:
+        """We walk the trajectory and outer-join on keys (autonumbers built using shared columns)
         - If trajectory is empty but there's a single table, return that table's key/index columns.
-        - Otherwise, walk the trajectory and outer-join on relationship keys, keeping only
-          columns that are indexes or link keys to define the key space.
         """
 
+        def _get_index_and_key_cols(df: pd.DataFrame) -> List[str]:
+            return [c for c in df.columns if c.startswith('_index_') or c.startswith('_key_')]
+
         if not trajectory:
-            # No path: 
+            # No path but there's a single table, return its index column
             base_tables = list(self.tables.keys())
             if len(base_tables) == 1:
                 t = base_tables[0]
-                cols = [c for c in self.tables[t].columns if c.startswith('_index_') or c.startswith('_key_')]
-                return self.tables[t][cols].drop_duplicates() if cols else pd.DataFrame()
+                cols = _get_index_and_key_cols(self.tables[t])
+                return self.tables[t][cols] if cols else pd.DataFrame()
             return pd.DataFrame()
 
         current_table = trajectory[0]
-        current_data = self.tables[current_table]
+        if self.core_is_fully_deployed:
+            current_data = self.tables[current_table]
+        else:
+            current_data = self.tables[current_table][_get_index_and_key_cols(self.tables[current_table])]
+
         visited = {current_table}
         for i in range(len(trajectory) - 1):
             t1 = trajectory[i]
@@ -41,13 +50,24 @@ class Engine(GraphVisualizer, Filter, Query):
             key1, key2 = self.relationships.get((t1, t2), (None, None))
             if key1 is None or key2 is None:
                 raise ValueError(f"No relationship found between {t1} and {t2}")
-            next_data = self.tables[t2]
+            
+            if self.core_is_fully_deployed:
+                next_data = self.tables[t2]
+            else:
+                next_data = self.tables[t2][_get_index_and_key_cols(self.tables[t2])]
 
             current_data = pd.merge(current_data, next_data, left_on=key1, right_on=key2, how='outer')            
 
-        no_key_cols = [c for c in current_data.columns if not c.startswith('_key_')]
+        if self.core_is_fully_deployed:
+            # Drop non-key columns (they are not needed going forward)
+            no_key_cols = [c for c in current_data.columns if not c.startswith('_key_')]
+            current_data = current_data[no_key_cols]
+        
+            # Empty the original tables after processing, we have all the data in the core
+            for table in self.tables:
+                self.tables[table] = pd.DataFrame(columns=self.tables[table].columns)
 
-        return current_data[no_key_cols]
+        return current_data
 
     def _create_table_join_column_mapping(self) -> Dict[str, str]:
         """
@@ -240,7 +260,7 @@ class Engine(GraphVisualizer, Filter, Query):
                     queue.append((neighbor_table[1], path + [(neighbor_table[0], neighbor_table[1], key1, key2)]))
         return None
 
-    def relationship_matrix(self, context_state_name: str = 'Unfiltered', core = False) -> pd.DataFrame:
+    def get_relationship_matrix(self, context_state_name: str = 'Unfiltered', core = False) -> pd.DataFrame:
         if core:
             stateful_core = self.context_states[context_state_name]
             return stateful_core[sorted(stateful_core.columns)]
@@ -282,8 +302,9 @@ class Engine(GraphVisualizer, Filter, Query):
                     self.log().info(f"Computing cardinality between {t1} and {t2} on shared column {shared_column}")
 
                     #If I want to use the context state, I need to get the relevant values first.. I can use the indexes of the tables
-                    s1 = self._single_state_and_filter_query(dimensions=[f'_index_{t1}', shared_column], context_state_name=context_state_name).dropna()[shared_column]
-                    s2 = self._single_state_and_filter_query(dimensions=[f'_index_{t2}', shared_column], context_state_name=context_state_name).dropna()[shared_column]
+                    #print(self.context_states[context_state_name][[f'_index_{t1}',key]])
+                    s1 = self.dimensions(dimensions=[f'_index_{t1}',shared_column]).dropna()[shared_column]
+                    s2 = self.dimensions(dimensions=[f'_index_{t2}',shared_column]).dropna()[shared_column]
                     #I need to first filter the tables by the context state indexes and then get the relevant key columns. idx1 and idx2 are pandas series with the relevant indexes
 
 
@@ -351,4 +372,67 @@ class Engine(GraphVisualizer, Filter, Query):
         # Concatenate and return; original rows are unique per unordered pair and key
         return pd.concat([df, inv], ignore_index=True)
     
+    def _fetch_and_merge_columns(
+        self,
+        columns_to_fetch: List[str],
+        keys_and_indexes_df: pd.DataFrame
+    ) -> pd.DataFrame:  
+        """Bring requested columns into the current index-key space.
+        - Groups requested columns by their source table.
+        - Joins on that table's index if present, otherwise on its link key(s).
+        """
+        # Group columns by table (we can join once per table)
+        by_table: Dict[str, List[str]] = {}
+        for col in columns_to_fetch:
+            t = self.column_to_table.get(col)
+            if not t:
+                self.log().warning("Warning: Column %s not found in any table.", col)
+                continue
+            if not col.startswith('_index_') and not col.startswith('_key_'):
+                by_table.setdefault(t, []).append(col)
 
+        out = keys_and_indexes_df
+        for table_name, cols in by_table.items():
+            table_df = self.tables[table_name]
+            join_column = self._table_join_column_map.get(table_name)
+            if not join_column:
+                self.log().warning("Warning: No index or key found for table %s.", table_name)
+                continue
+
+            if cols:
+                # Select join columns plus requested columns (requested columns don't include join cols)
+                select_cols = [join_column] + cols
+                right = table_df[select_cols]
+                out = pd.merge(out, right, on=join_column, how='left')
+
+        return out
+    
+    def _fetch_and_filter_not_fully_deployed_core_strategy(
+        self,
+        dimensions: Optional[List[str]] = None,
+        context_state_name: str = 'Default',
+        filter_criteria: Optional[Dict[str, List[Any]]] = None
+    ) -> pd.DataFrame:
+        df = self.context_states[context_state_name]
+        if filter_criteria:
+            for column, values in filter_criteria.items():
+                df = self._fetch_and_merge_columns([column], df)
+                df = df[df[column].isin(values)].drop(columns=[column])
+        if dimensions:
+            df = self._fetch_and_merge_columns(dimensions, df)
+        return df
+    
+    def _fetch_and_filter_fully_deployed_core_strategy(
+        self,
+        dimensions: Optional[List[str]] = None, # dimensions is not used in this strategy, they are all present in the context state
+        context_state_name: str = 'Default',
+        filter_criteria: Optional[Dict[str, List[Any]]] = None
+    ) -> pd.DataFrame:
+        df = self.context_states[context_state_name]
+        if filter_criteria:
+            for column, values in filter_criteria.items():
+                if column in df.columns:
+                    df = df[df[column].isin(values)]
+                else:
+                    self.log().warning("Warning: Column %s not found in DataFrame.", column)
+        return df

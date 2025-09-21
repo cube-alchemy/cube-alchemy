@@ -16,9 +16,8 @@ class Filter:
         """
         if context_state_name == 'Unfiltered':
             raise ValueError("Cannot use 'Unfiltered' state name to change filter state. Please use a different state name.")
-        
-        self.context_states[context_state_name] = self._apply_filters_to_dataframe(self.context_states[context_state_name], criteria)
-        
+
+        self.context_states[context_state_name] = self._fetch_and_filter(context_state_name=context_state_name, filter_criteria=criteria)
 
         if not is_reset:
             self._truncate_filter_history(context_state_name=context_state_name)
@@ -182,20 +181,6 @@ class Filter:
         except Exception as e:
             self.log().error("Error setting state '%s': %s", context_state_name, e)
             return False
-        
-    def _apply_filters_to_dataframe(
-        self,
-        df: pd.DataFrame,
-        criteria: Dict[str, List[Any]]
-    ) -> pd.DataFrame:
-        if criteria:
-            for column, values in criteria.items():
-                if column in df.columns:
-                    df = df[df[column].isin(values)]
-                else:
-                    self.log().warning("Warning: Column %s not found in DataFrame.", column)
-            
-        return df
     
     def _truncate_filter_history(
         self,

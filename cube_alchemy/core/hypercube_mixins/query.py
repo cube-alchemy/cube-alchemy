@@ -73,7 +73,10 @@ class Query(Transformation, Plotting):
         query_filters: Optional[Dict[str, Any]] = None) -> List[str]:
         df = self._single_state_and_filter_query(dimensions=[dimension], context_state_name=context_state_name, query_filters=query_filters)
         return df[dimension]
-    
+
+    def dimensions(self, dimensions:List[str], context_state_name: str = 'Default', query_filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
+        return self._single_state_and_filter_query(dimensions=dimensions, context_state_name=context_state_name, query_filters=query_filters)
+
     def add_functions(self, **kwargs):
         """Add variables/functions to the registry for expressions and DataFrame.query via @name."""
         self.function_registry.update(kwargs)
@@ -197,14 +200,11 @@ class Query(Transformation, Plotting):
             dimensions = original_dimensions
 
         if metrics_list_len == 0:
-            df = self.context_states[context_state_name]
-            df = self._apply_filters_to_dataframe(df, query_filters)
-            return df[dimensions].drop_duplicates()
+            return self._fetch_and_filter(dimensions = dimensions, context_state_name = context_state_name, filter_criteria = query_filters)[dimensions].drop_duplicates()
+            
         else:
             results = []
             for metric in metrics:
-                df = self.context_states[context_state_name]
-                df = self._apply_filters_to_dataframe(df, query_filters)
 
                 # Compute per-metric effective dimensions once (used for nested and outer aggregation)
                 if metric.ignore_dimensions is False:
@@ -223,7 +223,7 @@ class Query(Transformation, Plotting):
 
                 # Fetch only what this metric needs: effective dims + metric-relevant columns (metric columns + indexes + nested dimensions)
                 all_relevant_columns = list(set(metric_effective_dims + metric.query_relevant_columns))
-                metric_result = df[all_relevant_columns].drop_duplicates()
+                metric_result = self._fetch_and_filter(dimensions = all_relevant_columns, context_state_name = context_state_name, filter_criteria = query_filters)[all_relevant_columns].drop_duplicates()
                 if no_dimension:  # fake dimension to group by, will be deleted later
                     metric_result[fake_dim_to_group_by] = True
 

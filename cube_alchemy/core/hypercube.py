@@ -20,19 +20,23 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
         rename_original_shared_columns: bool = True,
+        core_is_fully_deployed: bool = False,
+        *,
         apply_composite: bool = True,
         validate: bool = True,
         to_be_stored: bool = False,
         logger: Optional[Union[logging.Logger, bool]] = None,
-        # Simple DI hooks for testability/extensibility
         validator_cls: Optional[Type[SchemaValidator]] = None,
         bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
-        function_registry: Optional[Dict[str, Any]] = None,
+        function_registry: Optional[Dict[str, Any]] = None
     ) -> None:
+        self.core_is_fully_deployed = core_is_fully_deployed
+        self.rename_original_shared_columns = rename_original_shared_columns
+
         # Initialize Logger mixins
         Logger.__init__(self, logger=logger)
         Engine.__init__(self)
-        ModelCatalog.__init__(self)
+        ModelCatalog.__init__(self)        
 
         # Bind supporting components
         self._dep_index = DependencyIndex()  # Modular dependency index for queries/metrics/plots
@@ -43,8 +47,6 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         if function_registry:
             # Query.__init__ sets defaults; merge any provided extras
             self.function_registry.update(function_registry)
-
-        self.rename_original_shared_columns = rename_original_shared_columns
 
         if tables is not None:
             self.load_data(
@@ -136,13 +138,9 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
 
             # Set the initial state to the unfiltered version of the joined trajectory keys across all the connections
             tables_trajectory = self._find_complete_trajectory(self.tables)
-            self.context_states['Unfiltered'] = self._join_trajectory_keys(tables_trajectory)
+            self.context_states['Unfiltered'] = self._build_relationship_matrix(tables_trajectory)
 
             self.core = self.context_states['Unfiltered']
-
-            # from now on, all the data will be contained in the core
-            for table in self.tables:
-                self.tables[table] = pd.DataFrame(columns=self.tables[table].columns)
 
             self.applied_filters = {}   # List of applied filters
             self.filter_pointer = {}    # Pointer to the current filter state
@@ -204,7 +202,6 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
             if old_log is not None:
                 self._log = old_log
         return target
-
     @staticmethod
     def load_pickle(
         path: Optional[Union[str, "Path"]] = None,
