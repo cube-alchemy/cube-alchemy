@@ -1,7 +1,8 @@
 from typing import Callable, Any, Dict
-from .series import render_bar, render_line
+from .series import render_bar, render_line, render_area
 from .combo import render_combo
 from .kpi import render_kpi
+from .pie import render_pie
 
 # Registry mapping plot types to handler callables with a common signature
 # Handlers can accept a flexible subset of arguments:
@@ -11,8 +12,10 @@ from .kpi import render_kpi
 PLOT_HANDLERS: Dict[str, Callable[..., Any]] = {
     'bar': render_bar,
     'line': render_line,
+    'area': render_area,
     'combo': render_combo,
     'kpi': render_kpi,
+    'pie': render_pie,
 }
 
 

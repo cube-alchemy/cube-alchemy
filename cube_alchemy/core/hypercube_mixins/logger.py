@@ -47,3 +47,14 @@ class Logger:
             return logger
         # Fallback to a logger named after the class' module for sensible defaults
         return logging.getLogger(self.__class__.__module__)
+    
+    def set_logger(self, logger: Optional[Union[logging.Logger, bool]] = True) -> None:
+        """(Re)configure the logger for an existing Hypercube instance.
+
+        - Pass a logging.Logger to use it directly.
+        - Pass True to enable a basic INFO-level configuration (if none exists)
+          and use a module-named logger.
+        - Pass False to attach a silent logger to this instance.
+        - Pass None to attach a module-named logger inheriting app settings.
+        """
+        Logger.__init__(self, logger=logger)

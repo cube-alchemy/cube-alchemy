@@ -4,7 +4,7 @@
 
 <h1 align="center">Cube Alchemy</h1>
 
-A lightweight, queryable hypercube engine for multidimensional analytics on top of pandas.
+A lightweight hypercube engine for multidimensional analytics on top of pandas.
 
 ## Why It Matters
 
@@ -14,9 +14,9 @@ Reduce glue code and speed up your analysis so you can focus on insights.
 
 - **Simplicity**: Declarative queries achieve slicing and dicing in pure Python with less ad‑hoc joins.
 
-- **Concistency**: Define your queries and use them everywhere with the same logic and filtering behavior.
+- **Consistency**: Define your queries and use them everywhere with the same logic and filtering behavior.
 
-- **Maintainability**: Centralized business logic in reusable components.
+- **Maintainability**: Centralized analytical logic in reusable components.
 
 - **Integration**: Power fully interactive analytics apps using frameworks like Streamlit or Panel, or expose it to a web client.
 
@@ -118,7 +118,7 @@ cube = Hypercube({
     'Promos': promos,
 })
 
-# Inspect your new hypercube model (shared columns are now the edges)
+# Inspect your new hypercube model (shared columns will connect tables)
 
 cube.visualize_graph(full_column_names=False)
 ```
@@ -126,6 +126,8 @@ cube.visualize_graph(full_column_names=False)
 ![Hypercube Graph Visualization](images/hypercube_graph.png)
 
 ```python
+# Define (can be done in YAML, here we expose the direct method)
+
 # 3) Define metrics
 cube.define_metric(
     name='Revenue',
@@ -184,8 +186,7 @@ cube.query("sales analysis")
 1  North         Home   Discount    100.0      4    40.0                1
 ```
 
-
-Addional *features* such as **Filters** and **New Context States** and more are available but omitted here for brevity and simplicity. See the docs for details.
+Additional features such as filters, custom context states, nested metrics, and plotting integrations are available but omitted here for brevity. See the docs for details.
 
 ## Full documentation
 For concepts, API specs, advanced features, full examples and Streamlit integration see:

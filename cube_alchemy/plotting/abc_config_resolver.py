@@ -32,10 +32,12 @@ class DefaultPlotConfigResolver(PlotConfigResolver):
 				{"plot_type": "bar"},
 				{"plot_type": "line"},
 				{"plot_type": "area"},
+				{"plot_type": "pie"},
 			],
 			(2, 1): [
-				{"plot_type": "bar", "stacked": False},
-				{"plot_type": "bar", "stacked": True},
+				{"plot_type": "bar"},
+				{"plot_type": "line"},
+				{"plot_type": "area"},
 			],
 			(1, 2): [
 				{"plot_type": "combo"},
