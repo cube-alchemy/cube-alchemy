@@ -105,39 +105,97 @@ class AnalyticsSpecs:
 
         # --- Precompute hidden (internal) base metrics required ---
         hidden_metrics: List[str] = []
-        # From derived metrics' expressions
+        
+        # Helper function to recursively collect all base metrics needed by a derived metric
+        def collect_base_metrics(derived_metric_name: str, collected_metrics: List[str] = None, visited: set[str] = None):
+            if collected_metrics is None:
+                collected_metrics = []
+            if visited is None:
+                visited = set()
+                
+            # Avoid infinite recursion if there are circular dependencies
+            if derived_metric_name in visited:
+                return collected_metrics
+            visited.add(derived_metric_name)
+            
+            if derived_metric_name not in self.derived_metrics:
+                return collected_metrics
+                
+            # Get columns referenced by this derived metric
+            for col in self.derived_metrics[derived_metric_name].columns:
+                # If it's a base metric, add it
+                if col in self.metrics and col not in metrics and col not in collected_metrics:
+                    collected_metrics.append(col)
+                # If it's another derived metric, recursively process it
+                elif col in self.derived_metrics:
+                    collect_base_metrics(col, collected_metrics, visited)
+            
+            return collected_metrics
+        
+        # From derived metrics' expressions (with recursive dependency resolution)
         for cm_name in derived_metrics:
-            if cm_name in self.derived_metrics:
-                for col in self.derived_metrics[cm_name].columns:
-                    if col in self.metrics and col not in metrics and col not in hidden_metrics:
-                        hidden_metrics.append(col)
+            collect_base_metrics(cm_name, hidden_metrics)
+            
         # From HAVING expression referenced columns
         for col in having_columns:
             if col in self.metrics and col not in metrics and col not in hidden_metrics:
                 hidden_metrics.append(col)
+            # Also handle derived metrics in HAVING
+            elif col in self.derived_metrics and col not in derived_metrics:
+                collect_base_metrics(col, hidden_metrics)
+                
         # From SORT columns
         for sort_col, _dir in sort:
             if sort_col in self.metrics and sort_col not in metrics and sort_col not in hidden_metrics:
                 hidden_metrics.append(sort_col)
+            # Also handle derived metrics in SORT
+            elif sort_col in self.derived_metrics and sort_col not in derived_metrics:
+                collect_base_metrics(sort_col, hidden_metrics)
 
         # --- Precompute hidden derived metrics and dependency order ---
         # Any derived metric referenced by requested derived metrics, HAVING, or SORT
         hidden_derived_metrics: List[str] = []
         referenced_computed: set[str] = set()
+        
+        # Helper function to recursively collect all derived metrics needed by another derived metric
+        def collect_derived_metrics(derived_metric_name: str, collected_metrics: List[str], visited: set[str] = None):
+            if visited is None:
+                visited = set()
+                
+            # Avoid infinite recursion if there are circular dependencies
+            if derived_metric_name in visited:
+                return
+            visited.add(derived_metric_name)
+            
+            if derived_metric_name not in self.derived_metrics:
+                return
+                
+            # Get columns referenced by this derived metric
+            for col in self.derived_metrics[derived_metric_name].columns:
+                # If it's another derived metric and not already included, add it and recursively process it
+                if col in self.derived_metrics and col not in derived_metrics and col not in collected_metrics:
+                    collected_metrics.append(col)
+                    referenced_computed.add(col)
+                    collect_derived_metrics(col, collected_metrics, visited)
+            
+        # From derived metrics' expressions (with recursive dependency resolution)
         for cm_name in derived_metrics:
             if cm_name in self.derived_metrics:
-                for col in self.derived_metrics[cm_name].columns:
-                    if col in self.derived_metrics and col not in derived_metrics and col not in hidden_derived_metrics:
-                        hidden_derived_metrics.append(col)
-                        referenced_computed.add(col)
+                collect_derived_metrics(cm_name, hidden_derived_metrics)
+                
+        # From HAVING expression referenced columns
         for col in having_columns:
             if col in self.derived_metrics and col not in derived_metrics and col not in hidden_derived_metrics:
                 hidden_derived_metrics.append(col)
                 referenced_computed.add(col)
+                collect_derived_metrics(col, hidden_derived_metrics)
+                
+        # From SORT columns
         for sort_col, _dir in sort:
             if sort_col in self.derived_metrics and sort_col not in derived_metrics and sort_col not in hidden_derived_metrics:
                 hidden_derived_metrics.append(sort_col)
                 referenced_computed.add(sort_col)
+                collect_derived_metrics(sort_col, hidden_derived_metrics)
 
         # Build dependency graph for all derived metrics involved in this query (we need to execute them in order to work)
         def build_cm_dependencies(names: List[str]) -> Dict[str, List[str]]:
