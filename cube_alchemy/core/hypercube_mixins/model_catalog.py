@@ -23,8 +23,18 @@ class ModelCatalog:
         self._model_yaml_path: Optional[Path] = None
 
     # ---------- YAMLsource wiring ----------
-    def set_yaml_model_catalog(self, path: Optional[str] = None, use_current_directory: bool = True, create_if_missing: bool = True, default_yaml_name: Optional[str] = None) -> Path:
-        """Set the YAML file path to use for model definitions, and attach it to this cube."""
+    def set_yaml_model_catalog(self, path: Optional[str] = None, use_current_directory: bool = True, create_if_missing: bool = True, 
+                         default_yaml_name: Optional[str] = None, prefer_nested_plots: bool = True, prefer_nested_transformers: bool = True) -> Path:
+        """Set the YAML file path to use for model definitions, and attach it to this cube.
+        
+        Args:
+            path: Path to the YAML file, relative or absolute
+            use_current_directory: If True and path is relative, use current working directory as base
+            create_if_missing: If True, create the file with empty sections if it doesn't exist
+            default_yaml_name: Default filename to use if path is None
+            prefer_nested_plots: If True, plots will be nested under their parent queries in YAML
+            prefer_nested_transformers: If True, transformers will be nested under parent queries in YAML
+        """
         if default_yaml_name is None:
             default_yaml_name = "model_catalog.yaml"
         if path is None:
@@ -38,7 +48,7 @@ class ModelCatalog:
             )
         self._model_yaml_path = p.resolve()
         # Use the model-aware YAML source here; generic YAMLSource stays domain-agnostic
-        source = ModelYAMLSource(p)
+        source = ModelYAMLSource(p, prefer_nested_plots=prefer_nested_plots, prefer_nested_transformers=prefer_nested_transformers)
         self.set_model_catalog([source])
         self.log().info("Attached YAML definitions from %s to the model catalog.", self._model_yaml_path)
         return self._model_yaml_path
@@ -86,7 +96,16 @@ class ModelCatalog:
                 spec.setdefault("name", name)
                 repo.put(kind, name, spec)
 
-    def save_to_model_catalog(self) -> None: # Cube -> Repo -> Source
+    def save_to_model_catalog(self, prefer_nested_plots: bool = True, prefer_nested_transformers: bool = True) -> Optional[Path]:
+        """Save the cube's current state to the model catalog.
+        
+        Args:
+            prefer_nested_plots: If True, plots will be nested under their parent queries in YAML
+            prefer_nested_transformers: If True, transformers will be nested under parent queries in YAML
+            
+        Returns:
+            Path to the saved YAML file if available, otherwise None
+        """
         # Ensure repo reflects current cube state
         self._model_catalog_pull_from_cube()
         catalog = self._require_model_catalog_()
@@ -100,14 +119,21 @@ class ModelCatalog:
         # Save through all sources
         if not getattr(catalog, 'sources', None):
             raise RuntimeError("No sources attached to Catalog; cannot save.")
+            
+        # Update preferences for ModelYAMLSource instances before saving
         for source in catalog.sources:
-            # Each source decides how to persist
+            if isinstance(source, ModelYAMLSource):
+                source.prefer_nested_plots = prefer_nested_plots
+                source.prefer_nested_transformers = prefer_nested_transformers
             source.save(data)
+            
         self.log().info(
             "Saved model definitions via %s source(s). %s",
             len(catalog.sources),
-            ('YAML file ->' + str(self._model_yaml_path)) if self._model_yaml_path else ''
+            ('YAML file -> ' + str(self._model_yaml_path)) if self._model_yaml_path else ''
         )
+        
+        return self._model_yaml_path
 
     # ---------- Catalog -> cube ----------
     def _apply_catalog_to_hypercube(self, catalog: Catalog, kinds: Optional[Iterable[str]] = None) -> None:
