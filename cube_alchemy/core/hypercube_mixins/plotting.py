@@ -318,6 +318,13 @@ class Plotting:
         if limit is not None:
             plot_df = plot_df.head(limit)
         
+        # Apply formatter if provided
+        formatter = config.get('formatter')
+        if formatter:
+            for column, fmt in formatter.items():
+                if column in plot_df.columns:
+                    plot_df[column] = plot_df[column].apply(lambda x: fmt.format(x) if x is not None else x)
+        
         return plot_df, config
 
     def suggest_plot_types(self, query_name: str) -> List[Dict[str, Any]]:
