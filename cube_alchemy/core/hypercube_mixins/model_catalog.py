@@ -244,6 +244,8 @@ class ModelCatalog:
             palette=spec.get("palette"),
             sort_values=spec.get("sort_values", False),
             sort_ascending=spec.get("sort_ascending", True),
+            sort_by=spec.get("sort_by"),
+            pivot=spec.get("pivot"),
             limit=spec.get("limit"),
             formatter=spec.get("formatter"),
             annotations=spec.get("annotations"),

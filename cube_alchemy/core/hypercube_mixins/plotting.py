@@ -33,7 +33,9 @@ class Plotting:
         orientation: str = "vertical",
         palette: Optional[str] = None,
         sort_values: bool = False,
-        sort_ascending: bool = True,
+        sort_ascending: Union[bool, List[bool]] = True,
+        sort_by: Optional[Union[str, List[str], Tuple[str, ...], List[Tuple[str, ...]]]] = None,
+        pivot: Optional[Union[str, List[str]]] = None,
         limit: Optional[int] = None,
         formatter: Optional[Dict[str, str]] = None,
         annotations: Optional[Dict[str, Any]] = None,
@@ -55,7 +57,9 @@ class Plotting:
             orientation: "vertical" or "horizontal" for bar charts
             palette: Color palette name
             sort_values: Whether to sort values
-            sort_ascending: Sort order if sort_values is True
+            sort_ascending: Sort order if sort_values is True. Can be a bool or list of bools for multi-column sorting
+            sort_by: Column name(s) to sort by (for table and pivot plots). Can be a string, list of strings, 
+                     or for pivot tables with multi-level columns, a tuple or list of tuples
             limit: Limit number of items to show
             secondary_y: List of metrics to plot on secondary y-axis
             formatter: Dictionary mapping column names to format strings
@@ -104,6 +108,8 @@ class Plotting:
             'palette': palette,
             'sort_values': sort_values,
             'sort_ascending': sort_ascending,
+            'sort_by': sort_by,
+            'pivot': pivot,
             'limit': limit,
             'formatter': formatter,
             'annotations': annotations,

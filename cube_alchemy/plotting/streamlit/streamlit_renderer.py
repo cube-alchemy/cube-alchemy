@@ -42,21 +42,13 @@ class StreamlitRenderer(PlotRenderer):
         if limit is not None:
             df = df.head(limit)
 
-        # Special-case: 'table' plot returns/shows the DataFrame
-        if plot_type == 'table':
-            return st.dataframe(
-                df,
-                use_container_width=kwargs.get('use_container_width', True),
-                height=kwargs.get('height', None),
-            )
-
         # Use the global registry of handlers
         handler = PLOT_HANDLERS.get(plot_type)
 
         if handler is None:
             # Fallback: if no handler, try a simple display heuristic
-            st.info(f"Unsupported plot type for Streamlit renderer: {plot_type}. Showing data table instead.")
-            return st.dataframe(df, use_container_width=True)
+            st.info(f"Unsupported plot type for Streamlit renderer: {plot_type}. Falling back to table view.")
+            return PLOT_HANDLERS['table'](st=st, df=df, use_container_width=True)
 
         # Flexible call: we pass only parameters that the handler declares
         params = set(inspect.signature(handler).parameters.keys())
@@ -81,6 +73,14 @@ class StreamlitRenderer(PlotRenderer):
             call_kwargs['title'] = title
         if 'show_title' in params:
             call_kwargs['show_title'] = bool(kwargs.get('show_title', False))
+        if 'pivot' in params:
+            call_kwargs['pivot'] = plot_config.get('pivot')
+        if 'sort_values' in params:
+            call_kwargs['sort_values'] = plot_config.get('sort_values', False)
+        if 'sort_ascending' in params:
+            call_kwargs['sort_ascending'] = plot_config.get('sort_ascending', True)
+        if 'sort_by' in params:
+            call_kwargs['sort_by'] = plot_config.get('sort_by')
         # Pass common visual kwargs if declared by handler
         for key in ('height', 'width', 'use_container_width'):
             if key in params and key in kwargs:
