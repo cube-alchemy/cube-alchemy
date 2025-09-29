@@ -25,11 +25,11 @@ def _category_and_group(
     # Category from remaining dimensions (excluding group_key if present)
     cat_dims = [d for d in dimensions if d != group_key]
     if cat_dims:
-        work['__category__'] = work[cat_dims].astype(str).agg(' | '.join, axis=1)
+        work["__category__"] = work[cat_dims].astype(str).agg(" | ".join, axis=1)
     else:
-        work['__category__'] = 'All'
+        work["__category__"] = "All"
 
-    return '__category__', group_key, work
+    return "__category__", group_key, work
 
 
 def _build_wide_dataframe(
@@ -55,7 +55,7 @@ def _build_wide_dataframe(
     if len(metrics) == 1:
         metric = metrics[0]
         if group_key:
-            wide = work.pivot_table(index=cat_field, columns=group_key, values=metric, aggfunc='first')
+            wide = work.pivot_table(index=cat_field, columns=group_key, values=metric, aggfunc="first")
             # Keep NaN so line charts can break lines; bar charts may fill later
         else:
             wide = work.set_index(cat_field)[[metric]]
@@ -64,12 +64,12 @@ def _build_wide_dataframe(
 
     # Multi-metric: melt and pivot to series columns
     id_vars = [cat_field] + ([group_key] if group_key else [])
-    long_df = work.melt(id_vars=id_vars, value_vars=metrics, var_name='__metric__', value_name='__value__')
+    long_df = work.melt(id_vars=id_vars, value_vars=metrics, var_name="__metric__", value_name="__value__")
     if group_key:
-        long_df['__series__'] = long_df[group_key].astype(str) + ' • ' + long_df['__metric__']
+        long_df["__series__"] = long_df[group_key].astype(str) + "  " + long_df["__metric__"]
     else:
-        long_df['__series__'] = long_df['__metric__']
-    wide = long_df.pivot_table(index=cat_field, columns='__series__', values='__value__', aggfunc='first')
+        long_df["__series__"] = long_df["__metric__"]
+    wide = long_df.pivot_table(index=cat_field, columns="__series__", values="__value__", aggfunc="first")
     return wide
 
 
@@ -78,24 +78,26 @@ def render_bar(
     dimensions: List[str] | None = None,
     metrics: List[str] | None = None,
     color_by: Optional[str] = None,
-    orientation: str = 'vertical',
+    orientation: str = "vertical",
     height: Optional[int] = 400,
     width: Optional[int] = None,
     use_container_width: bool = True,
     title: Optional[str] = None,
     show_title: bool = False,
     stacked: bool = False,
+    legend_position: str = "right",
 ):
     """Bar chart with Altair, mirroring matplotlib grouping rules.
 
     - With two dimensions and one metric: first dim on x, second dim as color legend.
     - Y-axis title shows metric name.
     - Groups side-by-side when stacked is False; stacked when True.
+    - Legend position can be set to "right", "left", "top", or "bottom"
     """
     import altair as alt
 
     if df is None or df.empty:
-        return st.write('No metrics to plot.')
+        return st.write("No metrics to plot.")
 
     metrics = metrics or []
     dimensions = dimensions or []
@@ -106,27 +108,27 @@ def render_bar(
     # Compute which metrics are available in the dataframe
     used_metrics = [m for m in metrics if m in work.columns]
     if not used_metrics:
-        num_cols = work.select_dtypes(include=['number']).columns.tolist()
+        num_cols = work.select_dtypes(include=["number"]).columns.tolist()
         used_metrics = num_cols[:1]
     if not used_metrics:
-        return st.write('No metrics to plot.')
+        return st.write("No metrics to plot.")
 
-    x_enc = alt.X(f'{cat_field}:N', sort=None, axis=alt.Axis(title=None, labelAngle=-45))
+    x_enc = alt.X(f"{cat_field}:N", sort=None, axis=alt.Axis(title=None, labelAngle=-45))
 
-    # Special case: one dimension, multiple metrics, and no group/color_by →
+    # Special case: one dimension, multiple metrics, and no group/color_by 
     # show one color per metric, side-by-side using xOffset when not stacked.
     if len(dimensions) == 1 and not group_key and len(used_metrics) >= 2:
         long_df = work.melt(id_vars=[cat_field], value_vars=used_metrics,
-                            var_name='__series__', value_name='__value__')
+                            var_name="__series__", value_name="__value__")
         base = alt.Chart(long_df)
-        y_enc_multi = alt.Y('__value__:Q', title='Value')
-        color_enc_multi = alt.Color('__series__:N', title='Metric')
+        y_enc_multi = alt.Y("__value__:Q", title="Value")
+        color_enc_multi = alt.Color("__series__:N", title="Metric")
         if not stacked:
             chart = base.mark_bar().encode(
                 x=x_enc,
                 y=y_enc_multi,
                 color=color_enc_multi,
-                xOffset='__series__:N'
+                xOffset="__series__:N"
             )
         else:
             chart = base.mark_bar().encode(
@@ -137,17 +139,17 @@ def render_bar(
     else:
         # Default behavior (preserve existing rendering): choose a single metric
         metric = used_metrics[0]
-        y_enc = alt.Y(f'{metric}:Q', title=metric)
+        y_enc = alt.Y(f"{metric}:Q", title=metric)
         base = alt.Chart(work)
 
         if group_key:
-            color_enc = alt.Color(f'{group_key}:N', title=group_key)
+            color_enc = alt.Color(f"{group_key}:N", title=group_key)
             if not stacked:
                 chart = base.mark_bar().encode(
                     x=x_enc,
                     y=y_enc,
                     color=color_enc,
-                    xOffset=f'{group_key}:N',
+                    xOffset=f"{group_key}:N",
                 )
             else:
                 chart = base.mark_bar().encode(
@@ -167,6 +169,12 @@ def render_bar(
         chart = chart.properties(height=height)
     if width:
         chart = chart.properties(width=width)
+        
+    # Configure legend position
+    if legend_position:
+        chart = chart.configure_legend(
+            orient=legend_position
+        )
 
     return st.altair_chart(chart, use_container_width=use_container_width)
 
@@ -181,17 +189,19 @@ def render_line(
     use_container_width: bool = True,
     title: Optional[str] = None,
     show_title: bool = False,
+    legend_position: str = "right",
 ):
     """Line chart with Altair:
 
     - With two dimensions and one metric: color by second dim, legend shown.
     - Avoid plotting zeros for missing values (keep NaN, filter out).
     - Y-axis title shows metric name.
+    - Legend position can be set to "right", "left", "top", or "bottom"
     """
     import altair as alt
 
     if df is None or df.empty:
-        return st.write('No metrics to plot.')
+        return st.write("No metrics to plot.")
 
     metrics = metrics or []
     dimensions = dimensions or []
@@ -202,23 +212,23 @@ def render_line(
     # Build long form for possibly multiple metrics
     used_metrics = [m for m in metrics if m in work.columns]
     if not used_metrics:
-        num_cols = work.select_dtypes(include=['number']).columns.tolist()
+        num_cols = work.select_dtypes(include=["number"]).columns.tolist()
         used_metrics = num_cols[:1]
     if not used_metrics:
-        return st.write('No metrics to plot.')
+        return st.write("No metrics to plot.")
 
     if len(used_metrics) == 1:
         metric = used_metrics[0]
         base = alt.Chart(work)
-        x_enc = alt.X(f'{cat_field}:N', sort=None, axis=alt.Axis(title=None, labelAngle=-45))
-        y_enc = alt.Y(f'{metric}:Q', title=metric)
+        x_enc = alt.X(f"{cat_field}:N", sort=None, axis=alt.Axis(title=None, labelAngle=-45))
+        y_enc = alt.Y(f"{metric}:Q", title=metric)
         if group_key:
             chart = base.transform_filter(
                 f'isValid(datum["{metric}"]) && isFinite(datum["{metric}"])'
             ).mark_line(point=True).encode(
                 x=x_enc,
                 y=y_enc,
-                color=alt.Color(f'{group_key}:N', title=group_key),
+                color=alt.Color(f"{group_key}:N", title=group_key),
             )
         else:
             chart = base.transform_filter(
@@ -230,17 +240,17 @@ def render_line(
     else:
         # Multiple metrics: melt to series and color by series
         long_df = work.melt(id_vars=[cat_field] + ([group_key] if group_key else []),
-                            value_vars=used_metrics, var_name='__series__', value_name='__value__')
+                            value_vars=used_metrics, var_name="__series__", value_name="__value__")
         base = alt.Chart(long_df)
-        x_enc = alt.X(f'{cat_field}:N', sort=None, axis=alt.Axis(title=None, labelAngle=-45))
-        y_enc = alt.Y('__value__:Q', title='Value')
-        series_color = '__series__' if not group_key else '__series__'
+        x_enc = alt.X(f"{cat_field}:N", sort=None, axis=alt.Axis(title=None, labelAngle=-45))
+        y_enc = alt.Y("__value__:Q", title="Value")
+        series_color = "__series__" if not group_key else "__series__"
         chart = base.transform_filter(
             'isValid(datum["__value__"]) && isFinite(datum["__value__"])'
         ).mark_line(point=True).encode(
             x=x_enc,
             y=y_enc,
-            color=alt.Color(f'{series_color}:N', title='Series'),
+            color=alt.Color(f"{series_color}:N", title="Series"),
         )
 
     if title:
@@ -249,6 +259,12 @@ def render_line(
         chart = chart.properties(height=height)
     if width:
         chart = chart.properties(width=width)
+        
+    # Configure legend position
+    if legend_position:
+        chart = chart.configure_legend(
+            orient=legend_position
+        )
 
     return st.altair_chart(chart, use_container_width=use_container_width)
 
@@ -263,17 +279,19 @@ def render_area(
     use_container_width: bool = True,
     title: Optional[str] = None,
     show_title: bool = False,
+    legend_position: str = "right",
 ):
     """Area chart with Altair, mirroring line-chart grouping rules.
 
     - With two dimensions and one metric: color by second dim, legend shown.
     - Multiple metrics: color by metric series.
     - Areas are always stacked to avoid occlusion.
+    - Legend position can be set to "right", "left", "top", or "bottom"
     """
     import altair as alt
 
     if df is None or df.empty:
-        return st.write('No metrics to plot.')
+        return st.write("No metrics to plot.")
 
     metrics = metrics or []
     dimensions = dimensions or []
@@ -284,23 +302,23 @@ def render_area(
     # Build long form for possibly multiple metrics
     used_metrics = [m for m in metrics if m in work.columns]
     if not used_metrics:
-        num_cols = work.select_dtypes(include=['number']).columns.tolist()
+        num_cols = work.select_dtypes(include=["number"]).columns.tolist()
         used_metrics = num_cols[:1]
     if not used_metrics:
-        return st.write('No metrics to plot.')
+        return st.write("No metrics to plot.")
 
     if len(used_metrics) == 1:
         metric = used_metrics[0]
         base = alt.Chart(work)
-        x_enc = alt.X(f'{cat_field}:N', sort=None, axis=alt.Axis(title=None, labelAngle=-45))
-        y_enc = alt.Y(f'{metric}:Q', title=metric, stack='zero')
+        x_enc = alt.X(f"{cat_field}:N", sort=None, axis=alt.Axis(title=None, labelAngle=-45))
+        y_enc = alt.Y(f"{metric}:Q", title=metric, stack="zero")
         if group_key:
             chart = base.transform_filter(
                 f'isValid(datum["{metric}"]) && isFinite(datum["{metric}"])'
             ).mark_area().encode(
                 x=x_enc,
                 y=y_enc,
-                color=alt.Color(f'{group_key}:N', title=group_key),
+                color=alt.Color(f"{group_key}:N", title=group_key),
             )
         else:
             chart = base.transform_filter(
@@ -312,16 +330,16 @@ def render_area(
     else:
         # Multiple metrics: melt to series and color by series
         long_df = work.melt(id_vars=[cat_field] + ([group_key] if group_key else []),
-                            value_vars=used_metrics, var_name='__series__', value_name='__value__')
+                            value_vars=used_metrics, var_name="__series__", value_name="__value__")
         base = alt.Chart(long_df)
-        x_enc = alt.X(f'{cat_field}:N', sort=None, axis=alt.Axis(title=None, labelAngle=-45))
-        y_enc = alt.Y('__value__:Q', title='Value', stack='zero')
+        x_enc = alt.X(f"{cat_field}:N", sort=None, axis=alt.Axis(title=None, labelAngle=-45))
+        y_enc = alt.Y("__value__:Q", title="Value", stack="zero")
         chart = base.transform_filter(
             'isValid(datum["__value__"]) && isFinite(datum["__value__"])'
         ).mark_area().encode(
             x=x_enc,
             y=y_enc,
-            color=alt.Color('__series__:N', title='Series'),
+            color=alt.Color("__series__:N", title="Series"),
         )
 
     if title:
@@ -330,5 +348,11 @@ def render_area(
         chart = chart.properties(height=height)
     if width:
         chart = chart.properties(width=width)
+        
+    # Configure legend position
+    if legend_position:
+        chart = chart.configure_legend(
+            orient=legend_position
+        )
 
     return st.altair_chart(chart, use_container_width=use_container_width)

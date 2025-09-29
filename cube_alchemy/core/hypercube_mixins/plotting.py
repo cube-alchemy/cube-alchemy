@@ -38,6 +38,7 @@ class Plotting:
         pivot: Optional[Union[str, List[str]]] = None,
         limit: Optional[int] = None,
         formatter: Optional[Dict[str, str]] = None,
+        legend_position: Optional[str] = None,
         annotations: Optional[Dict[str, Any]] = None,
         custom_options: Optional[Dict[str, Any]] = None,
         set_as_default: bool = True,
@@ -112,6 +113,7 @@ class Plotting:
             'pivot': pivot,
             'limit': limit,
             'formatter': formatter,
+            'legend_position': legend_position,
             'annotations': annotations,
             'custom_options': (custom_options or {}),
             '_input_dimensions': dimensions, #store original user input to refresh in case of query changes after plot definition

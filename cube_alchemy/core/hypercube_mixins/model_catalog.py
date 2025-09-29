@@ -248,6 +248,7 @@ class ModelCatalog:
             pivot=spec.get("pivot"),
             limit=spec.get("limit"),
             formatter=spec.get("formatter"),
+            legend_position=spec.get("legend_position"),
             annotations=spec.get("annotations"),
             custom_options=spec.get("custom_options"),
             set_as_default=set_default,

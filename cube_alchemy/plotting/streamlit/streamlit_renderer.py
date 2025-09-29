@@ -108,6 +108,8 @@ class StreamlitRenderer(PlotRenderer):
             call_kwargs['sort_ascending'] = plot_config.get('sort_ascending', True)
         if 'sort_by' in params:
             call_kwargs['sort_by'] = plot_config.get('sort_by')
+        if 'legend_position' in params:
+            call_kwargs['legend_position'] = plot_config.get('legend_position', 'right')
         # Pass common visual kwargs if declared by handler
         for key in ('height', 'width', 'use_container_width'):
             if key in params and key in kwargs:
