@@ -112,7 +112,13 @@ class ModelYAMLSource(YAMLSource):
                     out.setdefault("kind", section)
                     out.setdefault("name", str(iname))
                     out.setdefault("query", qname)
-                bucket[str(iname)] = out
+                
+                # Use composite key for plots to avoid name collisions across queries
+                if section == "plots":
+                    bucket_key = f"{qname}:{str(iname)}"
+                else:
+                    bucket_key = str(iname)
+                bucket[bucket_key] = out
         if bucket:
             # Ensure kind/name defaults also for pre-existing top-level entries
             flat: Dict[str, Any] = {}
@@ -129,12 +135,23 @@ class ModelYAMLSource(YAMLSource):
                     )
                     # keep query annotation if present during normalized view
                     qref = normalized_spec.get("query")
-                    normalized_spec = {"transformer": str(iname), "params": params}
+                    
+                    # Extract the original transformer name if it's a composite key
+                    item_name = iname
+                    if section == "transformers" and "query" in normalized_spec and ":" in iname:
+                        _, item_name = iname.split(":", 1)
+                    
+                    normalized_spec = {"transformer": str(item_name), "params": params}
                     if qref is not None:
                         normalized_spec["query"] = qref
                 
+                # Extract the original item name for plots if it's a composite key
+                item_name = iname
+                if ":" in iname:
+                    _, item_name = iname.split(":", 1)
+                
                 normalized_spec.setdefault("kind", section)
-                normalized_spec.setdefault("name", str(iname))
+                normalized_spec.setdefault("name", str(item_name))
                 flat[iname] = normalized_spec
             normalized[section] = flat
 
@@ -162,6 +179,12 @@ class ModelYAMLSource(YAMLSource):
             for iname, ispec in bucket.items():
                 if not isinstance(ispec, dict):
                     continue
+                
+                # Extract original item name from composite key
+                item_name = iname
+                if ":" in iname:
+                    qname_from_key, item_name = iname.split(":", 1)
+                
                 qname = ispec.get("query")
                 target = work["queries"].get(qname) if qname else None
                 if target:
@@ -172,19 +195,24 @@ class ModelYAMLSource(YAMLSource):
                             ispec.get("params") if isinstance(ispec.get("params"), dict)
                             else {k: v for k, v in ispec.items() if k not in ("kind", "name", "query", "transformer")}
                         )
-                        q_items[str(iname)] = params
+                        q_items[str(item_name)] = params
                     else:
-                        q_items[str(iname)] = {k: v for k, v in ispec.items() if k not in ("kind", "name", "query")}
+                        q_items[str(item_name)] = {k: v for k, v in ispec.items() if k not in ("kind", "name", "query")}
                 else:
+                    # Extract original item name from composite key for top-level items
+                    item_name = iname
+                    if ":" in iname:
+                        _, item_name = iname.split(":", 1)
+                        
                     # keep top-level; drop only kind/name; for transformers keep params-only at save-time
                     if section == "transformers":
                         params = (
                             ispec.get("params") if isinstance(ispec.get("params"), dict)
                             else {k: v for k, v in ispec.items() if k not in ("kind", "name", "transformer", "query")}
                         )
-                        remaining[str(iname)] = params
+                        remaining[str(item_name)] = params
                     else:
-                        remaining[str(iname)] = {k: v for k, v in ispec.items() if k not in ("kind", "name")}
+                        remaining[str(item_name)] = {k: v for k, v in ispec.items() if k not in ("kind", "name")}
             if remaining:
                 work[section] = remaining
             else:

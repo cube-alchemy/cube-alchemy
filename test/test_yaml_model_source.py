@@ -49,11 +49,11 @@ def test_save_renests_known_queries(tmp_path: Path, prefer_plots: bool, prefer_t
     # Plots: p1 nested only when prefer_plots
     if prefer_plots:
         assert "plots" in q1 and "p1" in q1["plots"]
-        assert out.get("plots", {}).get("p1") is None  # not top-level anymore
+        assert "p1" not in out.get("plots", {})  # not top-level anymore
     else:
         # when not preferring nesting, p1 remains top-level and not nested
         assert "plots" not in q1 or "p1" not in q1.get("plots", {})
-        assert out.get("plots", {}).get("p1") is not None
+        assert "p1" in out.get("plots", {})  # p1 is at top level with its original name, not a composite key
 
     # p2 never had a query; must remain top-level
     assert "p2" in out.get("plots", {})
@@ -114,9 +114,9 @@ def test_load_lifts_nested_sections_to_top_level_with_query(tmp_path: Path) -> N
     src = ModelYAMLSource(ypath)
     data = src._load()
 
-    # lifted to top-level with query annotation
-    assert "p1" in data.get("plots", {})
-    assert data["plots"]["p1"].get("query") == "q1"
+    # lifted to top-level with query annotation and composite key for plots
+    assert "q1:p1" in data.get("plots", {})
+    assert data["plots"]["q1:p1"].get("query") == "q1"
     assert "t1" in data.get("transformers", {})
     assert data["transformers"]["t1"].get("query") == "q1"
 
@@ -130,7 +130,7 @@ def test_load_lifts_nested_sections_to_top_level_with_query(tmp_path: Path) -> N
     assert "transformers" not in q1
 
     # kind/name should be present in normalized specs
-    assert data["plots"]["p1"]["kind"] == "plots"
-    assert data["plots"]["p1"]["name"] == "p1"
+    assert data["plots"]["q1:p1"]["kind"] == "plots"
+    assert data["plots"]["q1:p1"]["name"] == "p1"  # name is still just p1, not the composite key
     assert data["transformers"]["t1"]["kind"] == "transformers"
     assert data["transformers"]["t1"]["name"] == "t1"

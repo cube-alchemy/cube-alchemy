@@ -36,6 +36,7 @@ def test_transformers_canonical_shape_on_load_and_save(tmp_path: Path) -> None:
     data = src._load()
 
     # Lifted and canonicalized: params under 'params', plus query marker in the normalized in-memory view
+    # Note: transformers are still using the original keys (not composite keys like plots)
     assert data["transformers"]["t_nested"]["params"]["alpha"] == 1
     assert data["transformers"]["t_nested"]["query"] == "q1"
     assert data["transformers"]["t_top"]["params"]["beta"] == 2
