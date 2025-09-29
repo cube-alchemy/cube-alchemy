@@ -1,10 +1,12 @@
 import pandas as pd
-from typing import Optional
+from typing import Optional, List
 
 
 def render_table(
     st, 
-    df: pd.DataFrame, 
+    df: pd.DataFrame,    
+    dimensions: List[str] | None = None,
+    metrics: List[str] | None = None,
     title: Optional[str] = None,
     use_container_width: bool = True,
     height: Optional[int] = None,
@@ -27,7 +29,7 @@ def render_table(
         st.write(title)
     
     return st.dataframe(
-        df,
+        df.reset_index(drop=True)[dimensions + metrics],
         use_container_width=use_container_width,
         height=height,
         **{k: v for k, v in kwargs.items() 
