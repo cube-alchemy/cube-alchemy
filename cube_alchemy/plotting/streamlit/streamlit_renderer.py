@@ -1,8 +1,31 @@
 import pandas as pd
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, List
 import inspect
 from ..abc_plot_renderer import PlotRenderer
 from .handlers import PLOT_HANDLERS, register_plot as _register_plot
+
+
+def _ensure_numeric_columns(df: pd.DataFrame, metrics: List[str]) -> None:
+    """Convert string columns that contain numeric data back to float type for charting.
+    
+    This modifies the DataFrame in-place.
+    """
+    for col in df.columns:
+        # Only process metrics and string columns
+        if col in metrics and df[col].dtype == 'object':
+            # Try to convert back to numeric
+            try:
+                # First, clean any formatting characters ($, %, commas, etc.)
+                cleaned_series = df[col].astype(str).str.replace(r'[$,%]', '', regex=True)
+                # Convert to numeric
+                numeric_series = pd.to_numeric(cleaned_series, errors='coerce')
+                
+                # Only replace if conversion was successful
+                if not numeric_series.isna().all():
+                    df[col] = numeric_series
+            except Exception:
+                # If conversion fails, leave as is
+                pass
 
 
 class StreamlitRenderer(PlotRenderer):
@@ -33,6 +56,10 @@ class StreamlitRenderer(PlotRenderer):
         limit = plot_config.get('limit')
 
         df = data
+        
+        # Ensure metrics are numeric for charts that need numeric data
+        if metrics and plot_type not in ['table', 'markdown', 'pivot']:
+            _ensure_numeric_columns(df, metrics)
 
         # Sort if requested (single-metric convenience only)
         if sort_values and isinstance(metrics, list) and len(metrics) == 1 and metrics[0] in df.columns:
