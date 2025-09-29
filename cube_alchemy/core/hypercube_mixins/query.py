@@ -395,7 +395,10 @@ class Query(Transformation, Plotting):
                 # join all results
                 final_result = results[0]
                 for result in results[1:]:
-                    final_result = pd.merge(final_result, result, on=dimensions, how='outer')
+                    if dimensions:
+                        final_result = pd.merge(final_result, result, on=dimensions, how='outer')
+                    else:
+                        final_result = pd.merge(final_result, result, left_index=True, right_index=True, how='outer')
         return final_result
 
     def _apply_nested(
