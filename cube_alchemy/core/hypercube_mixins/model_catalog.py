@@ -251,6 +251,9 @@ class ModelCatalog:
             legend_position=spec.get("legend_position"),
             annotations=spec.get("annotations"),
             custom_options=spec.get("custom_options"),
+            hide_index=spec.get("hide_index", False),
+            row_color_condition=spec.get("row_color_condition"),
+            row_colors=spec.get("row_colors"),
             set_as_default=set_default,
         )
 

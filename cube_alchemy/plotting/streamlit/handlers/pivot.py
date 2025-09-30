@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Optional, List, Union, Any, Tuple, Dict
+from typing import Optional, List, Union, Any, Tuple, Dict,Callable
 
 
 def render_pivot(
@@ -14,6 +14,8 @@ def render_pivot(
     use_container_width: bool = True,
     height: Optional[int] = None,
     formatter: Optional[Dict[str, str]] = None,
+    row_color_condition: Optional[Union[str, Callable]] = None,
+    row_colors: Optional[Dict[str, str]] = None,
     **kwargs
 ):
     """Render a pivot table visualization.
@@ -34,6 +36,9 @@ def render_pivot(
                 - A list of tuples: for multiple multi-level columns
         use_container_width: Whether to expand table to container width
         height: Optional height for the table
+        formatter: Optional dictionary mapping column names to format strings
+        row_color_condition: Column name or callable that returns a boolean mask for rows to color
+        row_colors: Dictionary of condition values to color strings (e.g., {"True": "lightgreen", "False": "lightcoral"})
         **kwargs: Additional parameters passed to st.dataframe
     
     Returns:
@@ -265,18 +270,86 @@ def render_pivot(
                     # If formatting fails, silently continue
                     pass
         
-        # 6. DISPLAY PIVOT TABLE
+        # 6. DISPLAY PIVOT TABLE WITH STYLING
         formatted_df = pivot_df.reset_index(drop=True)
         
-        return st.dataframe(
-            formatted_df,  # Using the pivoted, sorted, and formatted dataframe
-            use_container_width=use_container_width,
-            height=height,
-            **{k: v for k, v in kwargs.items() 
-               if k not in ['st', 'df', 'pivot', 'dimensions', 'metrics', 'title', 
-                          'sort_ascending', 'sort_by', 'formatter',
-                          'use_container_width', 'height']}
-        )
+        # Apply row coloring if conditions are specified
+        if row_color_condition and row_colors:
+            try:
+                # Create a styled version of the dataframe
+                styled_df = formatted_df.style
+                
+                # Define the styling function for row coloring
+                def highlight_rows(row):
+                    if isinstance(row_color_condition, str) and row_color_condition in row:
+                        val = row[row_color_condition]
+                        str_val = str(val)
+                        
+                        # Handle boolean conditions for numeric values
+                        if ('True' in row_colors or 'False' in row_colors) and isinstance(val, (int, float)):
+                            bool_val = bool(val > 0)
+                            str_val = str(bool_val)
+                        
+                        if str_val in row_colors:
+                            color = row_colors[str_val]
+                            return [f'background-color: {color}'] * len(row)
+                    return [''] * len(row)
+                
+                # Create a formatter dictionary for metrics
+                format_dict = {}
+                if formatter:
+                    for col in formatted_df.columns:
+                        # Look for the metric name in the column
+                        for metric_name in formatter:
+                            if metric_name in str(col):
+                                fmt_spec = formatter[metric_name]
+                                format_dict[col] = lambda x, fmt=fmt_spec: fmt.format(x) if pd.notna(x) and not isinstance(x, str) else x
+                
+                # First, apply the row styling (colors)
+                styled_df = styled_df.apply(highlight_rows, axis=1)
+                
+                # Then apply the formatting (currency, percentages, etc.) if needed
+                if format_dict:
+                    styled_df = styled_df.format(format_dict)
+                
+                return st.dataframe(
+                    styled_df,  # Using the styled dataframe with both formatting and colors
+                    use_container_width=use_container_width,
+                    height=height,
+                    hide_index=True,
+                    **{k: v for k, v in kwargs.items() 
+                       if k not in ['st', 'df', 'pivot', 'dimensions', 'metrics', 'title', 
+                                   'sort_ascending', 'sort_by', 'formatter',
+                                   'row_color_condition', 'row_colors',
+                                   'use_container_width', 'height']}
+                )
+            except Exception as e:
+                # If styling fails, fall back to unstyled dataframe
+                st.warning(f"Row coloring could not be applied: {str(e)}")
+                return st.dataframe(
+                    formatted_df,
+                    use_container_width=use_container_width,
+                    height=height,
+                    hide_index=True,
+                    **{k: v for k, v in kwargs.items() 
+                       if k not in ['st', 'df', 'pivot', 'dimensions', 'metrics', 'title', 
+                                   'sort_ascending', 'sort_by', 'formatter',
+                                   'row_color_condition', 'row_colors',
+                                   'use_container_width', 'height']}
+                )
+        else:
+            # No styling needed
+            return st.dataframe(
+                formatted_df,
+                use_container_width=use_container_width,
+                height=height,
+                hide_index=True,
+                **{k: v for k, v in kwargs.items() 
+                   if k not in ['st', 'df', 'pivot', 'dimensions', 'metrics', 'title', 
+                              'sort_ascending', 'sort_by', 'formatter',
+                              'row_color_condition', 'row_colors',
+                              'use_container_width', 'height']}
+            )
         
     except Exception as e:
         st.error(f"Error creating pivot table: {str(e)}")
@@ -285,5 +358,11 @@ def render_pivot(
         return st.dataframe(
             df,
             use_container_width=use_container_width,
-            height=height
+            height=height,
+            hide_index=True,
+            **{k: v for k, v in kwargs.items() 
+               if k not in ['st', 'df', 'pivot', 'dimensions', 'metrics', 'title', 
+                          'sort_ascending', 'sort_by', 'formatter',
+                          'row_color_condition', 'row_colors',
+                          'use_container_width', 'height']}
         )

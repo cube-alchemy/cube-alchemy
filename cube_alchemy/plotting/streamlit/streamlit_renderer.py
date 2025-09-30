@@ -112,6 +112,10 @@ class StreamlitRenderer(PlotRenderer):
             call_kwargs['legend_position'] = plot_config.get('legend_position', 'right')
         if 'formatter' in params:
             call_kwargs['formatter'] = plot_config.get('formatter')
+        if 'row_color_condition' in params:
+            call_kwargs['row_color_condition'] = plot_config.get('row_color_condition')
+        if 'row_colors' in params:
+            call_kwargs['row_colors'] = plot_config.get('row_colors')
         # Pass common visual kwargs if declared by handler
         for key in ('height', 'width', 'use_container_width'):
             if key in params and key in kwargs:

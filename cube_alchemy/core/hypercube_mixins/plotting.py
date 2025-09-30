@@ -41,6 +41,9 @@ class Plotting:
         legend_position: Optional[str] = None,
         annotations: Optional[Dict[str, Any]] = None,
         custom_options: Optional[Dict[str, Any]] = None,
+        hide_index: bool = False,
+        row_color_condition: Optional[str] = None,
+        row_colors: Optional[Dict[str, str]] = None,
         set_as_default: bool = True,
     ):
         """Define a plot configuration for a query.
@@ -116,6 +119,9 @@ class Plotting:
             'legend_position': legend_position,
             'annotations': annotations,
             'custom_options': (custom_options or {}),
+            'hide_index': hide_index,
+            'row_color_condition': row_color_condition,
+            'row_colors': row_colors,
             '_input_dimensions': dimensions, #store original user input to refresh in case of query changes after plot definition
             '_input_metrics': metrics,
         }
