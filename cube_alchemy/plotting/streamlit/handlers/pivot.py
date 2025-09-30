@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Optional, List, Union, Any, Tuple
+from typing import Optional, List, Union, Any, Tuple, Dict
 
 
 def render_pivot(
@@ -13,6 +13,7 @@ def render_pivot(
     sort_by: Optional[Union[str, List[str], Tuple[str, ...], List[Tuple[str, ...]]]] = None,
     use_container_width: bool = True,
     height: Optional[int] = None,
+    formatter: Optional[Dict[str, str]] = None,
     **kwargs
 ):
     """Render a pivot table visualization.
@@ -74,8 +75,7 @@ def render_pivot(
                 values=metrics[0] if isinstance(metrics, list) and metrics else metrics,
                 aggfunc='first'  # Use first value when multiple values exist
             )
-        except Exception as e1:
-            st.warning(f"Simple pivot failed: {e1}")
+        except Exception:
             # Try with more explicit parameters
             pivot_df = pd.pivot_table(
                 df,
@@ -92,14 +92,26 @@ def render_pivot(
         # 3. HANDLE MULTI-INDEX COLUMNS IF PRESENT
         has_multiindex = isinstance(pivot_df.columns, pd.MultiIndex)
         
+        # Store original column structure before flattening
+        original_columns = pivot_df.columns.tolist()
+        column_mapping = {}
+        
         # If we have multi-index columns, flatten them for easier handling
         if has_multiindex:
             # Create column names by joining the levels
-            pivot_df.columns = [
+            flattened_columns = [
                 '_'.join(str(i) for i in col).strip('_') 
                 if isinstance(col, tuple) else col 
                 for col in pivot_df.columns
             ]
+            
+            # Create mapping between flattened and original columns
+            column_mapping = {
+                flattened: original for flattened, original in zip(flattened_columns, original_columns)
+            }
+            
+            # Set the flattened column names
+            pivot_df.columns = flattened_columns
         
         # Add sort columns directly from original DataFrame
         for sort_col in sort_cols:
@@ -173,39 +185,101 @@ def render_pivot(
         # Remove sort-only columns
         if drop_cols:
             pivot_df = pivot_df.drop(columns=drop_cols)
+            
+        # Function to apply formatting based on column names
+        def format_value(val, col_name):
+            import numpy as np
+            
+            # Handle already formatted strings
+            if isinstance(val, str):
+                return val
+                
+            # Apply formatter if provided for this column
+            if formatter and col_name in formatter:
+                fmt_spec = formatter[col_name]
+                try:
+                    return fmt_spec.format(val)
+                except Exception:
+                    # If formatting fails, return the original value
+                    return val
+                    
+            # Special formatting for percentage columns if no explicit formatter
+            if isinstance(col_name, str) and ('%' in col_name or 'percent' in col_name.lower() or 'margin' in col_name.lower()):
+                if isinstance(val, (int, float, np.integer, np.floating)):
+                    # Multiply by 100 for proper percentage display
+                    return f"{val * 100:.2f}%"
+            
+            # Default to currency formatting for numbers
+            if isinstance(val, (int, float, np.integer, np.floating)):
+                return f"${val:,.0f}"
+                
+            # Return other values as-is
+            return val
+            
+        # Apply formatting to numeric columns that are not dimensions
+        format_columns = metric_cols if metrics else []
+        
+        # Process each column in the pivoted dataframe for formatting
+        for col in pivot_df.columns:
+            # Skip dimension columns
+            if dimensions and col in dimensions:
+                continue
+                
+            # Determine the metric part of this column
+            metric_name = None
+            
+            # If we have column mapping from multi-index, use it
+            if col in column_mapping:
+                original_col = column_mapping[col]
+                if isinstance(original_col, tuple) and len(original_col) > 0:
+                    # Last part of the tuple is typically the metric name in pivot tables
+                    metric_name = original_col[-1]
+            
+            # If no mapping or metric name not found, try to extract from column name
+            if not metric_name:
+                # Try to find which metric this column is derived from
+                for m in metrics or []:
+                    if isinstance(m, str) and isinstance(col, str) and m in col:
+                        metric_name = m
+                        break
+            
+            # Apply formatting if we found a metric match
+            if metric_name and formatter and metric_name in formatter:
+                fmt_spec = formatter[metric_name]
+                try:
+                    # Format using the metric name's formatter
+                    pivot_df[col] = pivot_df[col].apply(
+                        lambda x: fmt_spec.format(x) if pd.notna(x) and not isinstance(x, str) else x
+                    )
+                except Exception:
+                    # If formatting fails, silently continue
+                    pass
+            else:
+                # Fall back to standard formatting logic
+                try:
+                    pivot_df[col] = pivot_df[col].apply(
+                        lambda x: format_value(x, metric_name if metric_name else col) 
+                        if pd.notna(x) and not isinstance(x, str) else x
+                    )
+                except Exception:
+                    # If formatting fails, silently continue
+                    pass
         
         # 6. DISPLAY PIVOT TABLE
+        formatted_df = pivot_df.reset_index(drop=True)
+        
         return st.dataframe(
-            pivot_df.reset_index(drop=True),  # Using the pivoted and sorted dataframe with sort-only columns removed
+            formatted_df,  # Using the pivoted, sorted, and formatted dataframe
             use_container_width=use_container_width,
             height=height,
             **{k: v for k, v in kwargs.items() 
                if k not in ['st', 'df', 'pivot', 'dimensions', 'metrics', 'title', 
-                          'sort_ascending', 'sort_by',
+                          'sort_ascending', 'sort_by', 'formatter',
                           'use_container_width', 'height']}
         )
         
     except Exception as e:
         st.error(f"Error creating pivot table: {str(e)}")
-        
-        # Add debugging information
-        debug = st.expander("Debug Information")
-        debug.write(f"""
-        **Error:** {str(e)}
-        
-        **Parameters:**
-        - Pivot: {pivot}
-        - Dimensions: {dimensions}
-        - Metrics: {metrics}
-        - Sort by: {sort_by}
-        
-        **DataFrame Info:**
-        - Shape: {df.shape}
-        - Columns: {list(df.columns)}
-        """)
-        
-        # Show sample data
-        st.expander("Sample Data").dataframe(df.head(5))
         
         # Fallback to regular table
         return st.dataframe(

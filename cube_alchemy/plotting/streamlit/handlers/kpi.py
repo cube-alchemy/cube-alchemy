@@ -1,6 +1,47 @@
 from __future__ import annotations
-from typing import Optional, List
+from typing import Optional, List, Dict, Any, Union
 import pandas as pd
+
+
+# Shared helper function for formatting values
+def _format_value(val, col_name, formatter=None):
+    """Format a value based on column name and formatter.
+    
+    Args:
+        val: The value to format
+        col_name: The column name for context-aware formatting
+        formatter: Optional dictionary mapping column names to format strings
+        
+    Returns:
+        Formatted value as a string
+    """
+    import numpy as np
+    
+    # Handle already formatted strings
+    if isinstance(val, str):
+        return val
+        
+    # Apply formatter if provided for this column
+    if formatter and col_name in formatter:
+        fmt_spec = formatter[col_name]
+        try:
+            return fmt_spec.format(val)
+        except Exception:
+            # If formatting fails, continue to default formatting
+            pass
+            
+    # Special formatting for percentage columns if no explicit formatter
+    if isinstance(col_name, str) and ('%' in col_name or 'percent' in col_name.lower() or 'margin' in col_name.lower()):
+        if isinstance(val, (int, float, np.integer, np.floating)):
+            # Multiply by 100 for proper percentage display
+            return f"{val * 100:.2f}%"
+    
+    # Default to currency formatting for numbers
+    if isinstance(val, (int, float, np.integer, np.floating)):
+        return f"${val:,.0f}"
+        
+    # Return other values as-is
+    return val
 
 
 def render_kpi(
@@ -14,14 +55,15 @@ def render_kpi(
     height: int | None = None,
     width: int | None = None,
     use_container_width: bool = True,
+    formatter: Optional[Dict[str, str]] = None,
 ):
     """Render KPI values from a dataframe.
 
     Behavior:
-    - Uses exactly the values as provided in the dataframe (preserves formatting)
     - Uses the first row of data
     - If title is provided, uses it as the KPI label
     - Otherwise uses the column name as the label
+    - Formats values according to the formatter parameter
     """
     # Basic validation
     if df is None or df.empty:
@@ -32,7 +74,7 @@ def render_kpi(
         return _render_kpi_with_altair(
             st, df, dimensions=dimensions, metrics=metrics,
             title=title, height=height, width=width,
-            use_container_width=use_container_width
+            use_container_width=use_container_width, formatter=formatter
         )
     
     # Use the dataframe directly
@@ -40,30 +82,6 @@ def render_kpi(
     
     # Always use the first row directly
     row = work_df.iloc[0]
-    
-    # Function to format values appropriately
-    def format_value(val, col_name):
-        import numpy as np
-        
-        # Handle already formatted strings
-        if isinstance(val, str):
-            return val
-            
-        # Special formatting for percentage columns
-        if isinstance(col_name, str) and ('%' in col_name or 'percent' in col_name.lower() or 'margin' in col_name.lower()):
-            if isinstance(val, (int, float, np.integer, np.floating)):
-                # For percentages, we assume the value is already in percent form (e.g., 30.16 means 30.16%)
-                # So we don't multiply by 100 again
-                formatted = f"{val:.2f}%"
-                return formatted
-        
-        # Default to currency formatting for numbers
-        if isinstance(val, (int, float, np.integer, np.floating)):
-            formatted = f"${val:,.0f}"
-            return formatted
-            
-        # Return other values as-is
-        return val
     
     # Determine which columns to show
     if metrics:
@@ -84,7 +102,7 @@ def render_kpi(
             col = cols[0]
             # Get the value and format it appropriately
             val = row[col]
-            formatted_val = format_value(val, col)
+            formatted_val = _format_value(val, col, formatter)
             
             # Use CSS to center the metric
             # Create a single centered column
@@ -109,7 +127,7 @@ def render_kpi(
                 # Display with column name as label
                 # Get the value and format it appropriately
                 val = row[col]
-                formatted_val = format_value(val, col)
+                formatted_val = _format_value(val, col, formatter)
                 
                 # Pass the formatted value to the metric
                 st.metric(label=col, value=formatted_val)
@@ -120,37 +138,13 @@ def render_kpi(
 def _render_kpi_with_altair(
     st, df, *, dimensions=None, metrics=None, 
     title=None, height=None, width=None, 
-    use_container_width=True
+    use_container_width=True, formatter=None
 ):
     """Helper function to render KPIs with Altair charts for precise height control."""
     import altair as alt
     
     # Always use the first row directly
     row = df.iloc[0]
-    
-    # Function to format values appropriately
-    def format_value(val, col_name):
-        import numpy as np
-        
-        # Handle already formatted strings
-        if isinstance(val, str):
-            return val
-            
-        # Special formatting for percentage columns
-        if isinstance(col_name, str) and ('%' in col_name or 'percent' in col_name.lower() or 'margin' in col_name.lower()):
-            if isinstance(val, (int, float, np.integer, np.floating)):
-                # For percentages, we assume the value is already in percent form (e.g., 30.16 means 30.16%)
-                # So we don't multiply by 100 again
-                formatted = f"{val:.2f}%"
-                return formatted
-        
-        # Default to currency formatting for numbers
-        if isinstance(val, (int, float, np.integer, np.floating)):
-            formatted = f"${val:,.0f}"
-            return formatted
-            
-        # Return other values as-is
-        return val
     
     # Determine which columns to show
     if metrics:
@@ -171,7 +165,7 @@ def _render_kpi_with_altair(
         # Get value, format it, and convert to string for display
         col = cols[0]
         val = row[col]
-        formatted_val = format_value(val, col)
+        formatted_val = _format_value(val, col, formatter)
         value_strs = [formatted_val]
     else:
         # Otherwise use column names
@@ -179,7 +173,7 @@ def _render_kpi_with_altair(
         for c in cols:
             # Get value, format it, and convert to string for display
             val = row[c]
-            formatted_val = format_value(val, c)
+            formatted_val = _format_value(val, c, formatter)
             value_strs.append(formatted_val)
     
     kpi_df = pd.DataFrame({

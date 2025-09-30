@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import pandas as pd
 
 
@@ -86,6 +86,7 @@ def render_bar(
     show_title: bool = False,
     stacked: bool = False,
     legend_position: str = "right",
+    formatter: Optional[Dict[str, str]] = None,
 ):
     """Bar chart with Altair, mirroring matplotlib grouping rules.
 
@@ -115,52 +116,118 @@ def render_bar(
 
     x_enc = alt.X(f"{cat_field}:N", sort=None, axis=alt.Axis(title=None, labelAngle=-45))
 
+    # Function to apply formatting based on column names
+    def format_value(val: Any, col_name: str) -> Any:
+        import numpy as np
+        
+        # Handle already formatted strings
+        if isinstance(val, str):
+            return val
+            
+        # Apply formatter if provided for this column
+        if formatter and col_name in formatter:
+            fmt_spec = formatter[col_name]
+            try:
+                return fmt_spec.format(val)
+            except Exception:
+                # If formatting fails, return the original value
+                pass
+                
+        # Special formatting for percentage columns if no explicit formatter
+        if isinstance(col_name, str) and ('%' in col_name or 'percent' in col_name.lower() or 'margin' in col_name.lower()):
+            if isinstance(val, (int, float, np.integer, np.floating)):
+                # Multiply by 100 for proper percentage display
+                return f"{val * 100:.2f}%"
+        
+        # Default to currency formatting for numbers
+        if isinstance(val, (int, float, np.integer, np.floating)):
+            return f"${val:,.0f}"
+            
+        # Return other values as-is
+        return val
+        
     # Special case: one dimension, multiple metrics, and no group/color_by 
     # show one color per metric, side-by-side using xOffset when not stacked.
     if len(dimensions) == 1 and not group_key and len(used_metrics) >= 2:
         long_df = work.melt(id_vars=[cat_field], value_vars=used_metrics,
                             var_name="__series__", value_name="__value__")
+        
+        # Create tooltip columns with formatted values if needed
+        for metric in used_metrics:
+            tooltip_col = f"{metric}_formatted"
+            long_df[tooltip_col] = long_df.apply(
+                lambda row: format_value(row["__value__"], row["__series__"]) 
+                if row["__series__"] == metric else "", 
+                axis=1
+            )
+        
         base = alt.Chart(long_df)
         y_enc_multi = alt.Y("__value__:Q", title="Value")
         color_enc_multi = alt.Color("__series__:N", title="Metric")
+        # Create tooltip fields to include formatted values
+        tooltip_fields = [cat_field]
+        for metric in used_metrics:
+            tooltip_col = f"{metric}_formatted"
+            tooltip_fields.append(alt.Tooltip(f"{metric}_formatted:N", title=metric))
+            
         if not stacked:
             chart = base.mark_bar().encode(
                 x=x_enc,
                 y=y_enc_multi,
                 color=color_enc_multi,
-                xOffset="__series__:N"
+                xOffset="__series__:N",
+                tooltip=[cat_field, alt.Tooltip("__series__:N", title="Metric"), 
+                         alt.Tooltip("__value__:Q", title="Value", format=",.0f"),
+                         alt.Tooltip("__series___formatted:N", title="Formatted")]
             )
         else:
             chart = base.mark_bar().encode(
                 x=x_enc,
                 y=y_enc_multi,
                 color=color_enc_multi,
+                tooltip=[cat_field, alt.Tooltip("__series__:N", title="Metric"), 
+                         alt.Tooltip("__value__:Q", title="Value", format=",.0f"),
+                         alt.Tooltip("__series___formatted:N", title="Formatted")]
             )
     else:
         # Default behavior (preserve existing rendering): choose a single metric
         metric = used_metrics[0]
         y_enc = alt.Y(f"{metric}:Q", title=metric)
         base = alt.Chart(work)
+        
+        # Create formatted tooltip columns if needed
+        tooltip_col = f"{metric}_formatted"
+        if formatter and metric in formatter:
+            work[tooltip_col] = work[metric].apply(lambda x: format_value(x, metric))
+        else:
+            work[tooltip_col] = work[metric].apply(lambda x: format_value(x, metric))
 
         if group_key:
             color_enc = alt.Color(f"{group_key}:N", title=group_key)
+            tooltip_fields = [cat_field, alt.Tooltip(f"{metric}:Q", title=metric, format=",.0f"),
+                             alt.Tooltip(f"{tooltip_col}:N", title=f"{metric} Formatted")]
+            
             if not stacked:
                 chart = base.mark_bar().encode(
                     x=x_enc,
                     y=y_enc,
                     color=color_enc,
                     xOffset=f"{group_key}:N",
+                    tooltip=tooltip_fields + [group_key]
                 )
             else:
                 chart = base.mark_bar().encode(
                     x=x_enc,
                     y=y_enc,
                     color=color_enc,
+                    tooltip=tooltip_fields + [group_key]
                 )
         else:
             chart = base.mark_bar().encode(
                 x=x_enc,
                 y=y_enc,
+                tooltip=[cat_field, alt.Tooltip(f"{metric}:Q", title=metric, format=",.0f"),
+                         alt.Tooltip(f"{tooltip_col}:N", title=f"{metric} Formatted")]
             )
 
     if title:
@@ -190,6 +257,7 @@ def render_line(
     title: Optional[str] = None,
     show_title: bool = False,
     legend_position: str = "right",
+    formatter: Optional[Dict[str, str]] = None,
 ):
     """Line chart with Altair:
 
@@ -280,6 +348,7 @@ def render_area(
     title: Optional[str] = None,
     show_title: bool = False,
     legend_position: str = "right",
+    formatter: Optional[Dict[str, str]] = None,
 ):
     """Area chart with Altair, mirroring line-chart grouping rules.
 
