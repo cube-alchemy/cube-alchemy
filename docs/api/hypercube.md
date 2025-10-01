@@ -7,21 +7,31 @@ The Hypercube class is the central component of Cube Alchemy, providing methods 
 The Hypercube can be initialized in two ways:
 
 ```python
-# Option 1: Initialize with data
+# Option 1: Initialize with data (recommended for immediate use)
 Hypercube(
-  tables: Dict[str, pd.DataFrame] = None,
-  rename_original_shared_columns: bool = True,
-  to_be_stored: bool = False,
-  logger: Optional[Union[bool, logging.Logger]] = None
+    tables: Optional[Dict[str, pd.DataFrame]] = None,
+    rename_original_shared_columns: bool = True,
+    normalized_core: bool = False,
+    *,
+    apply_composite: bool = True,
+    validate: bool = True,
+    to_be_stored: bool = False,
+    logger: Optional[Union[bool, logging.Logger]] = None,
+    validator_cls: Optional[Type[SchemaValidator]] = None,
+    bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
+    function_registry: Optional[Dict[str, Any]] = None,
 )
 
 # Option 2: Initialize empty and load data later
 Hypercube()
+
 load_data(
-  tables: Dict[str, pd.DataFrame],
-  rename_original_shared_columns: bool = True,
-  to_be_stored: bool = False,
-  reset_specs: bool = False
+    tables: Dict[str, pd.DataFrame],
+    rename_original_shared_columns: bool = True,
+    apply_composite: bool = True,
+    validate: bool = True,
+    to_be_stored: bool = False,
+    reset_specs: bool = False,
 )
 ```
 
@@ -33,11 +43,21 @@ The `load_data()` method can also be used to reload or update data in an existin
 
 - `rename_original_shared_columns`: Controls what happens to shared columns in source tables.  
 
-  - True (default): keep them, renamed as `<column> (<table_name>)`. Enables per‑table counts/aggregations.  
+    - True (default): keep them, renamed as `<column> (<table_name>)`. Enables per‑table counts/aggregations.  
 
-  - False: drop them from source tables (values remain in link tables). Saves time and memory if per‑table analysis isn’t needed.  
+    - False: drop them from source tables (values remain in link tables). Saves time and memory if per‑table analysis isn’t needed.  
 
 - `to_be_stored`: Set to True if the hypercube will be serialized/stored (skips Default context state creation)
+
+- `normalized_core`: Controls the core data storage strategy for the hypercube, affecting performance characteristics based on your data and query patterns.
+
+    - `False` (default): **Normalized core** - The core stores only keys and indexes from the schema. Each query dynamically joins required dimensions and metrics from their source tables. This approach uses less memory but requires joins during query execution.
+    
+    - `True`: **Denormalized core** - All schema tables are joined together into one large table stored as the core. Queries fetch data directly from this pre-joined structure without additional joins. This approach uses more memory but can be faster for queries that span multiple tables.
+    
+    **Performance trade-offs:**
+    
+    The optimal choice depends on your data size, relationship complexity, and query patterns. For large datasets with many relationships, the normalized approach may be more efficient. For smaller datasets with frequent cross-table analysis, the denormalized approach may perform better.
 
 - `reset_specs` *(only load_data method)*: Whether to clear all existing analytics and plotting definitions (metrics, derived metrics, queries, plots, transformations) and the function registry before loading new ones from the Catalog Source.
 
@@ -154,7 +174,7 @@ cube.visualize_graph(full_column_names=False)
 ### relationship_matrix
 
 ```python
-relationship_matrix(context_state_name: str = 'Unfiltered') -> pd.DataFrame
+get_relationship_matrix(context_state_name: str = 'Unfiltered') -> pd.DataFrame
 ```
 Reconstruct the original shared columns across the model to inspect connectivity.
 
@@ -163,20 +183,33 @@ Reconstruct the original shared columns across the model to inspect connectivity
 ```python
 get_cardinalities(context_state_name: str = 'Unfiltered', include_inverse: bool = False) -> pd.DataFrame
 ```
-Compute relationship cardinalities for shared keys between base tables; optionally include inverse orientation.
+Compute relationship cardinalities for shared keys between base tables.
 
-## Shared columns: counts and distincts
+## Persistence helpers
 
-When multiple tables share a column (for example, `customer_id`), Cube Alchemy builds a link table containing the distinct values of that column across all participating tables. This has two practical implications:
+### save_as_pickle
 
-- Counting on the shared column name (e.g., `customer_id`) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.
+```python
+save_as_pickle(
+    path: Optional[Union[str, Path]] = None,
+    *,
+    relative_path: bool = True,
+    pickle_name: str = "cube.pkl",
+) -> Path
+```
 
-- Counting on a per-table renamed column (e.g., `customer_id <orders>` or `customer_id <customers>`) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.
+Serialize the current Hypercube instance to a pickle file. If `path` is omitted the working directory is used and `pickle_name` is written there. The logger is temporarily removed during pickling to avoid capturing non-picklable handlers. The function registry is persisted via import specs so only importable top-level callables are fully restorable.
 
-Example idea:
+### load_pickle (static)
 
-- Count distinct `customer_id` (shared) → distinct customers across all linked tables.
+```python
+@staticmethod
+load_pickle(
+    path: Optional[Union[str, Path]] = None,
+    *,
+    relative_path: bool = True,
+    pickle_name: str = "cube.pkl",
+) -> Hypercube
+```
 
-- Count distinct `customer_id <orders>` → distinct customers present in the Orders table specifically.
-
-Choose the one that matches your analytical intent: cross-table distincts via the shared column, or table-specific distincts via the renamed columns. Note: per-table renamed columns are available only when `rename_original_shared_columns=True`; set it to False to drop them and reduce memory/processing if you don’t need that analysis.
+Load a previously pickled Hypercube. If `path` points to a directory, `pickle_name` is appended; if it is a file path it is used directly.

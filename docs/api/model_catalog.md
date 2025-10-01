@@ -8,6 +8,8 @@ set_yaml_model_catalog(
     use_current_directory: bool = True,
     create_if_missing: bool = True,
     default_yaml_name: Optional[str] = None,
+    prefer_nested_plots: bool = True,
+    prefer_nested_transformers: bool = True,
 ) -> Path
 ```
 
@@ -47,12 +49,19 @@ Load from sources into the Catalog, then apply to the cube. Order: metrics -> de
 ## save_to_model_catalog
 
 ```python
-save_to_model_catalog() -> None
+save_to_model_catalog(prefer_nested_plots: bool = True, prefer_nested_transformers: bool = True) -> Optional[Path]
 ```
 
-Save current cube definitions (metrics, derived metrics, queries, plots, transformers) through attached sources.
+Save current cube definitions (metrics, derived metrics, queries, plots, transformers) through attached sources. Returns the path to the YAML file if a YAML source was attached via `set_yaml_model_catalog(...)`, otherwise may return None.
 
 Notes:
+
 - The Catalog repository acts as the in-memory store; sources decide persistence (e.g., YAML).
 
 - Plots and transformers are serialized with their associated query reference.
+
+Notes on nesting preferences:
+
+- `prefer_nested_plots`: When True, plots will be nested under their parent queries in YAML output (default True).
+
+- `prefer_nested_transformers`: When True, transformers will be nested under parent queries in YAML output (default True).

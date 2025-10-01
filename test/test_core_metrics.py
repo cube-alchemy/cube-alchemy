@@ -31,8 +31,8 @@ def test_metric_and_derived_metric_basic():
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("core_is_fully_deployed", [True, False])
-def test_readme_example_end_to_end_query_and_filter(minimal_tables, core_is_fully_deployed):
+@pytest.mark.parametrize("normalized_core", [True, False])
+def test_readme_example_end_to_end_query_and_filter(minimal_tables, normalized_core):
     """Build the Hypercube using the exact README example data, then:
     - Define metrics and a query.
     - Assert the unfiltered result matches the README output.
@@ -40,7 +40,7 @@ def test_readme_example_end_to_end_query_and_filter(minimal_tables, core_is_full
     """
     # Use the README dataset provided by the shared fixture
     minimal_tables = copy.deepcopy(minimal_tables)
-    cube = Hypercube(minimal_tables, validate=False, logger=False, core_is_fully_deployed=core_is_fully_deployed)
+    cube = Hypercube(minimal_tables, validate=False, logger=False, normalized_core=normalized_core)
 
     # Define metrics exactly as in the README
     cube.define_metric(name='Revenue', expression='[qty] * [price]', aggregation='sum')

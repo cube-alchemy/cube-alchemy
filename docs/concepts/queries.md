@@ -99,7 +99,7 @@ cube.define_derived_metric(
 cube.define_query(
     name='margin_by_product',
     dimensions={'product'},
-    metrics=['Margin', 'Cost'],
+    metrics=['Margin', 'Cost'], # If not here, as they are part of 'Margin %' they would be calculated internally but hidden.
     derived_metrics=['Margin %'],
     having='[Margin %] >= 20'
 )
@@ -113,7 +113,7 @@ Notes:
 - Register functions with `cube.add_functions(...)`. You can inspect or replace the full registry via `cube.function_registry`.
 - Derived metrics reference columns present in the aggregated result (metrics and dimensions).
 
-### Registered Functions
+## Registered Functions
 
 You can register helper functions for use in metrics. 
 
@@ -124,7 +124,9 @@ All registered functions operate on 1D data: the first argument is a pandas `Ser
 - Aggregation functions: return a single value per group (e.g., number, text, or list).
 
 Access:
+
 - In expressions and HAVING (string evaluation): use `@function_name(...)`.
+
 - For aggregations: reference by name (no `@`), e.g., `aggregation='p90'`. You can pass a callable, but it will not persist to pickle or YAML; prefer registering the function and using its name.
 
 Examples
@@ -182,11 +184,12 @@ cube.define_query(
 df3 = cube.query('p90_revenue_by_segment')
 ```
 
-### Persistence and Function Registry
+**Note on Persistence and Function Registry**
 
 Hypercubes can be saved and loaded with `cube.save_as_pickle(...)` and `Hypercube.load_pickle(...)`. The function registry persists by import spec:
 
 - Importable top-level objects (modules, functions, classes) are restored.
+
 - Lambdas, closures, and locally defined callables are not persisted and will be dropped silently.
 
 Example:
@@ -206,10 +209,12 @@ assert 'tmp' not in cube2.function_registry
 ```
 
 Important:
+
 - A function persists only if its defining module is importable in the loading environment (on sys.path, correct module name).
+
 - If a query or metric references a non-restored function (e.g., a lambda or a function defined only in __main__), evaluation will raise. Re-register an importable function with the same name before running the query again.
 
-### Effective dimensions
+## Effective dimensions
 
 Effective dimensions are the dimensions that actually determine how a metric is aggregated. They are derived from the query’s dimensions after applying the metric’s `ignore_dimensions` setting:
 
@@ -220,28 +225,6 @@ Effective dimensions are the dimensions that actually determine how a metric is 
 - `ignore_dimensions=True`: no effective dimensions (grand total).
 
 Nested metrics use the same effective dimensions in both inner and outer steps; `nested.dimensions` are added only for the inner step.
-
-## Nested aggregation (inner → outer)
-
-Use `nested` on a metric to aggregate in two steps: first by `nested.dimensions` (inner), then at the query dimensions (outer).
-
-- Inner: aggregate the metric by the effective dimensions plus `nested.dimensions`.
-
-- Outer: aggregate those inner results by the effective dimensions. If you display extra dimensions, results are broadcast to them.
-
-Note: `ignore_dimensions` sets the metric’s effective dimensions and applies to both steps so results stay unbiased and consistent.
-
-Minimal example:
-
-```python
-cube.define_metric(
-    name='Avg Product Revenue',
-    expression='[qty] * [price]',
-    aggregation='mean',
-    nested={'dimensions': 'Product', 'aggregation': 'sum'},
-    ignore_dimensions=['Store']  # compute at Country-level; broadcast when displaying Store
-)
-```
 
 ## Working with Filters
 

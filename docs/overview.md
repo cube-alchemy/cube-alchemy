@@ -18,7 +18,7 @@ Cube Alchemy transforms your pandas DataFrames into a powerful **hypercube**, cr
 
 ### The Semantic Layer
 
-Map your data into a clear and consistent set of analytical assets to work with your hypercube:
+Map your data into a clear and consistent analytical model to work with your hypercube:
 
 - **Dimensions**: The "by" of your analysis—the entities you use to slice and dice data (e.g., `Customer`, `Region`, `Product`).
 

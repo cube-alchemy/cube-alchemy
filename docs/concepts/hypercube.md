@@ -24,7 +24,7 @@ The hypercube enables you to calculate *metrics* (like sales, revenue, or user c
 This is how Cube Alchemy Builds an Hypercube. The underlying structure is a **Connected Undirected Acyclic Graph** where:
 
 - **Nodes**: Your DataFrames.
-- **Edges**: The shared columns that link them.
+- **Edges**: Shared columns link tables. **
 
 > *It might not look like a tree, but under the hood, the hypercube is basically a tree in disguise — no loops, just clean branches connecting your data. See: [Tree (graph theory)](https://en.wikipedia.org/wiki/Tree_(graph_theory)).*
 
@@ -34,7 +34,19 @@ This is how Cube Alchemy Builds an Hypercube. The underlying structure is a **Co
 
 ---
 
-> **Important Note: Avoid Circular Dependencies**
+> **Notes:**
+
+> ** Practically, when three or more tables share the same column name, linking them directly would create cycles. Cube Alchemy prevents this by:
+
+>	- creating an extra node (a link table) with the distinct shared values,
+	    
+ >   - replacing the original column in each table with an auto‑numbered key,
+	
+ >   - keeping the original column name only in the link table,
+	
+ >   - using those key columns solely to connect tables (they’re internal and hidden for users).
+
+> *Avoid Circular Dependencies*
 >
 > For the hypercube to function correctly, your data model must be a **Acyclic Graph**. This means you must avoid **cyclic relationships** (or circular references). Such cycles create ambiguous join paths that break the logic of data traversal and aggregations.
 

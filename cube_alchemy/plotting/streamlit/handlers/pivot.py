@@ -54,8 +54,8 @@ def render_pivot(
         # Ensure pivot is a list
         pivot_cols = [pivot] if isinstance(pivot, str) else list(pivot)
         
-        # Use first dimension as index
-        index = dimensions[0] if dimensions and len(dimensions) > 0 else None
+        # Determine unpivoted columns (index) by excluding pivot columns from dimensions
+        unpivoted_cols = [dim for dim in dimensions if dim not in pivot_cols] if dimensions else []
         
         # Prepare sort columns
         sort_cols = []
@@ -65,9 +65,10 @@ def render_pivot(
             else:
                 sort_cols = list(sort_by)
         
+        
         # 2. CREATE PIVOT TABLE
         # Set up index for pivot
-        pivot_index = [index] if index else None
+        pivot_index = unpivoted_cols if unpivoted_cols else None
         
         # Create pivot table - pivot by month_year with Amount Actual as values
         try:
@@ -122,15 +123,15 @@ def render_pivot(
         for sort_col in sort_cols:
             if sort_col not in pivot_df.columns and sort_col in df.columns:
                 # For most cases, the sort column is constant per index value
-                if index and index in pivot_df.columns:
+                if pivot_index and all(col in pivot_df.columns for col in pivot_index):
                     # Add directly from original dataframe by joining on index
-                    index_values = pivot_df[index].unique()
                     
                     # Create a temporary dataframe with just index and sort column
-                    temp_df = df[[index, sort_col]].drop_duplicates(subset=[index])
+                    merge_cols = pivot_index + [sort_col]
+                    temp_df = df[merge_cols].drop_duplicates(subset=pivot_index)
                     
                     # Merge the sort column into the pivot table
-                    pivot_df = pivot_df.merge(temp_df, on=index, how='left')
+                    pivot_df = pivot_df.merge(temp_df, on=pivot_index, how='left')
         
         # 4. SORT THE PIVOTED DATAFRAME
         if sort_cols:

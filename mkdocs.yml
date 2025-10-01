@@ -25,7 +25,7 @@ extra:
     - icon: material/email
       link: mailto:delmontejuan92@gmail.com
     - icon: fontawesome/regular/house
-      link: https://cube-alchemy.com
+      link: https://www.cube-alchemy.com
 
 markdown_extensions:
   - admonition
@@ -60,8 +60,7 @@ nav:
     - Filters: api/filter_methods.md
     - Plotting: api/plotting_system.md
     - Model Catalog: api/model_catalog.md
-  - Examples: examples.md
-  - Streamlit Integration: streamlit.md
+  - Quick Start: examples.md
   - Contributing: contributing.md
 
 extra_javascript:

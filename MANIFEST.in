@@ -19,3 +19,8 @@ exclude .gitignore
 exclude .github
 recursive-exclude tests *
 exclude BACKLOG.md
+recursive-exclude tools *
+recursive-exclude out * 
+recursive-exclude artifacts *
+recursive-exclude .vscode *  
+recursive-exclude .pytest_cache * 

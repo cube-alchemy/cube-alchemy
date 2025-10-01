@@ -34,7 +34,7 @@ reset_filters(
 ) -> bool
 ```
 
-Reset filters using undo/redo or clear all filters. Direction: 'backward', 'fordward', or 'all'.
+Reset filters using undo/redo or clear all filters. Direction: 'backward', 'forward', or 'all'.
 
 ## get_filters
 
@@ -68,3 +68,6 @@ set_context_state(
 ```
 
 Create a new context state cloned from base_context_state_name.
+
+Notes:
+- When creating a new context state, the implementation initializes `applied_filters[context_state_name]` as an empty list and sets `filter_pointer[context_state_name]` to 0. The new context is a copy of the specified base context state.

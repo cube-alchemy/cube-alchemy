@@ -10,6 +10,22 @@ We apply a **transformation** to the DataFrame, which (ideally) enriches it by a
 
 - You want pluggable, composable transformations that can be reused across queries.
 
+With transformers you can easily implement standard analyses such as:
+
+- moving average
+
+- zscore
+
+- cumulative
+
+- pareto
+
+- linear_regression
+
+- kmeans
+
+- etc.
+
 ## Interface design
 
 Designed for extensibility as a small registry-based interface:
@@ -24,7 +40,7 @@ Designed for extensibility as a small registry-based interface:
 
 A transformer can be either:
 
-- An object implementing `Transformer` (ABC) with a method `transform(df: pd.DataFrame, **params) -> pd.DataFrame`.
+- An object implementing `Transformer` class (ABC) with a method `transform(df: pd.DataFrame, **params) -> pd.DataFrame`.
 
 - A plain callable `fn(df: pd.DataFrame, **params) -> pd.DataFrame`.
 
@@ -34,19 +50,10 @@ Cube Alchemy ships with a few defaults that are auto-registered:
 
 - moving_average
 
-- cumulative
-
-- rank
-
 - zscore
 
-- pareto
+You can inspect these under `cube_alchemy/transformation/default_transformers`. You can use them directly, or register your own custom transformers.
 
-- linear_regression
-
-- kmeans
-
-You can inspect these under `cube_alchemy/transformation/default_transformers`. You can use them directly, or register your own custom functions.
 
 ## Examples
 

@@ -10,8 +10,8 @@ define_metric(
     metric_filters: Optional[Dict[str, Any]] = None,
     row_condition_expression: Optional[str] = None,
     context_state_name: str = 'Default',
-    ignore_dimensions: Union[bool, List[str]] = False,
-    ignore_context_filters: Union[bool, List[str]] = False,
+    ignore_dimensions: bool = False,
+    ignore_context_filters: bool = False,
     fillna: Optional[Any] = None,
     nested: Optional[Dict[str, Any]] = None,
 ) -> None
@@ -20,6 +20,7 @@ define_metric(
 Persist a base metric for later use in queries.
 
 Parameters:
+
 - name: Label of the resulting column.
 
 - expression: Formula using [column] references and optional @functions.
@@ -32,9 +33,9 @@ Parameters:
 
 - context_state_name: Context state to read from.
 
-- ignore_dimensions: True for grand total, list[str] to ignore specific dims, or False.
+- `ignore_dimensions`: True to compute a grand-total metric (ignore query dimensions), or False to compute per-dimension values.
 
-- ignore_context_filters: True to ignore all context filters, list[str] to ignore specific ones, or False.
+- `ignore_context_filters`: True to ignore all context filters when computing this metric, or False to respect context filters.
 
 - fillna: Single value to fill NA on referenced columns before evaluation.
 

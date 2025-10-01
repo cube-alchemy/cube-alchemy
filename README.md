@@ -193,10 +193,20 @@ For concepts, API specs, advanced features, full examples and Streamlit integrat
 
 - Docs: https://cube-alchemy.info
 
-## Full documentation
-Visit the github repository created for showing more examples and use cases:
+## Examples and Demos
 
-- More examples: https://github.com/cube-alchemy/cube-alchemy-examples
+Explore our collection of practical examples and interactive demos to see Cube Alchemy in action:
+
+### Jupyter Notebooks
+- **Adventure Works Sales Analysis**: Explore a comprehensive retail dataset with drill-down capabilities
+- **Financial P&L Modeling**: See how Cube Alchemy handles complex financial data modeling challenges
+
+### Interactive Streamlit Applications
+- **[Financial Performance Dashboard](https://cube-alchemy-examples-profit-and-loss.streamlit.app/overview)**: Explore a comprehensive P&L analysis tool with interactive filters and visualizations
+- **[P&L Builder](https://cube-alchemy-examples-profit-and-loss-builder.streamlit.app/)**: Interactively construct and visualize financial models
+- **[Data Explorer Playground](https://cube-alchemy-examples-emepzeemy9ayt7khx98fyo.streamlit.app/)**: Experiment with different chart types and visualization options
+
+All examples are available in our [examples repository](https://github.com/cube-alchemy/cube-alchemy-examples).
 
 ## Creator
 

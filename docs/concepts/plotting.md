@@ -42,6 +42,80 @@ cube.plot('sales analysis')
 
 ```
 
+### Plot configuration parameters
+
+The plotting interface accepts a rich set of configuration parameters. Below is the full list used by the current implementation, with short descriptions and default values:
+
+- query_name: str
+    - The name of the query this plot config belongs to. (required)
+- plot_name: Optional[str] = None
+    - A name for the plot configuration. If omitted, a name will be inferred.
+- plot_type: Optional[str] = None
+    - Type of visualization (e.g., 'bar', 'line', 'area', 'table', 'heatmap'). Renderer-specific handlers may accept custom types.
+- dimensions: Optional[List[str]] = None
+    - Override the query dimensions for this plot. Provide a list of column names. If not passed all the query dimensions will be used.
+- metrics: Optional[List[str]] = None
+    - Override the query metrics for this plot. Provide a list of metric names. If not passed all the query metrics and derived metrics will be used.
+- color_by: Optional[str] = None
+    - Column (dimension or metric) used to color lines/bars/categories.
+- title: Optional[str] = None
+    - Plot title. If omitted, the query or plot name is used.
+- stacked: bool = False
+    - For area/bar charts, whether series should be stacked.
+- figsize: Optional[Tuple[int, int]] = None
+    - Figure size in inches as (width, height). If None, renderer defaults are used.
+- orientation: str = "vertical"
+    - 'vertical' or 'horizontal' orientation for bar-like charts.
+- palette: Optional[str] = None
+    - Color palette name or list accepted by the renderer.
+- sort_values: bool = False
+    - Whether to sort rows before plotting.
+- sort_ascending: Union[bool, List[bool]] = True
+    - Sort direction(s). Can be a single bool or a list aligned with `sort_by`.
+- sort_by: Optional[Union[str, List[str], Tuple[str, ...], List[Tuple[str, ...]]]] = None
+    - Column(s) to sort by. Accepts a string, list of strings, or tuple(s) for composite sort keys.
+- pivot: Optional[Union[str, List[str]]] = None
+    - Pivot the data on the given column(s) before rendering (e.g., create a wide table from long data).
+- limit: Optional[int] = None
+    - Limit the number of rows (e.g., top-N) after sorting.
+- formatter: Optional[Dict[str, str]] = None
+    - Mapping of column name -> format string (e.g., { 'revenue': '0.2f', 'date': '%Y-%m' }). Used when rendering text values.
+- legend_position: Optional[str] = None
+    - Position for the legend (e.g., 'best', 'upper right', 'bottom'). Renderer-dependent.
+- annotations: Optional[Dict[str, Any]] = None
+    - Annotation options passed to the renderer (e.g., {'show_values': True, 'format': '0.0f'}).
+- custom_options: Optional[Dict[str, Any]] = None
+    - Arbitrary renderer-specific options. Useful for passing through parameters not supported by the core.
+- hide_index: bool = False
+    - Hide index labels/axis when rendering tables or DataFrame-like outputs.
+- row_color_condition: Optional[str] = None
+    - A boolean expression (using column names) that determines which rows get special coloring (e.g., '[revenue] > 10000').
+- row_colors: Optional[Dict[str, str]] = None
+    - Mapping of value -> color for row-level coloring when `row_color_condition` or categorical coloring is used.
+- set_as_default: bool = True
+    - If True, mark this plot configuration as the default for the query.
+
+Example usage:
+
+```python
+cube.define_plot(
+        query_name='sales analysis',
+        plot_name='top_regions',
+        plot_type='bar',
+        dimensions=['region'],
+        metrics=['revenue'],
+        title='Top Regions by Revenue',
+        stacked=False,
+        figsize=(10, 6),
+        orientation='vertical',
+        sort_values=True,
+        sort_by='revenue',
+        limit=10,
+        palette='tab10',
+        set_as_default=True
+)
+```
+
 Each query can have multiple plot configurations with one designated as the default.
 
 ### Plot Renderers
@@ -103,3 +177,11 @@ The plotting layer is separate from the core so you can:
 - Skip extra dependencies when visualization isn't needed
 
 You can always plot DataFrames directly. Using the plotting interface (renderers and plot configurations) keeps things organized, improves readability and maintainability, and makes updates or framework switches easier.
+
+## Default and Custom Plot Renderers
+
+Cube Alchemy includes a built-in Matplotlib renderer that is used by default. It works well in Jupyter notebooks and can also render charts inside Streamlit apps.
+
+When the plotting system calls a renderer it provides the prepared DataFrame and the complete plot configuration. The renderer decides which configuration fields to apply (for example: title, figsize, palette, annotations, etc.). Custom renderers should accept the data and config and use the keys they need; any unused keys can be ignored.
+
+A Streamlit renderer is included as a convenience example. Rendering is intentionally separated from the core: renderers can be extended or replaced without changing core functionality Ideally all but the default renderer will live on it's own project/repo in the future.

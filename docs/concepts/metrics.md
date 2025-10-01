@@ -125,6 +125,8 @@ For more sophisticated analysis, metrics support several powerful options:
 
 - **Ignore Context Filters (per metric)**: Let a metric ignore all or some of the active context filters
 
+- **Nested Aggregations**: two-step aggregations (see below). 
+
 - **Custom functions**: Use your own Python functions for complex logic
 
 Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.
@@ -206,13 +208,61 @@ cube.define_query(
 result = cube.query("advanced_analysis")
 ```
 
-**How ignore_context_filters works**
+### Ignore Context Filters
 
 When a metric specifies `ignore_context_filters`:
 
 - If set to `True`, the metric is evaluated against the Unfiltered context (equivalent to using `context_state_name='Unfiltered'` for that metric). Any `metric_filters` on the metric still apply.
 
 - If set to a list of dimensions, the metric is evaluated against its context state with those specific filters removed; then the metric's own `metric_filters` (if any) are applied on top.
+
+### Nested aggregation
+
+Nested aggregation runs the metric in two stages so you can build staged calculations (for example: "average of per-product totals"). Use this when you need to aggregate at a finer grouping first, then combine those intermediate results into the final value.
+
+How it works:
+
+1. Stage 1: compute the metric by grouping on the metric's effective dimensions plus the `nested.dimensions`. This produces one value per group defined by those combined dimensions.
+
+2. Stage 2: aggregate the stage-1 results by the metric's effective dimensions (usually the dimensions in your query). The metric's main `aggregation` setting is used in this final step.
+
+Key points:
+
+- `nested.aggregation` is the aggregation used in stage 1; the metric's `aggregation` is applied in stage 2.
+- `nested.dimensions` only change how the first stage groups the rows.
+- The metric's parameter `ignore_dimensions` applies to both stages and defines the metric's effective dimensions.
+
+
+Example:
+
+```python
+cube.define_metric(
+    name='Avg Product Revenue',
+    expression='[qty] * [price]',
+    aggregation='mean',                # final aggregation over product sums
+    nested={'dimensions': ['product'], 'aggregation': 'sum'},
+    ignore_dimensions=['store']         # compute at a higher level and broadcast to store rows
+)
+```
+
+Explanation: this computes total revenue per product first (stage 1, `sum` by product), then takes the average of those product totals across the query dimensions (stage 2, `mean`).
+
+## Shared columns: counts and distincts
+
+When multiple tables share a column (for example, `customer_id`), Cube Alchemy builds a link table containing the distinct values of that column across all participating tables. This has two practical implications:
+
+- Counting on the shared column name (e.g., `customer_id`) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.
+
+- Counting on a per-table renamed column (e.g., `customer_id <orders>` or `customer_id <customers>`) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.
+
+Example idea:
+
+- Count distinct `customer_id` (shared) → distinct customers across all linked tables.
+
+- Count distinct `customer_id <orders>` → distinct customers present in the Orders table specifically.
+
+Choose the one that matches your analytical intent: cross-table distincts via the shared column, or table-specific distincts via the renamed columns. Note: per-table renamed columns are available only when `rename_original_shared_columns=True` on the Hypercube initialization; set it to False to drop them and reduce memory/processing if you don’t need that analysis.
+
 
 ## Custom Functions
 

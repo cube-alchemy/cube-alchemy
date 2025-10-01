@@ -9,6 +9,11 @@ register_transformer(name: str, transformer: Union[Transformer, Callable[..., pd
 ```
 
 Register an transformer by name.
+Notes:
+
+- The implementation registers a set of default transformers (if available) during initialization. You can override or add new transformers via this method.
+
+- `transformer` may be an instance implementing the `Transformer` interface or a plain callable that accepts a DataFrame and returns a DataFrame.
 
 ## define_transformation
 
@@ -21,6 +26,8 @@ define_transformation(
 ```
 
 Create or update an transformation for a query. Each transformer can be configured at most once per query.
+Notes:
+- Defining a transformation registers a dependency in the cube's dependency index so downstream refreshes can be tracked.
 
 ## list_transformations
 
@@ -37,6 +44,13 @@ get_transformation_config(query_name: str, transformer: Optional[str] = None) ->
 ```
 
 Return stored parameters for a transformer in a query.
+Notes:
+
+- If `overwrite=True` the transform result replaces the provided DataFrame; otherwise only newly added columns are joined into the original result.
+
+- If `copy_input=True` the input DataFrame is copied before calling the transformer; otherwise the transformer may mutate the provided DataFrame.
+
+- The method raises if the named transformer is not registered.
 
 ## delete_transformation
 
