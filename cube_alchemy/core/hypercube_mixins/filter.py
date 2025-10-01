@@ -74,7 +74,7 @@ class Filter:
                 is_reset=True,
                 save_state=False,
             )  # resets are not saved as a new state
-        elif direction == 'fordward':
+        elif direction == 'forward':
             if self.filter_pointer[context_state_name] == len(self.applied_filters[context_state_name]):
                 return False
             self.filter_pointer[context_state_name] += 1

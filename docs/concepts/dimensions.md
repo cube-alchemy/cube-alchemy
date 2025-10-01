@@ -1,4 +1,4 @@
-Dimensions are the categorical columns from your DataFrames that you use to slice and group your data. Think of them as the "by what" in your analysis—region, product category, time period, customer segment, and so on.
+Dimensions are used to slice and group your data. Think of them as the "by what" in your analysis—region, product category, time period, customer segment, and so on.
 
 In Cube Alchemy, any column from any table in your hypercube can serve as a dimension.
 

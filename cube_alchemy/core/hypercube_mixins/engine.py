@@ -12,7 +12,7 @@ class Engine(GraphVisualizer, Filter, Query):
         Query.__init__(self)
 
         # Main fetch and filter function, set based on core deployment mode
-        if self.core_is_fully_deployed:
+        if self.normalized_core:
             self._fetch_and_filter = self._fetch_and_filter_fully_deployed_core_strategy
         else:
             self._fetch_and_filter = self._fetch_and_filter_not_fully_deployed_core_strategy
@@ -35,7 +35,7 @@ class Engine(GraphVisualizer, Filter, Query):
             return pd.DataFrame()
 
         current_table = trajectory[0]
-        if self.core_is_fully_deployed:
+        if self.normalized_core:
             current_data = self.tables[current_table]
         else:
             current_data = self.tables[current_table][_get_index_and_key_cols(self.tables[current_table])]
@@ -51,14 +51,14 @@ class Engine(GraphVisualizer, Filter, Query):
             if key1 is None or key2 is None:
                 raise ValueError(f"No relationship found between {t1} and {t2}")
             
-            if self.core_is_fully_deployed:
+            if self.normalized_core:
                 next_data = self.tables[t2]
             else:
                 next_data = self.tables[t2][_get_index_and_key_cols(self.tables[t2])]
 
             current_data = pd.merge(current_data, next_data, left_on=key1, right_on=key2, how='outer')            
 
-        if self.core_is_fully_deployed:
+        if self.normalized_core:
             # Drop non-key columns (they are not needed going forward)
             no_key_cols = [c for c in current_data.columns if not c.startswith('_key_')]
             current_data = current_data[no_key_cols]

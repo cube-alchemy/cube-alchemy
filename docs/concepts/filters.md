@@ -29,7 +29,7 @@ cube.filter({'region': ['North', 'West']})
 cube.query("sales")
 ```
 
-The beauty of Cube Alchemy filtering is that it works seamlessly across all your connected tables. When you filter by customer region, it automatically affects sales data, product data, and anything else connected through your data model relationships.
+It works seamlessly across all your connected tables. When you filter by customer region, it automatically affects sales data, product data, and anything else connected through your data model relationships.
 
 ## Basic Filtering Operations
 

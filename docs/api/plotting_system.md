@@ -18,16 +18,27 @@ define_plot(
     orientation: str = 'vertical',
     palette: Optional[str] = None,
     sort_values: bool = False,
-    sort_ascending: bool = True,
+    sort_ascending: Union[bool, List[bool]] = True,
+    sort_by: Optional[Union[str, List[str], Tuple[str, ...], List[Tuple[str, ...]]]] = None,
+    pivot: Optional[Union[str, List[str]]] = None,
     limit: Optional[int] = None,
     formatter: Optional[Dict[str, str]] = None,
+    legend_position: Optional[str] = None,
     annotations: Optional[Dict[str, Any]] = None,
     custom_options: Optional[Dict[str, Any]] = None,
+    hide_index: bool = False,
+    row_color_condition: Optional[str] = None,
+    row_colors: Optional[Dict[str, str]] = None,
     set_as_default: bool = True,
 ) -> None
 ```
 
-Persist a plot configuration for a query. If plot_type is None, an appropriate type is suggested.
+Persist a plot configuration for a query. If `plot_type` is None, an appropriate type is suggested. The stored configuration keeps the original user-provided `dimensions` and `metrics` under `_input_dimensions` and `_input_metrics` so plots automatically refresh if the query is redefined.
+
+Notes:
+- If `plot_name` is omitted a descriptive auto-generated name is used (e.g. "bar plot").
+- The function registers a dependency (query -> plot) so plot configs are refreshed when the query changes.
+- If `dimensions` or `metrics` are omitted they default to the query's definition (metrics includes derived metrics).
 
 ## get_plots
 
@@ -44,6 +55,8 @@ get_plot_config(query_name: str, plot_name: Optional[str] = None) -> Dict[str, A
 ```
 
 Return the configuration for a specific plot (default if None).
+
+Note: the implementation raises a `ValueError` if the query is undefined or has no plot configurations.
 
 ## set_default_plot
 
@@ -108,6 +121,12 @@ plot(
 
 Render a plot for a stored or ad‑hoc query. If plot_name is a list, returns multiple outputs using a shared query result.
 
+Notes:
+
+- When `plot_name` is a list the method returns a list of rendered outputs (one per plot) and enforces `query_options is None` (it reuses the stored query definition).
+
+- The default renderer is `MatplotlibRenderer()` but you can override it per-call via the `renderer` parameter or set a global default using `set_plot_renderer()`.
+
 ## delete_plot
 
 ```python
@@ -117,6 +136,7 @@ delete_plot(query_name: str, plot_name: str) -> None
 Remove a plot configuration and its dependency edges.
 
 Notes:
+
 - Dimensions/metrics default to the query definition if omitted.
 
 - When a query is redefined, linked plot configs auto-refresh to reflect updated dims/mets.

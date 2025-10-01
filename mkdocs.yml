@@ -61,7 +61,6 @@ nav:
     - Plotting: api/plotting_system.md
     - Model Catalog: api/model_catalog.md
   - Examples: examples.md
-  - Streamlit Integration: streamlit.md
   - Contributing: contributing.md
 
 extra_javascript:

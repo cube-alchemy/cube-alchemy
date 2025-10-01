@@ -20,7 +20,7 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         self,
         tables: Optional[Dict[str, pd.DataFrame]] = None,
         rename_original_shared_columns: bool = True,
-        core_is_fully_deployed: bool = False,
+        normalized_core: bool = False,
         *,
         apply_composite: bool = True,
         validate: bool = True,
@@ -30,7 +30,7 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         bridge_factory_cls: Optional[Type[CompositeBridgeGenerator]] = None,
         function_registry: Optional[Dict[str, Any]] = None
     ) -> None:
-        self.core_is_fully_deployed = core_is_fully_deployed
+        self.normalized_core = normalized_core
         self.rename_original_shared_columns = rename_original_shared_columns
 
         # Initialize Logger mixins

@@ -57,7 +57,7 @@ Note that the library is flexible regarding relationships between data rather th
 cube.get_cardinalities()
 
 # Or inspect the relationships
-cube.relationship_matrix()  
+cube.get_relationship_matrix()  
 ```
 
 

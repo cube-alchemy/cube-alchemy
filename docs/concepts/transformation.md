@@ -24,7 +24,7 @@ Designed for extensibility as a small registry-based interface:
 
 A transformer can be either:
 
-- An object implementing `Transformer` (ABC) with a method `transform(df: pd.DataFrame, **params) -> pd.DataFrame`.
+- An object implementing `Transformer` class (ABC) with a method `transform(df: pd.DataFrame, **params) -> pd.DataFrame`.
 
 - A plain callable `fn(df: pd.DataFrame, **params) -> pd.DataFrame`.
 

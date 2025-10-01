@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cube-alchemy"
-version = "0.1.13"
-description = "A lightweight, queryable hypercube engine for multidimensional data analysis"
+version = "0.2.2"
+description = "A lightweight, hypercube engine for multidimensional data analysis"
 readme = "READMEPIP.md"
 authors = [
     {name = "Juan C. Del Monte", email = "delmontejuan92@gmail.com"},
@@ -28,13 +28,6 @@ dependencies = [
 "Repository" = "https://github.com/cube-alchemy/cube-alchemy"
 "Bug Tracker" = "https://github.com/cube-alchemy/cube-alchemy/issues"
 
-[tool.setuptools]
-packages = [
-    "cube_alchemy",
-    "cube_alchemy.core",
-    "cube_alchemy.core.hypercube_building_classes",
-    "cube_alchemy.model_definitions",
-    "cube_alchemy.model_definitions.sources",
-    "cube_alchemy.model_definitions.repository",
-    "cube_alchemy.model_definitions.validation",
-]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cube_alchemy*"]
