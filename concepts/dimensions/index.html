@@ -448,6 +448,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -477,6 +500,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -615,6 +684,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/filter_methods/" class="md-nav__link">
         
   
@@ -638,12 +753,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_assets/" class="md-nav__link">
+      <a href="../../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -745,13 +883,19 @@
 
   <h1>Dimensions</h1>
 
-<p>Dimensions are the categorical columns from your DataFrames that you use to slice and group your data. Think of them as the "by what" in your analysis—region, product category, time period, customer segment, and so on.</p>
+<p>Dimensions are used to slice and group your data. Think of them as the "by what" in your analysis—region, product category, time period, customer segment, and so on.</p>
 <p>In Cube Alchemy, any column from any table in your hypercube can serve as a dimension.</p>
 <p><strong>How dimensions work:</strong></p>
 <ul>
-<li><strong>Available everywhere</strong>: Once your DataFrames are connected in the hypercube, dimensions from any table can be used in any query</li>
-<li><strong>Auto-joining</strong>: When you query dimensions from different tables, the hypercube automatically traverses the relationships to bring them together</li>
-<li><strong>Multi-hop</strong>: You can combine dimensions that are several "hops" apart in your data model—like querying by both customer region and product category even if they're in completely separate tables</li>
+<li>
+<p><strong>Available everywhere</strong>: Once your DataFrames are connected in the hypercube, dimensions from any table can be used in any query</p>
+</li>
+<li>
+<p><strong>Auto-joining</strong>: When you query dimensions from different tables, the hypercube automatically traverses the relationships to bring them together</p>
+</li>
+<li>
+<p><strong>Multi-hop</strong>: You can combine dimensions that are several "hops" apart in your data model—like querying by both customer region and product category even if they're in completely separate tables</p>
+</li>
 </ul>
 <p><strong>Getting dimension values:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get combinations of region and category</span>

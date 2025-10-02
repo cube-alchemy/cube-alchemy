@@ -12,7 +12,7 @@
         <link rel="prev" href="../metrics/">
       
       
-        <link rel="next" href="../filters/">
+        <link rel="next" href="../transformation/">
       
       
       <link rel="icon" href="../../assets/cube-alchemy-logo.png">
@@ -514,9 +514,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#computed-metrics-and-having" class="md-nav__link">
+  <a href="#derived-metrics-and-having" class="md-nav__link">
     <span class="md-ellipsis">
-      Computed Metrics and HAVING
+      Derived Metrics and HAVING
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registered-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Registered Functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#effective-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Effective dimensions
     </span>
   </a>
   
@@ -535,6 +553,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -576,6 +617,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -714,6 +801,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/filter_methods/" class="md-nav__link">
         
   
@@ -737,12 +870,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_assets/" class="md-nav__link">
+      <a href="../../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -876,9 +1032,10 @@
   A["Apply Context State Filters"] --&gt; B["Fetch Dimensions"]
   B --&gt; C["Calculate Metrics (Aggregations)"]
   C --&gt; D["Compute Post-Aggregation Metrics"]
-  D --&gt; E["Apply HAVING Filter"]
-  E --&gt; F["Apply SORT"]
-  F --&gt; G["Return Final Result"]</code></pre>
+  D --&gt; E["Apply DataFrame Transformer"]
+  E --&gt; F["Apply HAVING Filter"]
+  F --&gt; G["Apply SORT"]
+  G --&gt; H["Return Final Result"]</code></pre>
 <h2 id="query-types">Query Types</h2>
 <p>Queries must contain either dimensions, metrics, or both (a query cannot lack both).</p>
 <h3 id="dimension-only-queries">Dimension-Only Queries</h3>
@@ -907,25 +1064,25 @@
 <span class="c1"># Execute the query</span>
 <span class="n">global_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;global_totals&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="computed-metrics-and-having">Computed Metrics and HAVING</h2>
-<p>Computed metrics are calculated after base metrics are aggregated. Define them once, then reference by name in queries.</p>
+<h2 id="derived-metrics-and-having">Derived Metrics and HAVING</h2>
+<p>Derived metrics are calculated after base metrics are aggregated. Define them once, then reference by name in queries.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define base metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cost&#39;</span><span class="p">,</span>   <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[cost]&#39;</span><span class="p">,</span>           <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price] - [cost]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
 
-<span class="c1"># Define a computed metric (post-aggregation)</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_computed_metric</span><span class="p">(</span>
+<span class="c1"># Define a derived metric (post-aggregation)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_derived_metric</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Margin %&#39;</span><span class="p">,</span>
     <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[Margin] / [Cost] * 100&#39;</span><span class="p">,</span>
     <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 
-<span class="c1"># Use computed metric by name and add a HAVING filter</span>
+<span class="c1"># Use derived metric by name and add a HAVING filter</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;margin_by_product&#39;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product&#39;</span><span class="p">},</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span> <span class="s1">&#39;Cost&#39;</span><span class="p">],</span>
-    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin %&#39;</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin&#39;</span><span class="p">,</span> <span class="s1">&#39;Cost&#39;</span><span class="p">],</span> <span class="c1"># If not here, as they are part of &#39;Margin %&#39; they would be calculated internally but hidden.</span>
+    <span class="n">derived_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Margin %&#39;</span><span class="p">],</span>
     <span class="n">having</span><span class="o">=</span><span class="s1">&#39;[Margin %] &gt;= 20&#39;</span>
 <span class="p">)</span>
 
@@ -933,19 +1090,137 @@
 </code></pre></div>
 <p>Notes:</p>
 <ul>
+<li>Use [Column] syntax in expressions; functions you register are available as <code>@name</code>.</li>
+<li>Register functions with <code>cube.add_functions(...)</code>. You can inspect or replace the full registry via <code>cube.function_registry</code>.</li>
+<li>Derived metrics reference columns present in the aggregated result (metrics and dimensions).</li>
+</ul>
+<h2 id="registered-functions">Registered Functions</h2>
+<p>You can register helper functions for use in metrics. </p>
+<p>All registered functions operate on 1D data: the first argument is a pandas <code>Series</code> (or NumPy array-like). You may add extra parameters as needed.</p>
+<ul>
+<li>Expression functions: return a <code>Series</code> of the same length. Used inside expressions via <code>@name(...)</code>.</li>
+<li>Filter/HAVING functions: return a boolean <code>Series</code> of the same length. Used in HAVING via <code>@name(...)</code>.</li>
+<li>Aggregation functions: return a single value per group (e.g., number, text, or list).</li>
+</ul>
+<p>Access:</p>
+<ul>
 <li>
-<p>Use [Column] syntax in expressions; registered functions are available as @name.</p>
+<p>In expressions and HAVING (string evaluation): use <code>@function_name(...)</code>.</p>
 </li>
 <li>
-<p>Computed metrics reference columns present in the aggregated result (metrics and dimensions).</p>
+<p>For aggregations: reference by name (no <code>@</code>), e.g., <code>aggregation='p90'</code>. You can pass a callable, but it will not persist to pickle or YAML; prefer registering the function and using its name.</p>
 </li>
 </ul>
+<p>Examples</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1) Expression function: register and use in a metric</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">double_series</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">s</span> <span class="o">*</span> <span class="mi">2</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">double</span><span class="o">=</span><span class="n">double_series</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Double Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;@double([qty]) * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
+<span class="p">)</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;double_revenue_by_segment&#39;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;segment&#39;</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Double Revenue&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;double_revenue_by_segment&#39;</span><span class="p">)</span>
+
+<span class="c1"># 2) HAVING function: register and use as a filter</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">above</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">above</span><span class="o">=</span><span class="n">above</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;big_segments&#39;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;segment&#39;</span><span class="p">},</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Revenue&#39;</span><span class="p">],</span>
+    <span class="n">having</span><span class="o">=</span><span class="s1">&#39;@above([Revenue], 1000)&#39;</span>
+<span class="p">)</span>
+<span class="n">df2</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;big_segments&#39;</span><span class="p">)</span>
+
+<span class="c1"># Tip: to persist functions across save/load, define them in a module and import before registering</span>
+<span class="c1"># from udfs import double_series, above</span>
+<span class="c1"># cube.add_functions(double=double_series, above=above)</span>
+
+<span class="c1"># 3) Aggregation function: register and reference by name (persists if importable)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">p90</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">())</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">p90</span><span class="o">=</span><span class="n">p90</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;P90 Revenue&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;p90&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;p90_revenue_by_segment&#39;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;segment&#39;</span><span class="p">},</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;P90 Revenue&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">df3</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;p90_revenue_by_segment&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Note on Persistence and Function Registry</strong></p>
+<p>Hypercubes can be saved and loaded with <code>cube.save_as_pickle(...)</code> and <code>Hypercube.load_pickle(...)</code>. The function registry persists by import spec:</p>
+<ul>
+<li>
+<p>Importable top-level objects (modules, functions, classes) are restored.</p>
+</li>
+<li>
+<p>Lambdas, closures, and locally defined callables are not persisted and will be dropped silently.</p>
+</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">cube_alchemy.core.hypercube</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hypercube</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">udfs</span><span class="w"> </span><span class="kn">import</span> <span class="n">double</span>  <span class="c1"># top-level function in an importable module</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">double</span><span class="o">=</span><span class="n">double</span><span class="p">)</span>        <span class="c1"># persisted IF &#39;udfs&#39; is importable at load time</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">tmp</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># not persisted</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">save_as_pickle</span><span class="p">(</span><span class="n">pickle_name</span><span class="o">=</span><span class="s2">&quot;cube.pkl&quot;</span><span class="p">)</span>
+<span class="n">cube2</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="o">.</span><span class="n">load_pickle</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="s1">&#39;double&#39;</span> <span class="ow">in</span> <span class="n">cube2</span><span class="o">.</span><span class="n">function_registry</span>  <span class="c1"># only if &#39;udfs&#39; is on sys.path</span>
+<span class="k">assert</span> <span class="s1">&#39;tmp&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cube2</span><span class="o">.</span><span class="n">function_registry</span>
+</code></pre></div>
+<p>Important:</p>
+<ul>
+<li>
+<p>A function persists only if its defining module is importable in the loading environment (on sys.path, correct module name).</p>
+</li>
+<li>
+<p>If a query or metric references a non-restored function (e.g., a lambda or a function defined only in <strong>main</strong>), evaluation will raise. Re-register an importable function with the same name before running the query again.</p>
+</li>
+</ul>
+<h2 id="effective-dimensions">Effective dimensions</h2>
+<p>Effective dimensions are the dimensions that actually determine how a metric is aggregated. They are derived from the query’s dimensions after applying the metric’s <code>ignore_dimensions</code> setting:</p>
+<ul>
+<li>
+<p><code>ignore_dimensions=False</code> (default): effective dimensions = query dimensions.</p>
+</li>
+<li>
+<p><code>ignore_dimensions</code> is a list: effective dimensions = query dimensions minus those listed.</p>
+</li>
+<li>
+<p><code>ignore_dimensions=True</code>: no effective dimensions (grand total).</p>
+</li>
+</ul>
+<p>Nested metrics use the same effective dimensions in both inner and outer steps; <code>nested.dimensions</code> are added only for the inner step.</p>
 <h2 id="working-with-filters">Working with Filters</h2>
 <p>Queries automatically respect all active filters on your hypercube, allowing you to:</p>
 <ol>
-<li>Define a query once</li>
-<li>Apply different filters</li>
-<li>Execute the same query to see different filtered views of your data</li>
+<li>
+<p>Define a query once</p>
+</li>
+<li>
+<p>Apply different filters</p>
+</li>
+<li>
+<p>Execute the same query to see different filtered views of your data</p>
+</li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define your query</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>

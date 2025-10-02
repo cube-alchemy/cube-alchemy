@@ -523,6 +523,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -552,6 +575,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -690,6 +759,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/filter_methods/" class="md-nav__link">
         
   
@@ -713,12 +828,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_assets/" class="md-nav__link">
+      <a href="../../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -820,55 +958,78 @@
 
 <h1 id="relationships-in-cube-alchemy">Relationships in Cube Alchemy</h1>
 <p>Cube Alchemy uses implicit relationships, meaning DataFrames automatically connect to each other through shared column names.</p>
-<p>These relationships enable you to work with your newly connected data declaratively. Cube Alchemy handles all the necessary data operations under the hood.</p>
+<p>These relationships enable declarative work with newly connected data. The library handles the necessary data operations under the hood.</p>
+<p>At a high level, Cube Alchemy scans tables for shared columns, creates link/composite tables with auto keys when needed, and stores a relationship map plus join keys. Downstream operations (dimensions, metrics, queries) traverse this map to fetch only the columns required.</p>
 <h2 id="single-path">Single Path</h2>
-<p>Cube Alchemy ensures there is exactly one bidirectional path between any two tables in your data model. This creates a clear, unambiguous way to traverse from one table to another.</p>
+<p>Cube Alchemy ensures there is exactly one bidirectional path between any two tables in the data model. This creates a clear, unambiguous way to traverse from one table to another.</p>
 <h2 id="composite-key">Composite Key</h2>
 <p>When tables share multiple columns, Cube Alchemy automatically creates bridges to connect them:</p>
 <ol>
-<li><strong>Detection</strong>: It identifies sets of shared columns between tables</li>
-<li><strong>Composite Key Creation</strong>: A single key is generated from these shared columns, autonumbered to improve performance on the upcoming operations.</li>
-<li><strong>Composite Tables</strong>: New tables are created to store only the shared columns along with the generated keys</li>
-<li><strong>Column Renaming</strong>: The original shared columns in source tables are renamed with a format of <code>column_name &lt;table_name&gt;</code></li>
-<li><strong>Key Addition</strong>: The newly created composite keys are added to the original tables</li>
+<li>
+<p><strong>Detection</strong>: It identifies sets of shared columns between tables</p>
+</li>
+<li>
+<p><strong>Composite Key Creation</strong>: A single key is generated from these shared columns, autonumbered to improve performance on the upcoming operations.</p>
+</li>
+<li>
+<p><strong>Composite Tables</strong>: New tables are created to store only the shared columns along with the generated keys</p>
+</li>
+<li>
+<p><strong>Column Renaming</strong>: The original shared columns in source tables are renamed with a format of <code>column_name &lt;table_name&gt;</code></p>
+</li>
+<li>
+<p><strong>Key Addition</strong>: The newly created composite keys are added to the original tables</p>
+</li>
 </ol>
 <p>This process consolidates complex relationships into simple, efficient connections while preserving all the original data.</p>
 <h2 id="cardinality">Cardinality</h2>
 <p>Cube Alchemy takes a flexible approach:</p>
 <ul>
 <li>
-<p>It does not enforce specific cardinality constraints like one-to-many or many-to-one; many-to-many is the default relationship.</p>
+<p>It does not enforce specific cardinality constraints like one-to-many or many-to-one.</p>
 </li>
 <li>
-<p>You should understand your data's natural cardinality to avoid unexpected results in your aggregations (e.g., due to row duplication).</p>
+<p>Understanding the natural cardinality of the data helps avoid unexpected results in aggregations (e.g., due to row duplication).</p>
 </li>
 </ul>
 <p><strong>Fact and Dimension Tables</strong></p>
-<p>As a data analyst you might be already familiar with dimensional modeling principles used in data warehousing and business intelligence. These typically involve:</p>
+<p>Data analysts are often familiar with dimensional modeling principles used in data warehousing and business intelligence. These typically involve:</p>
 <ul>
 <li>
 <p><strong>Fact tables</strong>: Contain quantitative data that represent events or transactions (sales, orders, shipments).</p>
 </li>
 <li>
-<p><strong>Dimension tables</strong>: Provide descriptive context through attributes that answer the "who, what, where, when, why, and how" questions about your data (customers, products, locations, time periods).</p>
+<p><strong>Dimension tables</strong>: Provide descriptive context through attributes that answer the "who, what, where, when, why, and how" questions about the data (customers, products, locations, time periods).</p>
 </li>
 </ul>
-<p>Please bear in mind that Cube Alchemy's approach is flexible regarding relationships between your data rather than enforcing a specific modeling paradigm:</p>
+<p>Note that the library is flexible regarding relationships between data rather than enforcing a specific modeling paradigm:</p>
 <ul>
-<li>Cube Alchemy does not explicitly enforce Fact and Dimension table distinctions.</li>
-<li>Every single column provided in the DataFrames you use to define a Hypercube will be available as a dimension, and can also be used to create metrics and filters.</li>
-<li>The framework is design-agnostic. It's up to you as the analyst to define which tables serve as Facts or Dimensions in your specific context.</li>
+<li>
+<p>Cube Alchemy does not explicitly enforce Fact and Dimension table distinctions.</p>
+</li>
+<li>
+<p>Every column provided in the DataFrames used to define a Hypercube is available as a dimension and can also be used to create metrics and filters.</p>
+</li>
+<li>
+<p>The framework is design-agnostic. The analyst defines which tables serve as facts or dimensions in a given context.</p>
+</li>
 </ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># After initiating the hypercube, inspect how the connected tables relate</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">get_cardinalities</span><span class="p">()</span>
+
+<span class="c1"># Or inspect the relationships</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">get_relationship_matrix</span><span class="p">()</span>  
+</code></pre></div>
 <h2 id="visualization">Visualization</h2>
-<p>When setting up your hypercube, it's a good idea to inspect the relationship graph to confirm how tables connect and where composite keys have been introduced. 
+<p>When setting up a hypercube, it can be useful to inspect the relationship graph to confirm how tables connect and where composite keys have been introduced. 
 <div class="highlight"><pre><span></span><code><span class="c1"># Default view shows renamed columns (column_name &lt;table_name&gt;)</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">()</span>
 
 <span class="c1"># For cleaner display without table name suffixes</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
-This visualization helps you understand the automatic transformations that Cube Alchemy has applied.</p>
-<p><em>Note: If the displayed graph doesn't look so good try a couple of times or adjust the size.</em></p>
+This visualization helps illustrate the automatic transformations applied by Cube Alchemy.</p>
+<p><em>Note: If the displayed graph doesn't render well, try again or adjust the size.</em></p>
 
 
 

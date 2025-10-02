@@ -357,9 +357,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-cube-alchemy-builds-the-hypercube" class="md-nav__link">
+  <a href="#data-model-as-a-graph" class="md-nav__link">
     <span class="md-ellipsis">
-      How Cube Alchemy Builds the Hypercube
+      Data Model as a Graph
     </span>
   </a>
   
@@ -496,6 +496,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -525,6 +548,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -663,6 +732,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/filter_methods/" class="md-nav__link">
         
   
@@ -686,12 +801,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_assets/" class="md-nav__link">
+      <a href="../../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -792,51 +930,65 @@
 
 
 <h1 id="understanding-the-hypercube">Understanding the Hypercube</h1>
-<p>A <strong>hypercube</strong> is a powerful data structure for organizing and analyzing data from multiple perspectives. Think of a simple cube with three dimensions: length, width, and height. A hypercube extends this concept to an unlimited number of dimensions, allowing you to model complex business scenarios.</p>
+<p>The <strong>hypercube</strong> is a powerful abstraction for analyzing data from multiple perspectives. Think of a simple cube with three dimensions: length, width, and height. A hypercube extends this concept to an arbitrary number of dimensions, allowing you to model complex business scenarios.</p>
 <p>Each axis of the hypercube represents a key <strong>dimension</strong> of your data, such as:</p>
 <ul>
-<li>
-<p><strong>Time</strong> (e.g., year, month, day)</p>
-</li>
-<li>
-<p><strong>Geography</strong> (e.g., region, country, city)</p>
-</li>
-<li>
-<p><strong>Product</strong> (e.g., category, brand, item)</p>
-</li>
-<li>
-<p><strong>Customer</strong> (e.g., segment, demographics)</p>
-</li>
+<li><strong>Time</strong> (e.g., year, month, day)</li>
+<li><strong>Geography</strong> (e.g., region, country, city)</li>
+<li><strong>Product</strong> (e.g., category, brand, item)</li>
+<li><strong>Customer</strong> (e.g., segment, demographics)</li>
 </ul>
 <p>The hypercube enables you to calculate <em>metrics</em> (like sales, revenue, or user counts) across any combination of these dimensions, ensuring your calculations are always consistent and reusable. For example, you can analyze:</p>
 <ul>
-<li><em>Revenue</em> by <strong>Month</strong></li>
-<li><em>Active users</em> by <strong>Month</strong> and <strong>Product Category</strong></li>
-<li><em>Margin</em> by <strong>Month</strong>, <strong>Product Category</strong>, and <strong>Region</strong></li>
+<li>
+<p><em>Revenue</em> by <strong>Month</strong></p>
+</li>
+<li>
+<p><em>Active users</em> by <strong>Month</strong> and <strong>Product Category</strong></p>
+</li>
+<li>
+<p><em>Margin</em> by <strong>Month</strong>, <strong>Product Category</strong>, and <strong>Region</strong></p>
+</li>
 </ul>
 <hr />
-<h3 id="how-cube-alchemy-builds-the-hypercube">How Cube Alchemy Builds the Hypercube</h3>
-<p>In Cube Alchemy, the hypercube is not limited to a single table. It combines <strong>multiple DataFrames</strong> into a unified, logical model that you can query seamlessly. You don't need to write the complex joins to connect them; the hypercube handles the relationships for you.</p>
-<p><strong>Key Concepts:</strong></p>
-<ul>
-<li>
-<p><strong>Data Model as a Graph:</strong> The underlying structure is a <strong>Directed Acyclic Graph (DAG)</strong>.</p>
+<h2 id="data-model-as-a-graph">Data Model as a Graph</h2>
+<p>This is how Cube Alchemy Builds an Hypercube. The underlying structure is a <strong>Connected Undirected Acyclic Graph</strong> where:</p>
 <ul>
 <li><strong>Nodes</strong>: Your DataFrames.</li>
-<li><strong>Edges</strong>: The shared columns that link them.</li>
+<li><strong>Edges</strong>: Shared columns link tables. **</li>
 </ul>
+<blockquote>
+<p><em>It might not look like a tree, but under the hood, the hypercube is basically a tree in disguise — no loops, just clean branches connecting your data. See: <a href="https://en.wikipedia.org/wiki/Tree_(graph_theory)">Tree (graph theory)</a>.</em></p>
+</blockquote>
+<ul>
+<li>
+<p><strong>Effortless Queries:</strong> The hypercube handles the relationships for you. When you request a metric across certain dimensions, the hypercube automatically <strong>traverses</strong> these connections to gather the necessary data.</p>
 </li>
 <li>
-<p><strong>Effortless Queries:</strong> When you request a metric across certain dimensions, the hypercube automatically <strong>traverses</strong> these connections (even across multiple "hops") to gather the necessary data.</p>
-</li>
-<li>
-<p><strong>Consistency:</strong> Define your metrics and dimensions once, and they can be reliably used across the entire data model.</p>
+<p><strong>Consistency:</strong> Define your metrics and queries once; they will be stateful and can be used reliably across the entire analysis journey.</p>
 </li>
 </ul>
 <hr />
 <blockquote>
-<p><strong>Important Note: Avoid Circular Dependencies</strong></p>
-<p>For the hypercube to function correctly, your data model must be a <strong>Directed Acyclic Graph (DAG)</strong>. This means you must avoid <strong>cyclic relationships</strong> (or circular references). Such cycles break the logic of data traversal and can lead to incorrect or infinite aggregations.</p>
+<p><strong>Notes:</strong></p>
+<p>** Practically, when three or more tables share the same column name, linking them directly would create cycles. Cube Alchemy prevents this by:</p>
+<ul>
+<li>
+<p>creating an extra node (a link table) with the distinct shared values,</p>
+</li>
+<li>
+<p>replacing the original column in each table with an auto‑numbered key,</p>
+</li>
+<li>
+<p>keeping the original column name only in the link table,</p>
+</li>
+<li>
+<p>using those key columns solely to connect tables (they’re internal and hidden for users).</p>
+</li>
+</ul>
+<p><em>Avoid Circular Dependencies</em></p>
+<p>For the hypercube to function correctly, your data model must be a <strong>Acyclic Graph</strong>. This means you must avoid <strong>cyclic relationships</strong> (or circular references). Such cycles create ambiguous join paths that break the logic of data traversal and aggregations.</p>
+<p>With proper modeling (e.g., bridge tables, role-playing/conformed dimensions, etc) cycles can be addressed. Trees keep results consistent and avoid the ad‑hoc rules general graphs require.</p>
 </blockquote>
 
 

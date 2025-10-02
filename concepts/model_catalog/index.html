@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../filters/">
+        <link rel="prev" href="../plotting/">
       
       
-        <link rel="next" href="../plotting/">
+        <link rel="next" href="../../api/hypercube/">
       
       
       <link rel="icon" href="../../assets/cube-alchemy-logo.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Context State - Cube Alchemy</title>
+        <title>Model Catalog - Cube Alchemy</title>
       
     
     
@@ -63,6 +63,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#model-catalog" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -94,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Context State
+              Model Catalog
             
           </span>
         </div>
@@ -483,17 +488,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../context-state/" class="md-nav__link">
         
   
   
@@ -504,7 +502,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -537,10 +534,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../model_catalog/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -551,6 +570,62 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-can-persist" class="md-nav__link">
+    <span class="md-ellipsis">
+      What you can persist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How it works
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#yaml-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      YAML structure
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -881,58 +956,111 @@
 
 
 
-  <h1>Context State</h1>
-
-<p>You can think of it as a separate filtering environment.</p>
-<p>There are two main context states:</p>
+<h1 id="model-catalog">Model Catalog</h1>
+<p>The Model Catalog makes working with your hypercube more efficient by persisting analytics and plotting definitions to external storage. This lets you separate configuration from code and work across sessions.</p>
+<p>By default, Cube Alchemy uses YAML files to store your model definitions. You can:</p>
 <ul>
 <li>
-<p><strong>'Unfiltered'</strong>: This is created at the hypercube initialization. It has all the relationships that exists accross all the tables that conform the DAG when there is no filter applied. It is a special internal use state, and is not allowed to filter on it.</p>
+<p>Define metrics, queries, and visualizations directly in YAML</p>
 </li>
 <li>
-<p><strong>'Default'</strong>: When initializing the hypercube <em>on memory</em>, we take a copy of the unfiltered state. Then by default the filters and queries will use this context state, but you can change that..</p>
+<p>Load external definitions into a fresh hypercube session</p>
+</li>
+<li>
+<p>Save definitions you've created in code back to YAML</p>
 </li>
 </ul>
-<p><strong>More states (?)</strong></p>
-<p>You can also create more context states, as many as you want. They allow you to create multiple independent filtering contexts within the same app so you can compare, isolate, simulate different scenarios side by side or use to create more advanced filtering scenarios.</p>
-<p><strong>Creating new context states:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Create a new filtering environment</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">set_context_state</span><span class="p">(</span><span class="s1">&#39;New Analysis&#39;</span><span class="p">)</span>
+<p>This approach separates your analytical definitions from your processing code, creating a cleaner, more maintainable workflow.</p>
+<h2 id="what-you-can-persist">What you can persist</h2>
+<p><strong>Analytics Components</strong></p>
+<ul>
+<li>
+<p>Metrics and derived metrics</p>
+</li>
+<li>
+<p>Transformations</p>
+</li>
+<li>
+<p>Queries</p>
+</li>
+</ul>
+<p><strong>Visualization</strong></p>
+<ul>
+<li>Plot configurations</li>
+</ul>
+<h2 id="how-it-works">How it works</h2>
+<ul>
+<li>
+<p><strong>Catalog</strong>: A façade that coordinates Sources and Repository operations</p>
+</li>
+<li>
+<p><strong>Sources</strong>: Backend connectors that read/write definitions (YAML is the default implementation)</p>
+</li>
+<li>
+<p><strong>Repository</strong>: An in-memory store that holds normalized definitions during runtime.</p>
+</li>
+</ul>
+<p>This architecture potentially allows you combine multiple sources while maintaining a consistent interface for your hypercube.</p>
+<h2 id="basic-usage">Basic usage</h2>
+<p><div class="highlight"><pre><span></span><code><span class="c1"># 1. Attach a YAML file to your hypercube</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">set_yaml_model_catalog</span><span class="p">()</span> <span class="c1"># will set &quot;model_catalog.yaml&quot; on the working directory</span>
 
-<span class="c1"># Apply filters specific to this context</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-    <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;2024-10-01&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-11-01&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-12-01&#39;</span><span class="p">]},</span> 
-    <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;New Analysis&#39;</span>
-<span class="p">)</span>
+<span class="c1"># 2. Load existing definitions from YAML into your cube</span>
+<span class="c1"># If you want to start clean before applying the catalog, pass reset_specs=True</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">load_from_model_catalog</span><span class="p">(</span><span class="n">reset_specs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># Define metrics using the specific context state</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;New Analysis Revenue&#39;</span><span class="p">,</span>
-    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> 
-    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
-    <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;New Analysis&#39;</span>  <span class="c1"># This metric uses the New Analysis context</span>
-<span class="p">)</span>
+<span class="c1"># 3. Create or modify definitions using the hypercube API. This is useful when creating on-the-fly definitions...</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span><span class="s2">&quot;revenue&quot;</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;[sales] * [price]&quot;</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span><span class="s2">&quot;sales_by_region&quot;</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">],</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;revenue&quot;</span><span class="p">])</span>
 
-<span class="c1"># Define regular metrics (using Default context)</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Regular Revenue&#39;</span><span class="p">,</span>
-    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> 
-    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
-    <span class="c1"># No context_state_name means it uses &#39;Default&#39;</span>
-<span class="p">)</span>
+<span class="c1"># ...and you want to persist them.</span>
+<span class="c1"># 4. Save your definitions back to YAML</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">save_to_model_catalog</span><span class="p">()</span>
 
-<span class="c1"># Define a query that will use both metrics</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">},</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Regular Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;New Analysis Revenue&#39;</span><span class="p">]</span>
-    <span class="c1"># Queries don&#39;t have context_state_name parameter</span>
-<span class="p">)</span>
-
-<span class="c1"># Execute the query - it will show revenue from both context states</span>
-<span class="n">comparison_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">)</span>
+<span class="c1"># 5. Inspect available definitions by accessing the model_catalog object directly.</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">model_catalog</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">&quot;metrics&quot;</span><span class="p">)</span>
+<span class="n">queries</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">model_catalog</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">&quot;queries&quot;</span><span class="p">)</span>
+<span class="c1"># cube.model_catalog.get(&quot;metrics&quot;, &quot;Amount Actual&quot;)</span>
 </code></pre></div>
-<p><em>Bear in mind that when creating a new context state, a copy of the 'Unfiltered' context state holding all the relationships will be made and stored on memory.</em></p>
+<strong>Note:</strong></p>
+<p>In API methods, “model catalog” refers to the Catalog Source/s for simplicity.</p>
+<blockquote>
+<p>The Repository is an internal layer working under the hood that normalizes data so Python can read and write from and to the source/s easily. When you access the model_catalog object directly and list or get from it, bear in mind you are doing it from the Repository, so depending on your where you are in your workflow it might need to be refreshed, either from the Source or the actual Hypercube object:</p>
+<ul>
+<li>
+<p>cube.model_catalog.refresh(kinds, reload_sources, clear_repo) # Same as load_from_model_catalog, but without applying the catalog to the cube</p>
+</li>
+<li>
+<p>cube._model_catalog_pull_from_cube() # Same as save_to_model_catalog, but wihtout saving to the actual source.</p>
+</li>
+</ul>
+</blockquote>
+<h2 id="yaml-structure">YAML structure</h2>
+<p>Simply mirrors the respective definition APIs. Plots and Transformers can be nested under their parent query (as shown below) or defined at the top level with a query reference.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">metrics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">revenue</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[Unit</span><span class="nv"> </span><span class="s">Price]</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">[Quantity]&quot;</span>
+<span class="w">    </span><span class="nt">aggregation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sum</span>
+
+<span class="nt">derived_metrics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">margin_pct</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;margin</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">revenue&quot;</span>
+
+<span class="nt">queries</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Sales by Month Year </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dimensions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">month_year</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">metrics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">revenue</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">transformers</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">moving_average</span><span class="p">:</span>
+<span class="w">        </span><span class="s">&#39;on&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">revenue</span>
+<span class="w">        </span><span class="nt">window</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">        </span><span class="nt">sort_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">revenue</span>
+<span class="w">        </span><span class="nt">new_column</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">revenue_ma_3</span>
+<span class="w">    </span><span class="nt">plots</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">default_bar</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">plot_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">line</span>
+<span class="w">          </span><span class="nt">metrics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">revenue_ma_3</span><span class="p p-Indicator">]</span>
+</code></pre></div>
 
 
 

@@ -514,6 +514,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../concepts/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../concepts/filters/" class="md-nav__link">
         
   
@@ -543,6 +566,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -681,6 +750,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/filter_methods/" class="md-nav__link">
         
   
@@ -704,12 +819,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/analytics_assets/" class="md-nav__link">
+      <a href="../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -813,28 +951,56 @@
 <p>Cube Alchemy transforms your pandas DataFrames into a powerful <strong>hypercube</strong>, creating a unified semantic layer for multidimensional analysis. This allows you to move from disconnected tables to a coherent analytical model where you can explore data simply and declaratively.</p>
 <h3 id="core-capabilities">Core Capabilities</h3>
 <ul>
-<li><strong>Automatic Relationships:</strong>  Discovers relationships between your DataFrames by matching shared column names.<ul>
+<li>
+<p><strong>Automatic Relationships:</strong>  Discovers relationships between your DataFrames by matching shared column names.</p>
+<ul>
 <li><em>Complex Relationship Handling:</em> Handles composite keys and complex relationships transparently.</li>
 </ul>
 </li>
-<li><strong>Multidimensional Analytics:</strong> Slice, dice, and aggregate your data across any dimension with consistent, reusable metrics and queries that reduce boilerplate code.</li>
-<li><strong>Stateful Analysis:</strong> Maintain a filtering context across queries to easily compare different scenarios.</li>
-<li><strong>Interactive &amp; Scalable:</strong> Works seamlessly in notebook and data apps (Streamlit/Panel).</li>
+<li>
+<p><strong>Multidimensional Analytics:</strong> Slice, dice, and aggregate your data across any dimension with consistent, reusable metrics and queries that reduce boilerplate code.</p>
+</li>
+<li>
+<p><strong>Stateful Analysis:</strong> Maintain a filtering context across queries to easily compare different scenarios.</p>
+</li>
+<li>
+<p><strong>Interactive &amp; Scalable:</strong> Works seamlessly in notebook and data apps (Streamlit/Panel).</p>
+</li>
+<li>
+<p><strong>Framework-Agnostic Visualization:</strong> Flexible plotting system with a clean renderer interface that works with any visualization framework.</p>
+</li>
 </ul>
 <h3 id="the-semantic-layer">The Semantic Layer</h3>
 <p>Map your data into a clear and consistent set of analytical assets to work with your hypercube:</p>
 <ul>
-<li><strong>Dimensions</strong>: The "by" of your analysis—the entities you use to slice and dice data (e.g., <code>Customer</code>, <code>Region</code>, <code>Product</code>).</li>
-<li><strong>Metrics</strong>: The key performance indicators (KPIs) you measure (e.g., <code>Total Revenue</code>, <code>Conversion Rate</code>, <code>Average Order Value</code>).</li>
-<li><strong>Queries</strong>: The questions you ask of your data, combining metrics and dimensions to produce insights (e.g., <em>Revenue by Region over Time</em>).</li>
+<li>
+<p><strong>Dimensions</strong>: The "by" of your analysis—the entities you use to slice and dice data (e.g., <code>Customer</code>, <code>Region</code>, <code>Product</code>).</p>
+</li>
+<li>
+<p><strong>Metrics</strong>: The key performance indicators (KPIs) you measure (e.g., <code>Total Revenue</code>, <code>Conversion Rate</code>, <code>Average Order Value</code>).</p>
+</li>
+<li>
+<p><strong>Queries</strong>: The questions you ask of your data, combining metrics and dimensions to produce insights (e.g., <em>Revenue by Region over Time</em>).</p>
+</li>
+<li>
+<p><strong>Plot Configurations</strong>: Visualization definitions that specify how query results should be displayed, with support for multiple views of the same data.</p>
+</li>
 </ul>
 <h3 id="why-it-matters">Why It Matters</h3>
 <p>Build faster, reliable analytics with a fraction of the effort.</p>
 <ul>
-<li><strong>Accelerate Insights:</strong> Get into deep analysis in minutes. Relationships are discovered automatically, not manually coded.</li>
-<li><strong>Simplify Complexity:</strong> Replace ad-hoc joins and messy code with clean, declarative queries that are easy to read and maintain.</li>
-<li><strong>Ensure Consistency:</strong> Standardized metrics and a central data model guarantee that everyone gets reliable, consistent results.</li>
-<li><strong>Integrate Seamlessly:</strong> Designed to work with Streamlit and other Python-based frameworks for building interactive data applications.</li>
+<li>
+<p><strong>Accelerate Insights:</strong> Get into deep analysis in minutes. Relationships are discovered automatically, not manually coded.</p>
+</li>
+<li>
+<p><strong>Simplify Complexity:</strong> Replace ad-hoc joins and messy code with clean, declarative queries that are easy to read and maintain.</p>
+</li>
+<li>
+<p><strong>Ensure Consistency:</strong> Standardized metrics and a central data model guarantee that everyone gets reliable, consistent results.</p>
+</li>
+<li>
+<p><strong>Integrate Seamlessly:</strong> Designed to work with Streamlit and other Python-based frameworks for building interactive data applications.</p>
+</li>
 </ul>
 
 

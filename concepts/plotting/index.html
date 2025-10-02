@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../filters/">
+        <link rel="prev" href="../context-state/">
       
       
-        <link rel="next" href="../plotting/">
+        <link rel="next" href="../model_catalog/">
       
       
       <link rel="icon" href="../../assets/cube-alchemy-logo.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Context State - Cube Alchemy</title>
+        <title>Plotting - Cube Alchemy</title>
       
     
     
@@ -63,6 +63,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#plotting-system" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -94,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Context State
+              Plotting
             
           </span>
         </div>
@@ -483,17 +488,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../context-state/" class="md-nav__link">
         
   
   
@@ -504,7 +502,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -514,10 +511,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../plotting/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -528,6 +547,95 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Components
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plot-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plot Configurations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plot configuration parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-renderers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plot Renderers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registering-a-custom-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Registering a Custom Plot
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-a-separate-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why a Separate Interface?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-and-custom-plot-renderers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Default and Custom Plot Renderers
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -881,58 +989,227 @@
 
 
 
-  <h1>Context State</h1>
-
-<p>You can think of it as a separate filtering environment.</p>
-<p>There are two main context states:</p>
+<h1 id="plotting-system">Plotting System</h1>
+<p>Cube Alchemy includes a flexible plotting system that allows you to visualize your query results with any visualization framework of your choice.</p>
+<p>The plotting system is a framework-agnostic approach to visualizing data from your hypercube. It separates:</p>
 <ul>
 <li>
-<p><strong>'Unfiltered'</strong>: This is created at the hypercube initialization. It has all the relationships that exists accross all the tables that conform the DAG when there is no filter applied. It is a special internal use state, and is not allowed to filter on it.</p>
+<p><strong>What data to show</strong> (from your queries)</p>
 </li>
 <li>
-<p><strong>'Default'</strong>: When initializing the hypercube <em>on memory</em>, we take a copy of the unfiltered state. Then by default the filters and queries will use this context state, but you can change that..</p>
+<p><strong>How to configure the visualization</strong> (plot configurations)</p>
+</li>
+<li>
+<p><strong>How to render the visualization</strong> (through renderer interfaces)</p>
 </li>
 </ul>
-<p><strong>More states (?)</strong></p>
-<p>You can also create more context states, as many as you want. They allow you to create multiple independent filtering contexts within the same app so you can compare, isolate, simulate different scenarios side by side or use to create more advanced filtering scenarios.</p>
-<p><strong>Creating new context states:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Create a new filtering environment</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">set_context_state</span><span class="p">(</span><span class="s1">&#39;New Analysis&#39;</span><span class="p">)</span>
-
-<span class="c1"># Apply filters specific to this context</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-    <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;2024-10-01&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-11-01&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-12-01&#39;</span><span class="p">]},</span> 
-    <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;New Analysis&#39;</span>
-<span class="p">)</span>
-
-<span class="c1"># Define metrics using the specific context state</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;New Analysis Revenue&#39;</span><span class="p">,</span>
-    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> 
-    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
-    <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;New Analysis&#39;</span>  <span class="c1"># This metric uses the New Analysis context</span>
-<span class="p">)</span>
-
-<span class="c1"># Define regular metrics (using Default context)</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Regular Revenue&#39;</span><span class="p">,</span>
-    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span> 
-    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
-    <span class="c1"># No context_state_name means it uses &#39;Default&#39;</span>
-<span class="p">)</span>
-
-<span class="c1"># Define a query that will use both metrics</span>
+<h2 id="core-components">Core Components</h2>
+<h3 id="plot-configurations">Plot Configurations</h3>
+<p>Plot configurations are stored within queries and define how data should be visualized:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define the query with dimensions and metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">,</span>
-    <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">},</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Regular Revenue&#39;</span><span class="p">,</span> <span class="s1">&#39;New Analysis Revenue&#39;</span><span class="p">]</span>
-    <span class="c1"># Queries don&#39;t have context_state_name parameter</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sales analysis&quot;</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;revenue&quot;</span><span class="p">],</span>
 <span class="p">)</span>
 
-<span class="c1"># Execute the query - it will show revenue from both context states</span>
-<span class="n">comparison_results</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;revenue_comparison&quot;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_plot</span><span class="p">(</span>
+    <span class="n">query_name</span><span class="o">=</span><span class="s2">&quot;sales analysis&quot;</span><span class="p">,</span>
+    <span class="n">plot_name</span><span class="o">=</span><span class="s2">&quot;simple_bar&quot;</span><span class="p">,</span>
+    <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span>
+    <span class="c1">#dimensions=[&quot;region&quot;],</span>
+    <span class="c1">#metrics=[&quot;revenue&quot;],</span>
+    <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span>
+    <span class="n">sort_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Revenue by Region&quot;</span> <span class="c1"># if ommited, it will be the query name</span>
+<span class="p">)</span>
+
+<span class="c1"># cube.set_plot_renderer(MyRenderer()) # If you want to set up a customer renderer. See Plot Renders below</span>
+
+<span class="c1"># Use it with default plot configuration</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;sales analysis&#39;</span><span class="p">)</span>
 </code></pre></div>
-<p><em>Bear in mind that when creating a new context state, a copy of the 'Unfiltered' context state holding all the relationships will be made and stored on memory.</em></p>
+<h3 id="plot-configuration-parameters">Plot configuration parameters</h3>
+<p>The plotting interface accepts a rich set of configuration parameters. Below is the full list used by the current implementation, with short descriptions and default values:</p>
+<ul>
+<li>query_name: str<ul>
+<li>The name of the query this plot config belongs to. (required)</li>
+</ul>
+</li>
+<li>plot_name: Optional[str] = None<ul>
+<li>A name for the plot configuration. If omitted, a name will be inferred.</li>
+</ul>
+</li>
+<li>plot_type: Optional[str] = None<ul>
+<li>Type of visualization (e.g., 'bar', 'line', 'area', 'table', 'heatmap'). Renderer-specific handlers may accept custom types.</li>
+</ul>
+</li>
+<li>dimensions: Optional[List[str]] = None<ul>
+<li>Override the query dimensions for this plot. Provide a list of column names. If not passed all the query dimensions will be used.</li>
+</ul>
+</li>
+<li>metrics: Optional[List[str]] = None<ul>
+<li>Override the query metrics for this plot. Provide a list of metric names. If not passed all the query metrics and derived metrics will be used.</li>
+</ul>
+</li>
+<li>color_by: Optional[str] = None<ul>
+<li>Column (dimension or metric) used to color lines/bars/categories.</li>
+</ul>
+</li>
+<li>title: Optional[str] = None<ul>
+<li>Plot title. If omitted, the query or plot name is used.</li>
+</ul>
+</li>
+<li>stacked: bool = False<ul>
+<li>For area/bar charts, whether series should be stacked.</li>
+</ul>
+</li>
+<li>figsize: Optional[Tuple[int, int]] = None<ul>
+<li>Figure size in inches as (width, height). If None, renderer defaults are used.</li>
+</ul>
+</li>
+<li>orientation: str = "vertical"<ul>
+<li>'vertical' or 'horizontal' orientation for bar-like charts.</li>
+</ul>
+</li>
+<li>palette: Optional[str] = None<ul>
+<li>Color palette name or list accepted by the renderer.</li>
+</ul>
+</li>
+<li>sort_values: bool = False<ul>
+<li>Whether to sort rows before plotting.</li>
+</ul>
+</li>
+<li>sort_ascending: Union[bool, List[bool]] = True<ul>
+<li>Sort direction(s). Can be a single bool or a list aligned with <code>sort_by</code>.</li>
+</ul>
+</li>
+<li>sort_by: Optional[Union[str, List[str], Tuple[str, ...], List[Tuple[str, ...]]]] = None<ul>
+<li>Column(s) to sort by. Accepts a string, list of strings, or tuple(s) for composite sort keys.</li>
+</ul>
+</li>
+<li>pivot: Optional[Union[str, List[str]]] = None<ul>
+<li>Pivot the data on the given column(s) before rendering (e.g., create a wide table from long data).</li>
+</ul>
+</li>
+<li>limit: Optional[int] = None<ul>
+<li>Limit the number of rows (e.g., top-N) after sorting.</li>
+</ul>
+</li>
+<li>formatter: Optional[Dict[str, str]] = None<ul>
+<li>Mapping of column name -&gt; format string (e.g., { 'revenue': '0.2f', 'date': '%Y-%m' }). Used when rendering text values.</li>
+</ul>
+</li>
+<li>legend_position: Optional[str] = None<ul>
+<li>Position for the legend (e.g., 'best', 'upper right', 'bottom'). Renderer-dependent.</li>
+</ul>
+</li>
+<li>annotations: Optional[Dict[str, Any]] = None<ul>
+<li>Annotation options passed to the renderer (e.g., {'show_values': True, 'format': '0.0f'}).</li>
+</ul>
+</li>
+<li>custom_options: Optional[Dict[str, Any]] = None<ul>
+<li>Arbitrary renderer-specific options. Useful for passing through parameters not supported by the core.</li>
+</ul>
+</li>
+<li>hide_index: bool = False<ul>
+<li>Hide index labels/axis when rendering tables or DataFrame-like outputs.</li>
+</ul>
+</li>
+<li>row_color_condition: Optional[str] = None<ul>
+<li>A boolean expression (using column names) that determines which rows get special coloring (e.g., '[revenue] &gt; 10000').</li>
+</ul>
+</li>
+<li>row_colors: Optional[Dict[str, str]] = None<ul>
+<li>Mapping of value -&gt; color for row-level coloring when <code>row_color_condition</code> or categorical coloring is used.</li>
+</ul>
+</li>
+<li>set_as_default: bool = True<ul>
+<li>If True, mark this plot configuration as the default for the query.</li>
+</ul>
+</li>
+</ul>
+<p>Example usage:</p>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">define_plot</span><span class="p">(</span>
+        <span class="n">query_name</span><span class="o">=</span><span class="s1">&#39;sales analysis&#39;</span><span class="p">,</span>
+        <span class="n">plot_name</span><span class="o">=</span><span class="s1">&#39;top_regions&#39;</span><span class="p">,</span>
+        <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">,</span>
+        <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;region&#39;</span><span class="p">],</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;revenue&#39;</span><span class="p">],</span>
+        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Top Regions by Revenue&#39;</span><span class="p">,</span>
+        <span class="n">stacked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">,</span>
+        <span class="n">sort_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">sort_by</span><span class="o">=</span><span class="s1">&#39;revenue&#39;</span><span class="p">,</span>
+        <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">palette</span><span class="o">=</span><span class="s1">&#39;tab10&#39;</span><span class="p">,</span>
+        <span class="n">set_as_default</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Each query can have multiple plot configurations with one designated as the default.</p>
+<h3 id="plot-renderers">Plot Renderers</h3>
+<p>Renderers are responsible for creating the visualization based on the data and plot configuration. They implement a common interface:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">cube_alchemy.plot_renderer</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotRenderer</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyRenderer</span><span class="p">(</span><span class="n">PlotRenderer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Create and return a visualization using the data and configuration</span>
+</code></pre></div>
+<p>This design allows Cube Alchemy to integrate with any visualization framework in python including:</p>
+<ul>
+<li>
+<p>Matplotlib (set as Default, thought it could be a brand new one designed)</p>
+</li>
+<li>
+<p>Streamlit</p>
+</li>
+<li>
+<p>Plotly</p>
+</li>
+<li>
+<p>Etc</p>
+</li>
+</ul>
+<h3 id="registering-a-custom-plot">Registering a Custom Plot</h3>
+<p>You can add new plot types at runtime. The simplest handler accepts only a DataFrame; the renderer also supports richer signatures.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">custom_render</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">mets</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;dims:&quot;</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mets:&quot;</span><span class="p">,</span> <span class="n">mets</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">plot_renderer</span><span class="o">.</span><span class="n">register_plot</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span> <span class="n">custom_render</span><span class="p">)</span> <span class="c1">## This will work on the default Matplotlib Renderer, it adds a new rendering function to it which can be called for all plot_types = custom</span>
+
+<span class="n">cube</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Your Query&#39;</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+
+<span class="c1">## Or use a brand new renderer that knows how to render the plot_type = custom</span>
+<span class="n">my_renderer</span> <span class="o">=</span> <span class="n">CustomRenderer</span><span class="p">()</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Your Query&#39;</span><span class="p">,</span> <span class="n">renderer</span> <span class="o">=</span> <span class="n">my_renderer</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+
+<span class="c1"># Note: register_plot() is not part of PlotRenderer (ABC) but a special method for the Default MatplotlibRenderer installed with the Hypercube. If you use custom a renderer it will not be there.</span>
+</code></pre></div>
+<p>Notes:</p>
+<ul>
+<li>
+<p>Registration is per Python run; call it during startup or from a module that’s imported early.</p>
+</li>
+<li>
+<p>The same <code>plot_type</code> name will override an existing handler.</p>
+</li>
+</ul>
+<h2 id="why-a-separate-interface">Why a Separate Interface?</h2>
+<p>The plotting layer is separate from the core so you can:</p>
+<ul>
+<li>Keep data and visualization concerns independent</li>
+<li>Swap visualization frameworks without touching core logic</li>
+<li>Evolve as libraries change without core refactors</li>
+<li>Skip extra dependencies when visualization isn't needed</li>
+</ul>
+<p>You can always plot DataFrames directly. Using the plotting interface (renderers and plot configurations) keeps things organized, improves readability and maintainability, and makes updates or framework switches easier.</p>
+<h2 id="default-and-custom-plot-renderers">Default and Custom Plot Renderers</h2>
+<p>Cube Alchemy includes a built-in Matplotlib renderer that is used by default. It works well in Jupyter notebooks and can also render charts inside Streamlit apps.</p>
+<p>When the plotting system calls a renderer it provides the prepared DataFrame and the complete plot configuration. The renderer decides which configuration fields to apply (for example: title, figsize, palette, annotations, etc.). Custom renderers should accept the data and config and use the keys they need; any unused keys can be ignored.</p>
+<p>A Streamlit renderer is included as a convenience example. Rendering is intentionally separated from the core: renderers can be extended or replaced without changing core functionality Ideally all but the default renderer will live on it's own project/repo in the future.</p>
 
 
 

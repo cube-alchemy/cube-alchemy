@@ -448,6 +448,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -477,6 +500,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -615,6 +684,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/filter_methods/" class="md-nav__link">
         
   
@@ -638,12 +753,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_assets/" class="md-nav__link">
+      <a href="../../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -746,13 +884,17 @@
   <h1>Workflow</h1>
 
 <pre class="mermaid"><code>flowchart LR
-  A["Load DataFrames"] --&gt; B["Build Hypercube"]
-  B --&gt; C["Define Metrics"]
-  C --&gt; D["Define Queries"]
-  D --&gt; E["Execute Queries"]
-  E --&gt; F["Update Context State (Apply or Remove Filters)"]
-  F --&gt; E</code></pre>
-<p>Cube Alchemy's workflow is intuitive and powerful: load your data, build a unified hypercube structure, define your metrics, and create reusable queries. The stateful architecture allows you to execute queries and apply filters in an iterative process.</p>
+  A["Load Data"] --&gt; B["Build Hypercube"]
+  subgraph MS["Model Specification"]
+    C["Define Metrics"] --&gt; D["Define Queries"]
+  end
+  B --&gt; C
+  D --&gt; P["Define Plots"]
+  P --&gt; E["Execute Queries"]
+  E --&gt; F["Display"]
+  F --&gt; G["Filter"]
+  G --&gt; E</code></pre>
+<p>Cube Alchemy's workflow: load your data, build a unified hypercube, specify your model (metrics and queries), define plots, then execute. The stateful architecture lets you iterate by applying filters and re-running queries and plots.</p>
 
 
 

@@ -467,9 +467,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#computed-metrics" class="md-nav__link">
+  <a href="#derived-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      Computed Metrics
+      Derived Metrics
     </span>
   </a>
   
@@ -481,6 +481,30 @@
       Advanced Features
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Advanced Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ignore-context-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ignore Context Filters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-aggregation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nested aggregation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -532,6 +556,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -561,6 +608,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -699,6 +792,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/filter_methods/" class="md-nav__link">
         
   
@@ -722,12 +861,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/analytics_assets/" class="md-nav__link">
+      <a href="../../api/plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -831,16 +993,28 @@
 <p>A metric is a calculated measure that aggregates data in some meaningful way. Think revenue, profit margin, average order size, customer count—basically any aggregated value that helps you analyze your data.</p>
 <p>In Cube Alchemy, metrics are defined once and stored within the cube object for later use:</p>
 <ol>
-<li>You <strong>define a metric</strong> using <code>cube.define_metric()</code> providing at least a name, expression, and aggregation method</li>
-<li>The metric is <strong>stored in the cube object</strong></li>
-<li>Later, you <strong>reference metrics by name</strong> when defining queries</li>
+<li>
+<p>You <strong>define a metric</strong> using <code>cube.define_metric()</code> providing at least a name, expression, and aggregation method</p>
+</li>
+<li>
+<p>The metric is <strong>stored in the cube object</strong></p>
+</li>
+<li>
+<p>Later, you <strong>reference metrics by name</strong> when defining queries</p>
+</li>
 </ol>
 <h2 id="building-a-metric">Building a Metric</h2>
 <p>Every metric needs three essential components:</p>
 <ol>
-<li><strong>Name</strong>: A clear, descriptive label for the metric (e.g., 'Revenue', 'Customer Count')</li>
-<li><strong>Expression</strong>: The calculation formula, using dimension references inside square brackets (e.g., <code>[qty] * [price]</code>)</li>
-<li><strong>Aggregation</strong>: How to combine values—standard methods like <code>sum</code>, <code>mean</code>, <code>count</code>, or custom functions</li>
+<li>
+<p><strong>Name</strong>: A clear, descriptive label for the metric (e.g., 'Revenue', 'Customer Count')</p>
+</li>
+<li>
+<p><strong>Expression</strong>: The calculation formula, using dimension references inside square brackets (e.g., <code>[qty] * [price]</code>)</p>
+</li>
+<li>
+<p><strong>Aggregation</strong>: How to combine values—standard methods like <code>sum</code>, <code>mean</code>, <code>count</code>, or custom functions</p>
+</li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="c1"># Step 1: Define your metrics</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
@@ -885,13 +1059,17 @@
 <p>Pandas group by strings: <code>'sum'</code>, <code>'mean'</code>, <code>'count'</code>, <code>'min'</code>, <code>'max'</code>, etc.</p>
 </li>
 <li>
-<p>Custom callable functions: <code>lambda x: x.quantile(0.95)</code> or any function that accepts a pandas Series</p>
+<p>You can extend the pandas group by strings by registering custom functions, which will aggregate over the resultin pandas series. See below.</p>
+</li>
+<li>
+<p>Custom callable functions: <code>lambda x: x.quantile(0.95)</code> or any function that accepts a pandas Series.</p>
 </li>
 </ul>
 </li>
 </ul>
-<h2 id="computed-metrics">Computed Metrics</h2>
-<p>Computed metrics are calculated after aggregation has already occurred. While regular metrics aggregate over dimensions, computed metrics work with already aggregated results, letting you create ratios, percentages, and other derivative calculations.</p>
+<p>NOTE: Avoid passing custom callabes if you plan to work with YAML (or other source) catalog to persist these definitions. After registering it you can use it.</p>
+<h2 id="derived-metrics">Derived Metrics</h2>
+<p>Derived metrics are calculated after aggregation has already occurred. While regular metrics aggregate over dimensions, derived metrics work with already aggregated results, letting you create ratios, percentages, and other derivative calculations.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># First define the metrics needed for the computation</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue&#39;</span><span class="p">,</span>
@@ -905,17 +1083,17 @@
     <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span>
 <span class="p">)</span>
 
-<span class="c1"># Then define a computed metric that uses them</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">define_computed_metric</span><span class="p">(</span>
+<span class="c1"># Then define a derived metric that uses them</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_derived_metric</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Profit Margin %&#39;</span><span class="p">,</span>
     <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;([Revenue] - [Cost]) / [Revenue] * 100&#39;</span>
 <span class="p">)</span>
 
-<span class="c1"># Use both regular and computed metrics in queries</span>
+<span class="c1"># Use both regular and derived metrics in queries</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_query</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;profitability_analysis&quot;</span><span class="p">,</span>
     <span class="n">dimensions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;product_category&#39;</span><span class="p">,</span> <span class="s1">&#39;region&#39;</span><span class="p">},</span>
-    <span class="n">computed_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Profit Margin %&#39;</span><span class="p">]</span>
+    <span class="n">derived_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Profit Margin %&#39;</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Execute the query</span>
@@ -927,20 +1105,36 @@
 <p>Define regular metrics that perform aggregation</p>
 </li>
 <li>
-<p>Define computed metrics that reference those aggregated metrics</p>
+<p>Define derived metrics that reference those aggregated metrics</p>
 </li>
 <li>
-<p>Include them in your queries (computed metrics are passed separately)</p>
+<p>Include them in your queries (derived metrics are passed separately)</p>
 </li>
 </ol>
 <h2 id="advanced-features">Advanced Features</h2>
 <p>For more sophisticated analysis, metrics support several powerful options:</p>
 <ul>
-<li><strong>Different context states</strong>: Calculate metrics in different filtering environments</li>
-<li><strong>Metric filters</strong>: Apply specific filters only for a particular metric</li>
-<li><strong>Row conditions</strong>: Pre-filter rows before calculating the metric</li>
-<li><strong>Ignore Dimensions</strong>: Control dimensional aggregation behavior</li>
-<li><strong>Custom functions</strong>: Use your own Python functions for complex logic</li>
+<li>
+<p><strong>Different context states</strong>: Calculate metrics in different filtering environments</p>
+</li>
+<li>
+<p><strong>Metric filters</strong>: Apply specific filters only for a particular metric</p>
+</li>
+<li>
+<p><strong>Row conditions</strong>: Pre-filter rows before calculating the metric</p>
+</li>
+<li>
+<p><strong>Ignore Dimensions</strong>: Control dimensional aggregation behavior</p>
+</li>
+<li>
+<p><strong>Ignore Context Filters (per metric)</strong>: Let a metric ignore all or some of the active context filters</p>
+</li>
+<li>
+<p><strong>Nested Aggregations</strong>: two-step aggregations (see below). </p>
+</li>
+<li>
+<p><strong>Custom functions</strong>: Use your own Python functions for complex logic</p>
+</li>
 </ul>
 <p>Each of these options allows you to create highly specialized metrics that can answer specific more sophisticated questions.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Only count high-value orders</span>
@@ -957,6 +1151,22 @@
     <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
     <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
     <span class="n">metric_filters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;North&#39;</span><span class="p">,</span> <span class="s1">&#39;West&#39;</span><span class="p">]}</span>
+<span class="p">)</span>
+
+<span class="c1"># Ignore all context filters only for this metric (computed over the Unfiltered state)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue (All Context)&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">ignore_context_filters</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Ignore only some context filters (e.g., ignore the country filter, respect the rest)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Revenue (Ignoring Country Filter)&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+    <span class="n">ignore_context_filters</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Create a new Context State</span>
@@ -1002,12 +1212,55 @@
 <span class="c1"># Execute the query</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;advanced_analysis&quot;</span><span class="p">)</span>
 </code></pre></div>
+<h3 id="ignore-context-filters">Ignore Context Filters</h3>
+<p>When a metric specifies <code>ignore_context_filters</code>:</p>
+<ul>
+<li>
+<p>If set to <code>True</code>, the metric is evaluated against the Unfiltered context (equivalent to using <code>context_state_name='Unfiltered'</code> for that metric). Any <code>metric_filters</code> on the metric still apply.</p>
+</li>
+<li>
+<p>If set to a list of dimensions, the metric is evaluated against its context state with those specific filters removed; then the metric's own <code>metric_filters</code> (if any) are applied on top.</p>
+</li>
+</ul>
+<h3 id="nested-aggregation">Nested aggregation</h3>
+<p>Nested aggregation runs the metric in two stages so you can build staged calculations (for example: "average of per-product totals"). Use this when you need to aggregate at a finer grouping first, then combine those intermediate results into the final value.</p>
+<p>How it works:</p>
+<ol>
+<li>
+<p>Stage 1: compute the metric by grouping on the metric's effective dimensions plus the <code>nested.dimensions</code>. This produces one value per group defined by those combined dimensions.</p>
+</li>
+<li>
+<p>Stage 2: aggregate the stage-1 results by the metric's effective dimensions (usually the dimensions in your query). The metric's main <code>aggregation</code> setting is used in this final step.</p>
+</li>
+</ol>
+<p>Key points:</p>
+<ul>
+<li><code>nested.aggregation</code> is the aggregation used in stage 1; the metric's <code>aggregation</code> is applied in stage 2.</li>
+<li><code>nested.dimensions</code> only change how the first stage groups the rows.</li>
+<li>The metric's parameter <code>ignore_dimensions</code> applies to both stages and defines the metric's effective dimensions.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Avg Product Revenue&#39;</span><span class="p">,</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s1">&#39;[qty] * [price]&#39;</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span>                <span class="c1"># final aggregation over product sums</span>
+    <span class="n">nested</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dimensions&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;product&#39;</span><span class="p">],</span> <span class="s1">&#39;aggregation&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">},</span>
+    <span class="n">ignore_dimensions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;store&#39;</span><span class="p">]</span>         <span class="c1"># compute at a higher level and broadcast to store rows</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Explanation: this computes total revenue per product first (stage 1, <code>sum</code> by product), then takes the average of those product totals across the query dimensions (stage 2, <code>mean</code>).</p>
 <h2 id="custom-functions">Custom Functions</h2>
 <p>When your analysis requires logic that goes beyond basic arithmetic, you can register and use custom Python functions:</p>
 <ol>
-<li><strong>Define a Python function</strong> that performs your specialized calculation</li>
-<li><strong>Register the function</strong> with your cube using <code>cube.register_function()</code></li>
-<li><strong>Reference the function</strong> in your metric expressions using the <code>@function_name</code> syntax (Pandas and Numpy are already registered as <em>pd</em> and <em>np</em>).</li>
+<li>
+<p><strong>Define a Python function</strong> that performs your specialized calculation</p>
+</li>
+<li>
+<p><strong>Register the function</strong> with your cube using <code>cube.add_functions()</code></p>
+</li>
+<li>
+<p><strong>Reference the function</strong> in your metric expressions using the <code>@function_name</code> syntax (Pandas and Numpy are already registered as <em>pd</em> and <em>np</em>).</p>
+</li>
 </ol>
 <p>This powerful feature allows you to implement virtually any calculation logic while keeping your metric definitions clean and readable.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1019,7 +1272,7 @@
     <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
 
 <span class="c1"># Register the function with your hypercube</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">register_function</span><span class="p">(</span><span class="n">safe_division</span><span class="o">=</span><span class="n">safe_division</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">safe_division</span><span class="o">=</span><span class="n">safe_division</span><span class="p">)</span>
 
 <span class="c1"># Use it in a metric definition</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
@@ -1039,7 +1292,7 @@
     <span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Low&#39;</span><span class="p">,</span> <span class="s1">&#39;Medium&#39;</span><span class="p">,</span> <span class="s1">&#39;High&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">choices</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;Unknown&#39;</span><span class="p">)</span>
 
-<span class="n">cube</span><span class="o">.</span><span class="n">register_function</span><span class="p">(</span><span class="n">categorize_revenue</span><span class="o">=</span><span class="n">categorize_revenue</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">categorize_revenue</span><span class="o">=</span><span class="n">categorize_revenue</span><span class="p">)</span>
 
 <span class="c1"># Use for conditional logic - count how many sales fall into each tier</span>
 <span class="n">cube</span><span class="o">.</span><span class="n">define_metric</span><span class="p">(</span>
@@ -1099,14 +1352,19 @@
 <span class="p">)</span>
 
 <span class="c1"># You can inspect available registered functions:</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">registered_functions</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">function_registry</span>
 </code></pre></div>
 <p><strong>Note on Function Handling</strong></p>
 <p>Metric aggregation allows you to pass custom functions directly while expression functions need to be registered on the hypercube first and referenced with <code>@function_name</code>. This difference exists due to their roles in the processing pipeline:</p>
 <ul>
-<li><strong>Expression functions</strong> operate inside within dataframe rows before aggregation</li>
-<li><strong>Aggregation functions</strong> work outside on the grouped data</li>
+<li>
+<p><strong>Expression functions</strong> operate inside within dataframe rows before aggregation</p>
+</li>
+<li>
+<p><strong>Aggregation functions</strong> work outside on the grouped data</p>
+</li>
 </ul>
+<p>So you can in fact pass even lambda functions to the aggregations. Please bear in mind that if not registered, these functions cannot be persisted into model_catalog Sources, for instance you define a metric using a lambda function then &lt; lambda &gt; is stored on your YAML model catalog and on the way back when trying to read it python will not know how to interpret that. So if working with external model catalog is a good practice to register all the functions that are going to be used in your hypercube.</p>
 
 
 

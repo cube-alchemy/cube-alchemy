@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../analytics_specs/">
+        <link rel="prev" href="../filter_methods/">
       
       
-        <link rel="next" href="../plotting_system/">
+        <link rel="next" href="../model_catalog/">
       
       
       <link rel="icon" href="../../assets/cube-alchemy-logo.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Filters - Cube Alchemy</title>
+        <title>Plotting - Cube Alchemy</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#filter-methods" class="md-skip">
+        <a href="#plotting-system" class="md-skip">
           Skip to content
         </a>
       
@@ -99,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Filters
+              Plotting
             
           </span>
         </div>
@@ -724,6 +724,29 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../filter_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Filters
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -741,7 +764,7 @@
   
   
   <span class="md-ellipsis">
-    Filters
+    Plotting
     
   </span>
   
@@ -754,7 +777,7 @@
   
   
   <span class="md-ellipsis">
-    Filters
+    Plotting
     
   </span>
   
@@ -777,54 +800,99 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#filter" class="md-nav__link">
+  <a href="#define_plot" class="md-nav__link">
     <span class="md-ellipsis">
-      filter
+      define_plot
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#remove_filter" class="md-nav__link">
+  <a href="#get_plots" class="md-nav__link">
     <span class="md-ellipsis">
-      remove_filter
+      get_plots
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#reset_filters" class="md-nav__link">
+  <a href="#get_plot_config" class="md-nav__link">
     <span class="md-ellipsis">
-      reset_filters
+      get_plot_config
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#get_filters" class="md-nav__link">
+  <a href="#set_default_plot" class="md-nav__link">
     <span class="md-ellipsis">
-      get_filters
+      set_default_plot
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#get_filtered_dimensions" class="md-nav__link">
+  <a href="#get_default_plot" class="md-nav__link">
     <span class="md-ellipsis">
-      get_filtered_dimensions
+      get_default_plot
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#set_context_state" class="md-nav__link">
+  <a href="#list_plots" class="md-nav__link">
     <span class="md-ellipsis">
-      set_context_state
+      list_plots
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#suggest_plot_types" class="md-nav__link">
+    <span class="md-ellipsis">
+      suggest_plot_types
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set_plot_renderer" class="md-nav__link">
+    <span class="md-ellipsis">
+      set_plot_renderer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set_config_resolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      set_config_resolver
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      plot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete_plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      delete_plot
     </span>
   </a>
   
@@ -834,29 +902,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../plotting_system/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Plotting
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -974,54 +1019,110 @@
 
 
 
-<h1 id="filter-methods">Filter Methods</h1>
-<h2 id="filter">filter</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">filter</span><span class="p">(</span>
-  <span class="n">criteria</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> 
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span><span class="p">,</span>
-  <span class="n">is_reset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-  <span class="n">save_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<h1 id="plotting-system">Plotting System</h1>
+<p>Manage plot configurations per query and render via pluggable renderers.</p>
+<h2 id="define_plot">define_plot</h2>
+<div class="highlight"><pre><span></span><code><span class="n">define_plot</span><span class="p">(</span>
+    <span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">plot_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">plot_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">color_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stacked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">orientation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;vertical&#39;</span><span class="p">,</span>
+    <span class="n">palette</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sort_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">sort_ascending</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">sort_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pivot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">formatter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">legend_position</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">hide_index</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">row_color_condition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">row_colors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_as_default</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
-<p>Apply filters to a context state. Returns True on success.</p>
-<h2 id="remove_filter">remove_filter</h2>
-<div class="highlight"><pre><span></span><code><span class="n">remove_filter</span><span class="p">(</span>
-  <span class="n">dimensions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span><span class="p">,</span>
-  <span class="n">is_reset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
-</code></pre></div>
-<p>Remove filters for the specified dimensions from a context state.</p>
-<h2 id="reset_filters">reset_filters</h2>
-<div class="highlight"><pre><span></span><code><span class="n">reset_filters</span><span class="p">(</span>
-  <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;backward&#39;</span><span class="p">,</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
-</code></pre></div>
-<p>Reset filters using undo/redo or clear all filters. Direction: 'backward', 'forward', or 'all'.</p>
-<h2 id="get_filters">get_filters</h2>
-<div class="highlight"><pre><span></span><code><span class="n">get_filters</span><span class="p">(</span>
-  <span class="n">off_set</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span>
-</code></pre></div>
-<p>Return the aggregated active filters up to the current history pointer plus off_set.</p>
-<h2 id="get_filtered_dimensions">get_filtered_dimensions</h2>
-<div class="highlight"><pre><span></span><code><span class="n">get_filtered_dimensions</span><span class="p">(</span>
-  <span class="n">off_set</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Default&#39;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-</code></pre></div>
-<p>Return only the dimension names that are currently filtered (order preserved, no duplicates).</p>
-<h2 id="set_context_state">set_context_state</h2>
-<div class="highlight"><pre><span></span><code><span class="n">set_context_state</span><span class="p">(</span>
-  <span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-  <span class="n">base_context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Unfiltered&#39;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
-</code></pre></div>
-<p>Create a new context state cloned from base_context_state_name.</p>
+<p>Persist a plot configuration for a query. If <code>plot_type</code> is None, an appropriate type is suggested. The stored configuration keeps the original user-provided <code>dimensions</code> and <code>metrics</code> under <code>_input_dimensions</code> and <code>_input_metrics</code> so plots automatically refresh if the query is redefined.</p>
 <p>Notes:
-- When creating a new context state, the implementation initializes <code>applied_filters[context_state_name]</code> as an empty list and sets <code>filter_pointer[context_state_name]</code> to 0. The new context is a copy of the specified base context state.</p>
+- If <code>plot_name</code> is omitted a descriptive auto-generated name is used (e.g. "bar plot").
+- The function registers a dependency (query -&gt; plot) so plot configs are refreshed when the query changes.
+- If <code>dimensions</code> or <code>metrics</code> are omitted they default to the query's definition (metrics includes derived metrics).</p>
+<h2 id="get_plots">get_plots</h2>
+<div class="highlight"><pre><span></span><code><span class="n">get_plots</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+</code></pre></div>
+<p>Return all plot configurations for a query.</p>
+<h2 id="get_plot_config">get_plot_config</h2>
+<div class="highlight"><pre><span></span><code><span class="n">get_plot_config</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+<p>Return the configuration for a specific plot (default if None).</p>
+<p>Note: the implementation raises a <code>ValueError</code> if the query is undefined or has no plot configurations.</p>
+<h2 id="set_default_plot">set_default_plot</h2>
+<div class="highlight"><pre><span></span><code><span class="n">set_default_plot</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Set the default plot for a query.</p>
+<h2 id="get_default_plot">get_default_plot</h2>
+<div class="highlight"><pre><span></span><code><span class="n">get_default_plot</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</code></pre></div>
+<p>Return the default plot name.</p>
+<h2 id="list_plots">list_plots</h2>
+<div class="highlight"><pre><span></span><code><span class="n">list_plots</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</code></pre></div>
+<p>List all plot names for a query.</p>
+<h2 id="suggest_plot_types">suggest_plot_types</h2>
+<div class="highlight"><pre><span></span><code><span class="n">suggest_plot_types</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+</code></pre></div>
+<p>Suggest suitable plot types given the query’s (dimensions, metrics).</p>
+<h2 id="set_plot_renderer">set_plot_renderer</h2>
+<div class="highlight"><pre><span></span><code><span class="n">set_plot_renderer</span><span class="p">(</span><span class="n">renderer</span><span class="p">:</span> <span class="n">PlotRenderer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Set the default renderer.</p>
+<h2 id="set_config_resolver">set_config_resolver</h2>
+<div class="highlight"><pre><span></span><code><span class="n">set_config_resolver</span><span class="p">(</span><span class="n">resolver</span><span class="p">:</span> <span class="n">PlotConfigResolver</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Set the suggestion/validation resolver.</p>
+<h2 id="plot">plot</h2>
+<div class="highlight"><pre><span></span><code><span class="n">plot</span><span class="p">(</span>
+    <span class="n">query_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">query_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">plot_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">plot_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">renderer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PlotRenderer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
+</code></pre></div>
+<p>Render a plot for a stored or ad‑hoc query. If plot_name is a list, returns multiple outputs using a shared query result.</p>
+<p>Notes:</p>
+<ul>
+<li>
+<p>When <code>plot_name</code> is a list the method returns a list of rendered outputs (one per plot) and enforces <code>query_options is None</code> (it reuses the stored query definition).</p>
+</li>
+<li>
+<p>The default renderer is <code>MatplotlibRenderer()</code> but you can override it per-call via the <code>renderer</code> parameter or set a global default using <code>set_plot_renderer()</code>.</p>
+</li>
+</ul>
+<h2 id="delete_plot">delete_plot</h2>
+<div class="highlight"><pre><span></span><code><span class="n">delete_plot</span><span class="p">(</span><span class="n">query_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Remove a plot configuration and its dependency edges.</p>
+<p>Notes:</p>
+<ul>
+<li>
+<p>Dimensions/metrics default to the query definition if omitted.</p>
+</li>
+<li>
+<p>When a query is redefined, linked plot configs auto-refresh to reflect updated dims/mets.</p>
+</li>
+<li>
+<p>Plot configurations are persisted via the Model Catalog alongside metrics, queries, and transformers.</p>
+</li>
+</ul>
 
 
 

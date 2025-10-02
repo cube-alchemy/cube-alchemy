@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../../concepts/context-state/">
+        <link rel="prev" href="../../concepts/model_catalog/">
       
       
         <link rel="next" href="../metric_methods/">
@@ -445,6 +445,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/filters/" class="md-nav__link">
         
   
@@ -474,6 +497,52 @@
   
   <span class="md-ellipsis">
     Context State
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -599,6 +668,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Initialization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reset_specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset_specs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -608,6 +692,39 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Core Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#visualize_graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      visualize_graph
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#relationship_matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      relationship_matrix
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_cardinalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_cardinalities
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -616,6 +733,39 @@
       Shared columns: counts and distincts
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Persistence helpers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Persistence helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#save_as_pickle" class="md-nav__link">
+    <span class="md-ellipsis">
+      save_as_pickle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#load_pickle-static" class="md-nav__link">
+    <span class="md-ellipsis">
+      load_pickle (static)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -681,6 +831,52 @@
   
   
     <li class="md-nav__item">
+      <a href="../transformation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analytics_specs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analytics Specs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filter_methods/" class="md-nav__link">
         
   
@@ -704,12 +900,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../analytics_assets/" class="md-nav__link">
+      <a href="../plotting_system/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Get Analytics Assets
+    Plotting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model Catalog
     
   </span>
   
@@ -813,41 +1032,83 @@
 <p>The Hypercube class is the central component of Cube Alchemy, providing methods for creating, querying, and analyzing multidimensional data.</p>
 <h2 id="initialization">Initialization</h2>
 <p>The Hypercube can be initialized in two ways:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Option 1: Initialize with data</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Option 1: Initialize with data (recommended for immediate use)</span>
 <span class="n">Hypercube</span><span class="p">(</span>
-  <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="n">rename_original_shared_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">tables</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rename_original_shared_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">normalized_core</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">logger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">validator_cls</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">SchemaValidator</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bridge_factory_cls</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">CompositeBridgeGenerator</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">function_registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Option 2: Initialize empty and load data later</span>
 <span class="n">Hypercube</span><span class="p">()</span>
+
 <span class="n">load_data</span><span class="p">(</span>
-  <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
-  <span class="n">rename_original_shared_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-  <span class="n">reset_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+    <span class="n">rename_original_shared_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">apply_composite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">to_be_stored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">reset_specs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>The <code>load_data()</code> method can also be used to reload or update data in an existing hypercube.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li><code>tables</code>: Dictionary mapping table names to pandas DataFrames</li>
-<li><code>rename_original_shared_columns</code>: Controls what happens to shared columns in source tables.  </li>
-<li>True (default): keep them, renamed as <code>&lt;column&gt; (&lt;table_name&gt;)</code>. Enables per‑table counts/aggregations.  </li>
-<li>False: drop them from source tables (values remain in link tables). Saves time and memory if per‑table analysis isn’t needed.  </li>
-<li><code>apply_composite</code>: Whether to automatically create composite keys for multi-column relationships</li>
-<li><code>validate</code>: Whether to validate schema and build trajectory cache during initialization</li>
-<li><code>to_be_stored</code>: Set to True if the hypercube will be serialized/stored (skips Default context state creation)</li>
-<li><code>reset_all</code> <em>(only load_data method)</em>: Whether to reset metrics and queries definitions, as well as registered functions when reloading data</li>
+<li>
+<p><code>tables</code>: Dictionary mapping table names to pandas DataFrames</p>
+</li>
+<li>
+<p><code>rename_original_shared_columns</code>: Controls what happens to shared columns in source tables.  </p>
+<ul>
+<li>
+<p>True (default): keep them, renamed as <code>&lt;column&gt; (&lt;table_name&gt;)</code>. Enables per‑table counts/aggregations.  </p>
+</li>
+<li>
+<p>False: drop them from source tables (values remain in link tables). Saves time and memory if per‑table analysis isn’t needed.  </p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>to_be_stored</code>: Set to True if the hypercube will be serialized/stored (skips Default context state creation)</p>
+</li>
+<li>
+<p><code>normalized_core</code>: Controls the core data storage strategy for the hypercube, affecting performance characteristics based on your data and query patterns.</p>
+<ul>
+<li>
+<p><code>False</code> (default): <strong>Normalized core</strong> - The core stores only keys and indexes from the schema. Each query dynamically joins required dimensions and metrics from their source tables. This approach uses less memory but requires joins during query execution.</p>
+</li>
+<li>
+<p><code>True</code>: <strong>Denormalized core</strong> - All schema tables are joined together into one large table stored as the core. Queries fetch data directly from this pre-joined structure without additional joins. This approach uses more memory but can be faster for queries that span multiple tables.</p>
+</li>
+</ul>
+<p><strong>Performance trade-offs:</strong></p>
+<p>The optimal choice depends on your data size, relationship complexity, and query patterns. For large datasets with many relationships, the normalized approach may be more efficient. For smaller datasets with frequent cross-table analysis, the denormalized approach may perform better.</p>
+</li>
+<li>
+<p><code>reset_specs</code> <em>(only load_data method)</em>: Whether to clear all existing analytics and plotting definitions (metrics, derived metrics, queries, plots, transformations) and the function registry before loading new ones from the Catalog Source.</p>
+</li>
+<li>
+<p><code>logger</code> <em>(only constructor)</em>: Controls instance logging.</p>
+<ul>
+<li><code>True</code>: enable default Python logging (INFO) with format <code>%(levelname)s %(name)s: %(message)s</code>.</li>
+<li><code>logging.Logger</code>: use the provided logger instance.</li>
+<li><code>False</code>: silence this instance (no propagation; internal NullHandler).</li>
+<li><code>None</code>/omitted: no global config; a module-named logger is used and inherits app-level settings.</li>
+</ul>
+</li>
 </ul>
 <p><strong>Examples:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cube_alchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hypercube</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="c1"># Option 1: Initialize with data (keep renamed shared columns)</span>
 <span class="n">cube1</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">({</span>
@@ -871,37 +1132,58 @@
     <span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">updated_sales_df</span>
 <span class="p">})</span>
 
-<span class="c1"># Reset metrics and queries when loading new data schema</span>
-<span class="n">cube2</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">reset_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Reset definitions when loading a new data schema</span>
+<span class="n">cube2</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">reset_specs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Enable default logging quickly</span>
+<span class="n">cube3</span> <span class="o">=</span> <span class="n">Hypercube</span><span class="p">({</span><span class="s1">&#39;Sales&#39;</span><span class="p">:</span> <span class="n">sales_df</span><span class="p">},</span> <span class="n">logger</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="reset_specs">reset_specs</h3>
+<div class="highlight"><pre><span></span><code><span class="n">reset_specs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Clear all analytics and plotting definitions and the function registry:</p>
+<ul>
+<li>Metrics and derived metrics</li>
+<li>Queries</li>
+<li>Plots and transformations</li>
+<li>Function registry entries (custom functions)</li>
+</ul>
+<p>Use this to start from a clean slate before reloading definitions or importing from a model catalog.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="n">cube</span><span class="o">.</span><span class="n">reset_specs</span><span class="p">()</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">load_from_model_catalog</span><span class="p">(</span><span class="n">reset_specs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Reset the specs and then load from source model catalog (eg. YAML)</span>
 </code></pre></div>
 <h2 id="core-methods">Core Methods</h2>
-<p><strong>visualize_graph</strong></p>
-<div class="highlight"><pre><span></span><code><span class="n">visualize_graph</span><span class="p">(</span><span class="n">layout_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">full_column_names</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<h3 id="visualize_graph">visualize_graph</h3>
+<div class="highlight"><pre><span></span><code><span class="n">visualize_graph</span><span class="p">(</span>
+  <span class="n">w</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="n">h</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="n">full_column_names</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+  <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+  <span class="n">return_fig</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">Figure</span><span class="p">]</span>
 </code></pre></div>
 <p>Visualize the relationships between tables as a network graph.</p>
 <p><em>Parameters:</em></p>
 <ul>
 <li>
-<p><code>layout_type</code>: Algorithm for graph layout. Options include:</p>
-<ul>
-<li><code>'spring'</code>(default)</li>
-<li><code>'circular'</code></li>
-<li><code>'shell'</code></li>
-<li><code>'random'</code></li>
-<li><code>'kamada_kawai'</code></li>
-<li><code>'spectral'</code></li>
-<li><code>'planar'</code></li>
-<li><code>'spiral'</code></li>
-</ul>
+<p><code>w</code>: Width of the plot in inches. If None, an automatic size is chosen based on graph size.</p>
 </li>
 <li>
-<p><code>w</code>: Width of the plot</p>
+<p><code>h</code>: Height of the plot in inches. If None, an automatic size is chosen based on graph size.</p>
 </li>
 <li>
-<p><code>h</code>: Height of the plot</p>
+<p><code>full_column_names</code>: Whether to show renamed columns with table reference (e.g., <code>column &lt;table_name&gt;</code>) or just the original column names.</p>
 </li>
 <li>
-<p><code>full_column_names</code>: Whether to show renamed columns with table reference (e.g., <code>column &lt;table_name&gt;</code>) or just the original column names</p>
+<p><code>seed</code>: RNG seed for the spring layout; set a fixed value to make the layout reproducible.</p>
+</li>
+<li>
+<p><code>show</code>: If True, call <code>plt.show()</code> to display the figure.</p>
+</li>
+<li>
+<p><code>return_fig</code>: If True, return the Matplotlib Figure instead of None.</p>
 </li>
 </ul>
 <p><em>Example:</em></p>
@@ -909,41 +1191,57 @@
 <span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">()</span>
 
 <span class="c1"># Hide renamed column format for cleaner display</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">visualize_graph</span><span class="p">(</span><span class="n">full_column_names</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 <em>Note: If the displayed graph doesn't look so good try a couple of times or adjust the size.</em></p>
-<p><strong>set_context_state</strong></p>
-<div class="highlight"><pre><span></span><code><span class="n">set_context_state</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base_context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Unfiltered&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<h3 id="relationship_matrix">relationship_matrix</h3>
+<p><div class="highlight"><pre><span></span><code><span class="n">get_relationship_matrix</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Unfiltered&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
-<p>Create a new context state for independent filtering environments.</p>
-<p><em>Parameters:</em></p>
-<ul>
-<li><code>context_state_name</code>: Name for the new context state</li>
-<li><code>base_context_state_name</code>: Name of the base context state, the new context state will be a copy of this one.</li>
-</ul>
-<p><em>Returns:</em></p>
-<ul>
-<li>Boolean indicating success</li>
-</ul>
-<p><em>Example:</em></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Create a new context state</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">set_context_state</span><span class="p">(</span><span class="s1">&#39;Marketing Analysis&#39;</span><span class="p">)</span> <span class="c1"># Creates a copy from the unfiltered context state --&gt; self.context_states[&#39;Marketing Analysis&#39;] = self.context_states[&#39;Unfiltered&#39;]</span>
-
-<span class="c1"># Apply filters specific to this context</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s1">&#39;channel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Email&#39;</span><span class="p">,</span> <span class="s1">&#39;Social&#39;</span><span class="p">]},</span> <span class="n">context_state_name</span><span class="o">=</span><span class="s1">&#39;Marketing Analysis&#39;</span><span class="p">)</span>
+Reconstruct the original shared columns across the model to inspect connectivity.</p>
+<h3 id="get_cardinalities">get_cardinalities</h3>
+<p><div class="highlight"><pre><span></span><code><span class="n">get_cardinalities</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Unfiltered&#39;</span><span class="p">,</span> <span class="n">include_inverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
+Compute relationship cardinalities for shared keys between base tables.</p>
 <h2 id="shared-columns-counts-and-distincts">Shared columns: counts and distincts</h2>
 <p>When multiple tables share a column (for example, <code>customer_id</code>), Cube Alchemy builds a link table containing the distinct values of that column across all participating tables. This has two practical implications:</p>
 <ul>
-<li>Counting on the shared column name (e.g., <code>customer_id</code>) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.</li>
-<li>Counting on a per-table renamed column (e.g., <code>customer_id &lt;orders&gt;</code> or <code>customer_id &lt;customers&gt;</code>) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.</li>
+<li>
+<p>Counting on the shared column name (e.g., <code>customer_id</code>) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.</p>
+</li>
+<li>
+<p>Counting on a per-table renamed column (e.g., <code>customer_id &lt;orders&gt;</code> or <code>customer_id &lt;customers&gt;</code>) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.</p>
+</li>
 </ul>
 <p>Example idea:</p>
 <ul>
-<li>Count distinct <code>customer_id</code> (shared) → distinct customers across all linked tables.</li>
-<li>Count distinct <code>customer_id &lt;orders&gt;</code> → distinct customers present in the Orders table specifically.</li>
+<li>
+<p>Count distinct <code>customer_id</code> (shared) → distinct customers across all linked tables.</p>
+</li>
+<li>
+<p>Count distinct <code>customer_id &lt;orders&gt;</code> → distinct customers present in the Orders table specifically.</p>
+</li>
 </ul>
 <p>Choose the one that matches your analytical intent: cross-table distincts via the shared column, or table-specific distincts via the renamed columns. Note: per-table renamed columns are available only when <code>rename_original_shared_columns=True</code>; set it to False to drop them and reduce memory/processing if you don’t need that analysis.</p>
+<h2 id="persistence-helpers">Persistence helpers</h2>
+<h3 id="save_as_pickle">save_as_pickle</h3>
+<div class="highlight"><pre><span></span><code><span class="n">save_as_pickle</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">relative_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">pickle_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cube.pkl&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span>
+</code></pre></div>
+<p>Serialize the current Hypercube instance to a pickle file. If <code>path</code> is omitted the working directory is used and <code>pickle_name</code> is written there. The logger is temporarily removed during pickling to avoid capturing non-picklable handlers. The function registry is persisted via import specs so only importable top-level callables are fully restorable.</p>
+<h3 id="load_pickle-static">load_pickle (static)</h3>
+<div class="highlight"><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="n">load_pickle</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">relative_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">pickle_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cube.pkl&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Hypercube</span>
+</code></pre></div>
+<p>Load a previously pickled Hypercube. If <code>path</code> points to a directory, <code>pickle_name</code> is appended; if it is a file path it is used directly.</p>
 
 
 
