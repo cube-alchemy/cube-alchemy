@@ -509,6 +509,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#shared-columns-counts-and-distincts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shared columns: counts and distincts
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#custom-functions" class="md-nav__link">
     <span class="md-ellipsis">
       Custom Functions
@@ -936,28 +945,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../streamlit/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Streamlit Integration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         
   
@@ -1249,6 +1236,26 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>Explanation: this computes total revenue per product first (stage 1, <code>sum</code> by product), then takes the average of those product totals across the query dimensions (stage 2, <code>mean</code>).</p>
+<h2 id="shared-columns-counts-and-distincts">Shared columns: counts and distincts</h2>
+<p>When multiple tables share a column (for example, <code>customer_id</code>), Cube Alchemy builds a link table containing the distinct values of that column across all participating tables. This has two practical implications:</p>
+<ul>
+<li>
+<p>Counting on the shared column name (e.g., <code>customer_id</code>) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.</p>
+</li>
+<li>
+<p>Counting on a per-table renamed column (e.g., <code>customer_id &lt;orders&gt;</code> or <code>customer_id &lt;customers&gt;</code>) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.</p>
+</li>
+</ul>
+<p>Example idea:</p>
+<ul>
+<li>
+<p>Count distinct <code>customer_id</code> (shared) → distinct customers across all linked tables.</p>
+</li>
+<li>
+<p>Count distinct <code>customer_id &lt;orders&gt;</code> → distinct customers present in the Orders table specifically.</p>
+</li>
+</ul>
+<p>Choose the one that matches your analytical intent: cross-table distincts via the shared column, or table-specific distincts via the renamed columns. Note: per-table renamed columns are available only when <code>rename_original_shared_columns=True</code> on the Hypercube initialization; set it to False to drop them and reduce memory/processing if you don’t need that analysis.</p>
 <h2 id="custom-functions">Custom Functions</h2>
 <p>When your analysis requires logic that goes beyond basic arithmetic, you can register and use custom Python functions:</p>
 <ol>

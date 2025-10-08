@@ -728,15 +728,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shared-columns-counts-and-distincts" class="md-nav__link">
-    <span class="md-ellipsis">
-      Shared columns: counts and distincts
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#persistence-helpers" class="md-nav__link">
     <span class="md-ellipsis">
       Persistence helpers
@@ -975,28 +966,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../streamlit/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Streamlit Integration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         
   
@@ -1202,26 +1171,6 @@ Reconstruct the original shared columns across the model to inspect connectivity
 <p><div class="highlight"><pre><span></span><code><span class="n">get_cardinalities</span><span class="p">(</span><span class="n">context_state_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Unfiltered&#39;</span><span class="p">,</span> <span class="n">include_inverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </code></pre></div>
 Compute relationship cardinalities for shared keys between base tables.</p>
-<h2 id="shared-columns-counts-and-distincts">Shared columns: counts and distincts</h2>
-<p>When multiple tables share a column (for example, <code>customer_id</code>), Cube Alchemy builds a link table containing the distinct values of that column across all participating tables. This has two practical implications:</p>
-<ul>
-<li>
-<p>Counting on the shared column name (e.g., <code>customer_id</code>) uses the link table and therefore reflects distinct values in the current filtered context across all tables that share it.</p>
-</li>
-<li>
-<p>Counting on a per-table renamed column (e.g., <code>customer_id &lt;orders&gt;</code> or <code>customer_id &lt;customers&gt;</code>) uses that table’s own column values. The result can differ from the shared-column count because it’s scoped to that single table's values and is not the cross-table distinct set.</p>
-</li>
-</ul>
-<p>Example idea:</p>
-<ul>
-<li>
-<p>Count distinct <code>customer_id</code> (shared) → distinct customers across all linked tables.</p>
-</li>
-<li>
-<p>Count distinct <code>customer_id &lt;orders&gt;</code> → distinct customers present in the Orders table specifically.</p>
-</li>
-</ul>
-<p>Choose the one that matches your analytical intent: cross-table distincts via the shared column, or table-specific distincts via the renamed columns. Note: per-table renamed columns are available only when <code>rename_original_shared_columns=True</code>; set it to False to drop them and reduce memory/processing if you don’t need that analysis.</p>
 <h2 id="persistence-helpers">Persistence helpers</h2>
 <h3 id="save_as_pickle">save_as_pickle</h3>
 <div class="highlight"><pre><span></span><code><span class="n">save_as_pickle</span><span class="p">(</span>
