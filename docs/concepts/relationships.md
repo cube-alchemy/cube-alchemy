@@ -2,7 +2,7 @@
 
 Cube Alchemy uses implicit relationships, meaning DataFrames automatically connect to each other through shared column names.
 
-These relationships enable declarative work with newly connected data. The library handles the necessary data operations under the hood.
+These relationships enable declarative work with newly connected data. The necessary data operations are handled under the hood.
 
 At a high level, Cube Alchemy scans tables for shared columns, creates link/composite tables with auto keys when needed, and stores a relationship map plus join keys. Downstream operations (dimensions, metrics, queries) traverse this map to fetch only the columns required.
 
@@ -28,11 +28,9 @@ This process consolidates complex relationships into simple, efficient connectio
 
 ## Cardinality
 
-Cube Alchemy takes a flexible approach:
+Cube Alchemy takes a flexible approach: It does not enforce specific cardinality constraints like one-to-many or many-to-one.
 
-- It does not enforce specific cardinality constraints like one-to-many or many-to-one.
-
-- Understanding the natural cardinality of the data helps avoid unexpected results in aggregations (e.g., due to row duplication).
+Understanding the natural cardinality of the data helps avoid unexpected results in aggregations (e.g., due to row duplication).
 
 **Fact and Dimension Tables**
 
@@ -42,9 +40,9 @@ Data analysts are often familiar with dimensional modeling principles used in da
 
 - **Dimension tables**: Provide descriptive context through attributes that answer the "who, what, where, when, why, and how" questions about the data (customers, products, locations, time periods).
 
-Note that the library is flexible regarding relationships between data rather than enforcing a specific modeling paradigm:
+Note that Cube Alchemy is flexible regarding relationships between data rather than enforcing a specific modeling paradigm:
 
-- Cube Alchemy does not explicitly enforce Fact and Dimension table distinctions.
+- It does not explicitly enforce Fact and Dimension table distinctions.
 
 - Every column provided in the DataFrames used to define a Hypercube is available as a dimension and can also be used to create metrics and filters.
 
@@ -54,10 +52,7 @@ Note that the library is flexible regarding relationships between data rather th
 
 ```python
 # After initiating the hypercube, inspect how the connected tables relate
-cube.get_cardinalities()
-
-# Or inspect the relationships
-cube.get_relationship_matrix()  
+cube.get_cardinalities() 
 ```
 
 

@@ -196,8 +196,13 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
         try:
             if old_log is not None:
                 self._log = None
+            self.context_states['Default'] = None
             with open(target, "wb") as f:
                 pickle.dump(self, f)
+            self.set_context_state('Default')
+            self._log = old_log  # Restore the logger if it was set
+            if self._log:
+                self._log.info("Default Context State has been reset")
         finally:
             if old_log is not None:
                 self._log = old_log
@@ -225,4 +230,6 @@ class Hypercube(Logger, Engine, AnalyticsSpecs, ModelCatalog):
                 base_dir = (Path.cwd() / p) if relative_path else p
                 target = base_dir / pickle_name
         with open(target, "rb") as f:
-            return pickle.load(f)
+            cube = pickle.load(f)
+            cube.set_context_state('Default')
+            return cube
