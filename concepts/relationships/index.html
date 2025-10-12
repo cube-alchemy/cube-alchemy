@@ -936,7 +936,7 @@
 
 <h1 id="relationships-in-cube-alchemy">Relationships in Cube Alchemy</h1>
 <p>Cube Alchemy uses implicit relationships, meaning DataFrames automatically connect to each other through shared column names.</p>
-<p>These relationships enable declarative work with newly connected data. The library handles the necessary data operations under the hood.</p>
+<p>These relationships enable declarative work with newly connected data. The necessary data operations are handled under the hood.</p>
 <p>At a high level, Cube Alchemy scans tables for shared columns, creates link/composite tables with auto keys when needed, and stores a relationship map plus join keys. Downstream operations (dimensions, metrics, queries) traverse this map to fetch only the columns required.</p>
 <h2 id="single-path">Single Path</h2>
 <p>Cube Alchemy ensures there is exactly one bidirectional path between any two tables in the data model. This creates a clear, unambiguous way to traverse from one table to another.</p>
@@ -961,15 +961,8 @@
 </ol>
 <p>This process consolidates complex relationships into simple, efficient connections while preserving all the original data.</p>
 <h2 id="cardinality">Cardinality</h2>
-<p>Cube Alchemy takes a flexible approach:</p>
-<ul>
-<li>
-<p>It does not enforce specific cardinality constraints like one-to-many or many-to-one.</p>
-</li>
-<li>
+<p>Cube Alchemy takes a flexible approach: It does not enforce specific cardinality constraints like one-to-many or many-to-one.</p>
 <p>Understanding the natural cardinality of the data helps avoid unexpected results in aggregations (e.g., due to row duplication).</p>
-</li>
-</ul>
 <p><strong>Fact and Dimension Tables</strong></p>
 <p>Data analysts are often familiar with dimensional modeling principles used in data warehousing and business intelligence. These typically involve:</p>
 <ul>
@@ -980,10 +973,10 @@
 <p><strong>Dimension tables</strong>: Provide descriptive context through attributes that answer the "who, what, where, when, why, and how" questions about the data (customers, products, locations, time periods).</p>
 </li>
 </ul>
-<p>Note that the library is flexible regarding relationships between data rather than enforcing a specific modeling paradigm:</p>
+<p>Note that Cube Alchemy is flexible regarding relationships between data rather than enforcing a specific modeling paradigm:</p>
 <ul>
 <li>
-<p>Cube Alchemy does not explicitly enforce Fact and Dimension table distinctions.</p>
+<p>It does not explicitly enforce Fact and Dimension table distinctions.</p>
 </li>
 <li>
 <p>Every column provided in the DataFrames used to define a Hypercube is available as a dimension and can also be used to create metrics and filters.</p>
@@ -993,10 +986,7 @@
 </li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># After initiating the hypercube, inspect how the connected tables relate</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">get_cardinalities</span><span class="p">()</span>
-
-<span class="c1"># Or inspect the relationships</span>
-<span class="n">cube</span><span class="o">.</span><span class="n">get_relationship_matrix</span><span class="p">()</span>  
+<span class="n">cube</span><span class="o">.</span><span class="n">get_cardinalities</span><span class="p">()</span> 
 </code></pre></div>
 <h2 id="visualization">Visualization</h2>
 <p>When setting up a hypercube, it can be useful to inspect the relationship graph to confirm how tables connect and where composite keys have been introduced. 
