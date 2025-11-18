@@ -1,10 +1,11 @@
 <p align="center">
-  <img src="docs/assets/cube-alchemy-logo.png" alt="Cube Alchemy Logo" width="150">
+  <img src="docs/assets/cube-alchemy-logo.png" alt="Cube Alchemy Logo" width="340">
+</p>
+<p align="center">
+<em>Better Decisions, Built on Data</em>
 </p>
 
-<h1 align="center">Cube Alchemy</h1>
-
-A lightweight hypercube engine for multidimensional analytics on top of pandas.
+**Cube Alchemy OSS** is a lightweight semantic leyer and analytics engine for multidimensional analytics on top of pandas.
 
 ## Why It Matters
 

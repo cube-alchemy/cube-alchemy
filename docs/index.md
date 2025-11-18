@@ -1,3 +1,3 @@
 # Build a Powerful Hypercube
 
-More analysis, less plumbing. Cube Alchemy automatically transforms your disconnected pandas DataFrames into a unified, multidimensional data model.
+Cube Alchemy is a small semantic layer and in-memory analytics engine that automatically transforms your disconnected pandas DataFrames into a unified, multidimensional data model.

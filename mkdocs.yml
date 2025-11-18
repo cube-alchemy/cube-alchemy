@@ -4,8 +4,8 @@ site_name: Cube Alchemy
 
 theme:
   name: material
-  logo: assets/cube-alchemy-logo.png
-  favicon: assets/cube-alchemy-logo.png
+  #logo: assets/cube-alchemy-logo.png
+  #favicon: assets/cube-alchemy-logo.png
   features:
     - navigation.expand
     - navigation.sections
